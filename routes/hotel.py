@@ -297,7 +297,7 @@ def edit_hotel(store, hotel_id):
 
         # 重複チェック（編集中のホテル自身は除く）
         existing_hotel = find_hotel_by_name_category_area(db, name, category_id, area_id)
-        if existing_hotel and existing_hotel.hotel_id != hotel_id:
+        if existing_hotel and existing_hotel['hotel_id'] != hotel_id:
             return render_template(
                 "hotel_edit.html",
                 store=store, display_name=display_name,
