@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}
+  オプション管理 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>オプション管理</h1>
+
+    {% if success %}
+      <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="page-layout">
+      <div class="form-section">
+        <h2>オプション登録フォーム</h2>
+        <form method="post" action="{{ url_for('main_routes.register_option', store=store) }}">
+          <div class="form-group">
+            <label for="name" class="form-label">オプション名 (必須):</label>
+            <input type="text" class="form-control" id="name" name="name" required placeholder="例）延長30分">
+          </div>
+          <div class="form-group">
+            <label for="price" class="form-label">金額 (必須):</label>
+            <input type="number" class="form-control" id="price" name="price" required min="0" placeholder="例）3000" step="1">
+            <small style="color: #6c757d; font-size: 0.875em;">金額は円単位で入力してください</small>
+          </div>
+          <div class="form-group">
+            <label for="cast_back_amount" class="form-label">バック金額 (必須):</label>
+            <input type="number" class="form-control" id="cast_back_amount" name="cast_back_amount" required min="0" placeholder="例）1500" step="1">
+            <small style="color: #6c757d; font-size: 0.875em;">キャストへのバック金額を円単位で入力してください</small>
+          </div>
+          <button type="submit" class="btn-register">登録</button>
+        </form>
+      </div>
+
+      <div class="table-section">
+        <h2>オプション一覧</h2>
+        <div class="table-responsive">
+          {% if options and options|length > 0 %}
+            <table class="table table-striped">
+              <thead>
+                  <tr>
+                      <th>並び順</th>
+                      <th>オプション名</th>
+                      <th>金額</th>
+                      <th>バック金額</th>
+                      <th>状態</th>
+                      <th>操作</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for opt in options %}
+                  <tr>
+                      <td>
+                          <a href="{{ url_for('main_routes.move_option_up_route', store=store, option_id=opt.option_id) }}" 
+                             class="btn btn-secondary" 
+                             style="padding: 2px 6px; font-size: 12px; margin-right: 2px;"
+                             title="上に移動">↑</a>
+                          <a href="{{ url_for('main_routes.move_option_down_route', store=store, option_id=opt.option_id) }}" 
+                             class="btn btn-secondary" 
+                             style="padding: 2px 6px; font-size: 12px;"
+                             title="下に移動">↓</a>
+                      </td>
+                      <td>{{ opt.name }}</td>
+                      <td>{{ "{:,}".format(opt.price) }}円</td>
+                      <td>{{ "{:,}".format(opt.cast_back_amount) }}円</td>
+                      <td>
+                          {% if opt.is_active %}
+                              <span style="color: #28a745; font-weight: bold;">有効</span>
+                          {% else %}
+                              <span style="color: #dc3545; font-weight: bold;">無効</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                          <a href="{{ url_for('main_routes.edit_option', store=store, option_id=opt.option_id) }}" class="btn btn-edit">編集</a>
+                          <a href="{{ url_for('main_routes.delete_option_route', store=store, option_id=opt.option_id) }}" class="btn btn-delete" onclick="return confirm('本当にこのオプションを削除しますか？');">削除</a>
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+          {% else %}
+            <p>登録されているオプションはありません。</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // フォームバリデーション
+  document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('form');
+      const priceInput = document.getElementById('price');
+      const castBackAmountInput = document.getElementById('cast_back_amount');
+      
+      function validateAmounts() {
+          const price = parseInt(priceInput.value) || 0;
+          const castBackAmount = parseInt(castBackAmountInput.value) || 0;
+          
+          if (castBackAmount > price) {
+              castBackAmountInput.setCustomValidity('バック金額は金額以下で入力してください');
+          } else {
+              castBackAmountInput.setCustomValidity('');
+          }
+      }
+      
+      priceInput.addEventListener('input', validateAmounts);
+      castBackAmountInput.addEventListener('input', validateAmounts);
+      
+      form.addEventListener('submit', function(e) {
+          validateAmounts();
+          if (!castBackAmountInput.checkValidity()) {
+              e.preventDefault();
+              alert('バック金額は金額以下で入力してください');
+          }
+      });
+  });
+  </script>
+{% endblock %}

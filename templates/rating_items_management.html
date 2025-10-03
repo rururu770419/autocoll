@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+{% endblock %}
+
+{% block title %}評価項目マスタ管理 - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>評価項目マスタ管理</h2>
+    
+    <!-- メッセージエリア -->
+    {% if success %}
+        <div class="alert alert-success" role="alert">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endif %}
+    
+    <!-- 新規登録ボタン -->
+    <div class="mb-3">
+        <a href="{{ url_for('main_routes.rating_item_registration', store=store) }}" class="btn btn-primary cast-btn-registration">
+            新規登録
+        </a>
+    </div>
+    
+    <!-- 評価項目一覧テーブル -->
+    <div class="card">
+ 
+        <div class="card-body">
+            {% if items %}
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>項目名</th>
+                            <th>タイプ</th>
+                            <th>選択肢</th>
+                            <th>並び替え</th>
+                            <th>ステータス</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <!-- 項目名 -->
+                            <td>{{ item.item_name }}</td>
+                            
+                            <!-- タイプ -->
+                            <td>
+                                {% if item.item_type == 'radio' %}
+                                    ラジオボタン
+                                {% elif item.item_type == 'checkbox' %}
+                                    チェックボックス
+                                {% elif item.item_type == 'textarea' %}
+                                    テキストエリア
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 選択肢 -->
+                            <td>
+                                {% if item.item_type != 'textarea' %}
+                                    {% for option in item.options_list %}
+                                        {{ option.value }}
+                                        {% if option.enabled %}
+                                            <span class="badge badge-success">有効</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">無効</span>
+                                        {% endif %}
+                                        {% if not loop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <em>自由記述</em>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 並び替え -->
+                            <td>
+                                <button onclick="moveItem({{ item.item_id }}, 'up')" 
+                                        class="btn btn-sm btn-outline-secondary"
+                                        title="上に移動">
+                                    ↑
+                                </button>
+                                <button onclick="moveItem({{ item.item_id }}, 'down')" 
+                                        class="btn btn-sm btn-outline-secondary"
+                                        title="下に移動">
+                                    ↓
+                                </button>
+                            </td>
+                            
+                            <!-- ステータス -->
+                            <td>
+                                <span class="badge 
+                                    {% if item.is_active %}badge-success
+                                    {% else %}badge-secondary{% endif %}">
+                                    {{ '有効' if item.is_active else '無効' }}
+                                </span>
+                            </td>
+                            
+                            <!-- 操作 -->
+                            <td>
+                                <a href="{{ url_for('main_routes.edit_rating_item', store=store, item_id=item.item_id) }}" 
+                                   class="btn btn-sm btn-outline-primary btn-edit">
+                                    編集
+                                </a>
+                                <button onclick="deleteItem({{ item.item_id }}, '{{ item.item_name }}')" 
+                                        class="btn btn-sm btn-outline-danger btn-delete">
+                                    削除
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    評価項目が登録されていません。「新規登録」ボタンから最初の評価項目を登録してください。
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function moveItem(itemId, direction) {
+    fetch(`/{{ store }}/api/rating_item/move`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            item_id: itemId, 
+            direction: direction
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('エラー: ' + (data.error || '並び替えに失敗しました'));
+        }
+    })
+    .catch(error => {
+        alert('通信エラー: ' + error);
+    });
+}
+
+function deleteItem(itemId, itemName) {
+    if (!confirm(`「${itemName}」を削除してもよろしいですか？`)) {
+        return;
+    }
+    
+    fetch(`/{{ store }}/api/rating_item/delete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({item_id: itemId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || '削除しました');
+            location.reload();
+        } else {
+            alert('エラー: ' + (data.error || '削除に失敗しました'));
+        }
+    })
+    .catch(error => {
+        alert('通信エラー: ' + error);
+    });
+}
+</script>
+{% endblock %}

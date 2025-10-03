@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+<!-- 専用CSSを追加 -->
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+    <h1 class="dashboard-title">
+      ダッシュボード
+      <a href="javascript:void(0)" class="dashboard-pickup-btn" onclick="toggleAnnouncement()">お知らせ</a>
+    </h1>
+    
+    <div class="dashboard-save-section">
+      <button type="button" class="dashboard-save-btn" onclick="saveAllChanges()">現状の状態を保存</button>
+      <span id="saveMessage" class="dashboard-save-message">保存が完了しました。</span>
+    </div>
+
+    <div class="dashboard-refresh-section">
+      <button type="button" class="dashboard-refresh-btn" onclick="refreshDashboard()">更新</button>
+      <span id="refreshMessage" class="dashboard-refresh-message">更新が完了しました。</span>
+    </div>
+
+    
+
+  {% if success %}
+    <div class="dashboard-alert dashboard-alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="dashboard-alert dashboard-alert-error">{{ error }}</div>
+  {% endif %}
+
+  <!-- 日付ナビゲーション -->
+  <div class="dashboard-date-navigation">
+    <button class="dashboard-date-nav-btn" onclick="changeDate(-1)">◀</button>
+    <span class="dashboard-date-display" id="currentDateDisplay">{{ current_date_display }}</span>
+    <button class="dashboard-date-calendar-btn" onclick="openCalendarModal()">📅</button>
+    <button class="dashboard-date-nav-btn" onclick="changeDate(1)">▶</button>
+  </div>
+
+  <!-- お知らせエリア（更新ボタンとテーブルの間に配置） -->
+  <div id="announcementArea" class="announcement-area" style="display: {% if announcement.is_visible %}block{% else %}none{% endif %};">
+    <textarea 
+      id="announcementContent" 
+      class="announcement-textarea" 
+      placeholder="お知らせを入力してください..."
+      data-field="announcement"
+      data-store="{{ store }}">{{ announcement.content or '' }}</textarea>
+  </div>
+
+  <!-- 送迎記録テーブル -->
+  <div class="dashboard-table-container">
+    <div class="dashboard-table-wrapper">
+      <table class="dashboard-table" id="pickupTable">
+        <tbody>
+          {% for record in pickup_records %}
+          <tr class="dashboard-record-row{% if record.is_completed %} dashboard-completed{% endif %}{% if record.is_entry %} dashboard-entry-row{% endif %}" 
+    id="record-{{ record.record_id }}" 
+    data-course-id="{{ record.course_id }}">
+            
+            <td class="dashboard-cell dashboard-time-cell">
+              {% if record.type == 'pickup' %}
+                <input type="time" class="dashboard-input dashboard-time-input" 
+                       id="time-{{ record.record_id }}"
+                       value="{{ record.entry_time if record.is_entry else record.exit_time }}"
+                       data-field="{% if record.is_entry %}entry_time{% else %}exit_time{% endif %}"
+                       data-record-id="{{ record.record_id }}">
+              {% else %}
+                <input type="time" class="dashboard-input dashboard-time-input" 
+                       id="time-{{ record.record_id }}"
+                       value="{{ record.entry_time }}"
+                       data-field="entry_time"
+                       data-record-id="{{ record.record_id }}">
+              {% endif %}
+            </td>
+            
+            <!-- 指名バッジセル -->
+            <td class="dashboard-cell dashboard-nomination-cell">
+              {% if record.type == 'pickup' and record.nomination_type %}
+                <span class="dashboard-nomination-badge dashboard-nomination-{{ record.nomination_type }}">
+                  {% if record.nomination_type == '本指名' %}本
+                  {% elif record.nomination_type == '店リピ' %}リ
+                  {% elif record.nomination_type == '新規' %}新
+                  {% elif record.nomination_type == 'フリー' %}フ
+                  {% endif %}
+                </span>
+              {% endif %}
+            </td>
+            
+            {% if record.type == 'pickup' %}
+              <td class="dashboard-cell dashboard-cast-cell">
+                <select class="dashboard-input dashboard-cast-select" 
+                        id="cast-{{ record.record_id }}"
+                        data-field="cast_id"
+                        data-record-id="{{ record.record_id }}">
+                  <option value="">キャストを選択</option>
+                  {% for cast in casts %}
+                    <option value="{{ cast.cast_id }}" {% if cast.cast_id == record.cast_id %}selected{% endif %}>
+                      {{ cast.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="dashboard-cell dashboard-hotel-cell">
+                <select class="dashboard-input dashboard-hotel-select" 
+                        id="hotel-{{ record.record_id }}"
+                        data-field="hotel_id"
+                        data-record-id="{{ record.record_id }}">
+                  <option value="">ホテルを選択</option>
+                  {% for hotel in hotels %}
+                    <option value="{{ hotel.hotel_id }}" {% if hotel.hotel_id == record.hotel_id %}selected{% endif %}>
+                      {{ hotel.hotel_name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+            {% else %}
+              <td class="dashboard-cell dashboard-content-cell" colspan="2">
+                <input type="text" class="dashboard-input dashboard-content-input" 
+                       id="content-{{ record.record_id }}"
+                       value="{{ record.content }}"
+                       data-field="content"
+                       data-record-id="{{ record.record_id }}">
+              </td>
+            {% endif %}
+            
+            <td class="dashboard-cell dashboard-staff-cell">
+              <select class="dashboard-input dashboard-staff-select" 
+                      id="staff-{{ record.record_id }}"
+                      onchange="updateStaffColor({{ record.record_id }}, this)" 
+                      style="background-color: {{ record.staff_color or '#ffffff' }};"
+                      data-field="staff_id"
+                      data-record-id="{{ record.record_id }}">
+                <option value="">未定</option>
+                {% for staff in staff_list %}
+                  <option value="{{ staff.login_id }}" data-color="{{ staff.color }}" {% if staff.login_id == record.staff_id %}selected{% endif %}>{{ staff.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            
+            <td class="dashboard-cell dashboard-inout-cell">
+              <span class="dashboard-badge{% if record.is_entry %} dashboard-badge-entry{% else %} dashboard-badge-exit{% endif %}">
+                {% if record.is_entry %}入{% else %}出{% endif %}
+              </span>
+            </td>
+            
+            <!-- 退室行のみにお釣りボタンを追加 -->
+            {% if not record.is_entry %}
+            <td class="dashboard-cell change-button-cell">
+              <button class="change-modal-btn" onclick="openChangeModal({{ record.record_id }})">お釣り</button>
+            </td>
+            {% else %}
+            <td class="dashboard-cell change-button-cell">
+              <!-- 入室行は空のセル -->
+            </td>
+            {% endif %}
+            
+            <td class="dashboard-cell dashboard-completed-cell">
+              <button class="dashboard-btn{% if record.is_completed %} dashboard-btn-completed{% else %} dashboard-btn-uncompleted{% endif %}" 
+                      onclick="toggleCompleted({{ record.record_id }})">
+                {% if record.is_completed %}済{% else %}未{% endif %}
+              </button>
+            </td>
+            
+            <td class="dashboard-cell dashboard-memo-cell">
+              <button class="dashboard-btn dashboard-memo-btn" onclick="toggleMemo({{ record.record_id }})">メモ</button>
+            </td>
+            
+            <td class="dashboard-cell dashboard-delete-cell">
+              <button class="dashboard-btn dashboard-delete-btn" onclick="deleteRecord({{ record.record_id }})">削除</button>
+            </td>
+          </tr>
+          <!-- メモ行（非表示） -->
+          <tr class="dashboard-memo-row" id="memo-row-{{ record.record_id }}" style="display: {% if record.memo_expanded %}table-row{% else %}none{% endif %};">
+            <td class="dashboard-memo-cell-full" colspan="10">
+              <textarea class="dashboard-memo-textarea" 
+                        id="memo-{{ record.record_id }}" 
+                        rows="2" 
+                        placeholder="メモを入力..."
+                        data-record-id="{{ record.record_id }}"
+                        data-field="memo">{{ record.memo or '' }}</textarea>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if not pickup_records %}
+    <p class="dashboard-no-records">この日の送迎記録はありません。</p>
+  {% endif %}
+
+  <!-- お釣り登録モーダル -->
+  <div id="changeModal" class="change-modal">
+    <div class="change-modal-content">
+      <div class="change-modal-header">
+        <h3>お釣り登録</h3>
+        <span class="change-modal-close" onclick="closeChangeModal()">&times;</span>
+      </div>
+      
+      <!-- キャスト名表示エリア -->
+      <div class="change-cast-info">
+        <span class="change-cast-label">キャスト:</span>
+        <span id="changeCastName" class="change-cast-name">未選択</span>
+      </div>
+      
+      <form id="changeForm" onsubmit="submitChange(event)">
+        <input type="hidden" id="changeRecordId" name="record_id">
+        
+        <div class="change-form-group">
+          <label for="changeReceivedAmount">預かり金:</label>
+          <input type="number" id="changeReceivedAmount" name="received_amount" required placeholder="15000">
+        </div>
+        
+        <div class="change-form-group">
+          <label for="changeAmount">お釣り:</label>
+          <input type="number" id="changeAmount" name="change_amount" required placeholder="3000">
+        </div>
+        
+        <div class="change-form-group">
+          <label for="changePaymentMethod">方法:</label>
+          <select id="changePaymentMethod" name="payment_method" required>
+            <option value="現金">現金</option>
+            <option value="カード">カード</option>
+            <option value="後払い">後払い</option>
+          </select>
+        </div>
+        
+        <div class="change-form-buttons">
+          <button type="button" class="change-cancel-btn" onclick="closeChangeModal()">キャンセル</button>
+          <button type="submit" class="change-submit-btn">登録</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- カレンダーモーダル -->
+  <div id="calendarModal" class="calendar-modal">
+    <div class="calendar-modal-content">
+      <div class="calendar-modal-header">
+        <h3>日付を選択</h3>
+        <span class="calendar-modal-close" onclick="closeCalendarModal()">&times;</span>
+      </div>
+      
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
+          <h4 id="calendarMonthYear">2024年9月</h4>
+          <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
+        </div>
+        
+        <div class="calendar-grid">
+          <div class="calendar-weekdays">
+            <div class="calendar-weekday">日</div>
+            <div class="calendar-weekday">月</div>
+            <div class="calendar-weekday">火</div>
+            <div class="calendar-weekday">水</div>
+            <div class="calendar-weekday">木</div>
+            <div class="calendar-weekday">金</div>
+            <div class="calendar-weekday">土</div>
+          </div>
+          <div class="calendar-days" id="calendarDays">
+            <!-- 日付がJavaScriptで動的に生成される -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// URLを設定（JavaScriptファイルで使用）
+window.dashboardUrls = {
+  store: "/{{ store }}"
+};
+
+// 現在の日付情報をJavaScriptで利用
+window.currentDate = "{{ current_date }}";
+</script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+{% endblock %}

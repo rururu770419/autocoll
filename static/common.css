@@ -1,0 +1,1349 @@
+/* ==========================
+   リセットCSS＆基本設定
+   ========================== */
+   * {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* ==========================
+   ユーティリティクラス
+   ========================== */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* ==========================
+   コンテナレイアウト
+   ========================== */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+
+.col-left {
+    flex: 0 0 50%;
+    padding: 0 15px;
+}
+
+.col-right {
+    flex: 0 0 50%;
+    padding: 0 15px;
+}
+
+/* ==========================
+   ヘッダー（PC版でサイドナビ対応）
+   ========================== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.user-info {
+    margin-left: auto;
+    padding-right: 15px;
+    font-size: 1.1em;
+}
+
+.hamburger-menu {
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 0;
+    margin-right: 15px;
+}
+
+.hamburger-menu .line {
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+/* ==========================
+   サイドナビゲーション
+   ========================== */
+.nav-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 250px;
+    height: 100%;
+    background-color: #222;
+    color: white;
+    padding-top: 60px;
+    transition: left 0.3s ease;
+    z-index: 999;
+}
+
+.nav-menu.active {
+    left: 0;
+}
+
+.nav-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-menu li a {
+    display: block;
+    padding: 10px;
+    font-size: 16px;
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid #444;
+}
+
+.nav-menu li a:hover {
+    background-color: #444;
+}
+
+/* ==========================
+   コンテンツエリア
+   ========================== */
+.content {
+    margin-top: 60px;
+    padding: 20px;
+}
+
+/* ==========================
+   PC版レイアウト (769px以上)
+   ========================== */
+@media (min-width: 769px) {
+    /* ハンバーガーメニューを非表示 */
+    .hamburger-menu {
+        display: none;
+    }
+    
+    /* サイドナビを常時表示 */
+    .nav-menu {
+        left: 0;
+        position: fixed;
+        width: 200px;
+    }
+    
+    /* コンテンツエリアをサイドナビ分右に移動 */
+    .content {
+        margin-left: 200px;
+        margin-top: 60px;
+        padding: 20px;
+    }
+    
+    /* ページレイアウト調整 */
+    .page-layout {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+    }
+    
+    .form-section {
+        flex: 0 0 45%;
+    }
+    
+    .table-section {
+        flex: 0 0 55%;
+    }
+}
+
+/* ==========================
+   フォーム要素
+   ========================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-input,
+.form-control,
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-input:focus,
+.form-control:focus,
+.form-select:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-input::placeholder,
+.form-control::placeholder {
+    color: #999;
+    opacity: 0.5;
+}
+
+/* ==========================
+   共通ボタンスタイル
+   ========================== */
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 8px 16px;
+    font-size: 16px;
+    line-height: 1.5;
+    border-radius: 6px;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* 登録ボタン - 薄い緑、全幅 */
+.btn-register {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #00ced1;
+    border-color: #00ced1;
+    color: #FFFFFF;
+    font-weight: 500;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 6px;
+}
+
+.btn-register:hover {
+    background-color: #08abad;
+    border-color: #08abad;
+    color: #FFFFFF;
+    text-decoration: none;
+}
+
+/* 編集ボタン - 緑 */
+.btn-edit {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+.btn-edit:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 削除ボタン - 赤 */
+.btn-delete {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+    padding: 4px 6px;
+    font-size: 14px;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* その他のボタン */
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 送迎ページ用のダッシュボードリンクボタン */
+.btn-sougei {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #1d3cee;
+    color: #ffffff;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 400;
+    text-align: center;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-sougei:hover {
+    background-color: #0e28bc;
+    border-color: #1d3cee;
+    color: #FFFFFF;
+    text-decoration: none;
+}
+
+/* ==========================
+   テーブル共通スタイル
+   ========================== */
+.table {
+    width: 100%;
+    margin-bottom: 20px;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 6px;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================
+   カード
+   ========================== */
+.card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* ==========================
+   ページタイトル
+   ========================== */
+h1 {
+    font-size: 1.75rem;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* ==========================
+   メッセージ
+   ========================== */
+.alert {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+/* ==========================
+   チェックボックス・ラジオボタンのボタン風スタイル
+   ========================== */
+.form-check {
+    position: relative;
+    display: inline-block;
+    margin-right: 4px;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-left: 0;
+    min-height: auto;
+}
+
+.form-check:first-child {
+    margin-left: 0;
+}
+
+.form-check-input[type="radio"],
+.form-check-input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.form-check-label {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #ffffff;
+    border: 1px solid #e91e63;
+    color: #e91e63;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 400;
+    text-align: center;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    box-sizing: border-box;
+    text-decoration: none;
+    vertical-align: middle;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.form-check-input:checked + .form-check-label {
+    background-color: #e91e63;
+    border-color: #e91e63;
+    color: #ffffff;
+}
+
+.form-check-label:hover {
+    background-color: #d81b60;
+    border-color: #d81b60;
+    color: #ffffff;
+}
+
+/* ==========================
+   モーダル
+   ========================== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    display: block;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    max-width: 500px;
+    margin: 1.75rem auto;
+    pointer-events: none;
+}
+
+.modal-dialog-lg {
+    max-width: 800px;
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.modal-title {
+    margin-bottom: 0;
+    line-height: 1.5;
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.btn-close {
+    padding: 0.25rem 0.25rem;
+    margin: -0.25rem -0.25rem -0.25rem auto;
+    background: transparent;
+    border: 0;
+    border-radius: 0.25rem;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    opacity: 0.75;
+}
+
+.btn-close::before {
+    content: "×";
+    font-size: 1.5rem;
+}
+
+/* ==========================
+   入力グループ
+   ========================== */
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group > .form-control,
+.input-group > .form-select {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group > .btn {
+    position: relative;
+    z-index: 2;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* ==========================
+   リストグループ
+   ========================== */
+.list-group {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+    border-radius: 6px;
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 0.75rem 1.25rem;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    margin-bottom: -1px;
+}
+
+.list-group-item:first-child {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.list-group-item:last-child {
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+/* ==========================
+   スマホレイアウト (768px以下)
+   ========================== */
+@media (max-width: 768px) {
+    /* スマホではスライド式を維持 */
+    .hamburger-menu {
+        display: flex;
+        width: 25px;
+        height: 25px;
+        margin-right: 10px;
+    }
+    
+    .nav-menu {
+        left: -300px;
+        width: 220px;
+        padding-top: 50px;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    /* ヘッダー調整 */
+    .header {
+        height: 50px;
+        padding: 0 10px;
+    }
+    
+    .user-info {
+        font-size: 0.9rem;
+        padding-right: 10px;
+    }
+    
+    .content {
+        margin-top: 50px;
+        margin-left: 0;
+        padding: 15px 10px;
+    }
+    
+    .nav-menu li a {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    /* コンテナ調整 */
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .row {
+        margin: 0;
+    }
+    
+    .col-left,
+    .col-right {
+        flex: 0 0 100%;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    /* 見出し調整 */
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+    
+    /* フォーム調整 */
+    .form-input,
+    .form-control,
+    .form-select {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+    
+    /* ボタン調整 */
+    .btn {
+        margin-bottom: 5px;
+        margin-right: 5px;
+    }
+    
+    .btn-register {
+        padding: 14px;
+        font-size: 16px;
+    }
+    
+    /* テーブル調整 */
+    .table-responsive {
+        border: none;
+        margin: 0 -10px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 4px;
+        font-size: 14px;
+    }
+    
+    .table .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        margin: 2px;
+    }
+    
+    /* カード調整 */
+    .card {
+        margin-bottom: 20px;
+        border-radius: 10px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    /* モーダル調整 */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: none;
+    }
+    
+    .modal-header,
+    .modal-body {
+        padding: 15px;
+    }
+}
+/* ==========================
+   メニューオーバーレイ（スマホ版のみ）
+   ========================== */
+   .nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* PC版では非表示 */
+@media (min-width: 769px) {
+    .nav-overlay {
+        display: none !important;
+    }
+}
+/* ==========================
+   金銭管理テーブル専用スタイル
+   ========================== */
+
+/* 金銭管理テーブル全体 */
+.money-table {
+    width: 100%;
+    margin-bottom: 20px;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+/* ヘッダー行 */
+.money-table th {
+    padding: 12px 8px;
+    border-bottom: 2px solid #dee2e6;
+    text-align: center;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* 通常のデータ行 */
+.money-table-row td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+    background-color: #ffffff;
+    font-size: 14px;
+}
+
+/* 合計行 */
+.money-table-total td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+    background-color: #e3f2fd;
+    font-weight: bold;
+    font-size: 14px;
+    color: #1565c0;
+}
+
+/* キャスト間のスペーサー行 */
+.money-table-spacer td {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    height: 20px;
+    line-height: 1;
+}
+
+/* 削除ボタンのサイズ調整 */
+.money-table .btn-delete {
+    padding: 4px 8px;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ストライプ効果を無効化（金銭管理テーブルでは使わない） */
+.money-table tbody tr:nth-of-type(odd) {
+    background-color: transparent;
+}
+/* お釣り部分を赤くする */
+.money-change-amount {
+    color: #dc3545 !important; /* 赤色 */
+    font-weight: bold;
+}
+
+/* ==========================
+   新しいレイアウト用CSS
+   ========================== */
+
+/* メインレイアウト */
+.money-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* カレンダーセクション */
+.calendar-section {
+    flex: 0 0 320px;
+}
+
+/* 記録セクション */
+.records-section {
+    flex: 1;
+}
+
+/* カレンダーコンテナ */
+.calendar-container {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* カレンダーヘッダー */
+.calendar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+    min-width: 140px;
+    text-align: center;
+}
+
+/* 月切り替えボタン */
+.calendar-nav-btn {
+    background-color: #ffffff;
+    color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    min-width: 40px;
+}
+
+.calendar-nav-btn:hover:not(:disabled) {
+    background-color: #007bff;
+    color: white;
+}
+
+.calendar-nav-btn:disabled {
+    background-color: #f8f9fa;
+    color: #ccc;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+}
+
+/* カレンダーグリッド */
+.calendar-grid {
+    width: 100%;
+}
+
+/* 曜日ヘッダー */
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.calendar-weekday {
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    font-size: 12px;
+    background-color: #f8f9fa;
+}
+
+/* 日付グリッド */
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+/* 日付セル */
+.calendar-day {
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+    font-size: 14px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day:hover {
+    background-color: #e9ecef;
+}
+
+/* 他の月の日付 */
+.calendar-day.other-month {
+    color: #ccc;
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.calendar-day.other-month:hover {
+    background-color: #f8f9fa;
+}
+
+/* 今日の日付 */
+.calendar-day.today {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day.today:hover {
+    background-color: #0056b3;
+}
+
+/* 選択中の日付 */
+.calendar-day.selected {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day.selected:hover {
+    background-color: #1e7e34;
+}
+
+/* 記録がある日付 */
+.calendar-day.has-records {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+.calendar-day.has-records:hover {
+    background-color: #ffeaa7;
+}
+
+/* 記録がある日付で今日の場合 */
+.calendar-day.has-records.today {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.calendar-day.has-records.today:hover {
+    background-color: #e8650e;
+}
+
+/* アクセス不可の日付 */
+.calendar-day.disabled {
+    color: #ccc;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.calendar-day.disabled:hover {
+    background-color: #f8f9fa;
+}
+
+/* ==========================
+   レスポンシブ対応
+   ========================== */
+@media (max-width: 768px) {
+    .money-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .calendar-section {
+        flex: none;
+        order: 2;
+    }
+    
+    .records-section {
+        order: 1;
+    }
+    
+    .calendar-container {
+        padding: 15px;
+    }
+    
+    .calendar-day {
+        padding: 8px 4px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+    
+    .money-table th,
+    .money-table td {
+        padding: 6px 4px;
+        font-size: 12px;
+    }
+    
+    .money-table .btn-delete {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+}
+
+/* ==========================
+   階層メニュー専用CSS
+   ========================== */
+
+/* 親メニューアイテム */
+.nav-parent {
+    position: relative;
+}
+
+.nav-parent-link {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid #444;
+}
+
+.nav-parent-link:hover {
+    background-color: #444;
+}
+
+/* 矢印アイコン */
+.nav-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+.btn-yazirusi {
+    padding: 0 8px;
+    text-decoration: none;
+    background-color: #28a745;
+    color: #fff;
+    border-radius: 6px;
+}
+.btn-yazirusi:hover {
+    background-color: #12812c;
+    transition: color 0.15s 
+ease-in-out, background-color 0.15s 
+ease-in-out, border-color 0.15s 
+ease-in-out, box-shadow 0.15s 
+ease-in-out;
+    cursor: pointer;
+}
+@media (min-width: 769px) {
+.form-div-left {
+    width: 30%;
+}
+.table-div-right {
+    width: 70%;
+}
+}
+/* サブメニュー */
+.nav-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    background-color: #1a1a1a;
+    transition: max-height 0.3s ease;
+}
+
+.nav-submenu.nav-submenu-open {
+    max-height: 340px; /* サブメニューアイテム数に応じて調整 */
+}
+
+.nav-submenu li {
+    margin: 0;
+}
+
+.nav-submenu li a {
+    display: block;
+    padding: 8px 30px;
+    color: #ccc;
+    text-decoration: none;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+
+.nav-submenu li a:hover {
+    background-color: #333;
+    color: white;
+}
+
+/* 最後のサブメニューアイテムの境界線を非表示 */
+.nav-submenu li:last-child a {
+    border-bottom: none;
+}
+
+/* PC版での調整 */
+@media (min-width: 769px) {
+    .nav-parent-link {
+        padding: 10px;
+    }
+    
+    .nav-submenu li a {
+        padding: 8px 25px;
+    }
+}
+
+/* スマホ版での調整 */
+@media (max-width: 768px) {
+    .nav-parent-link {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    .nav-submenu li a {
+        padding: 10px 35px;
+        font-size: 15px;
+    }
+}
+
+/* スタッフ編集専用スタイル */
+.staff-edit-form .form-group {
+    margin-bottom: 20px;
+}
+
+.line-setup-section h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.line-notification-form .form-group {
+    margin-bottom: 18px;
+}
+
+.form-text.text-muted {
+    font-size: 12px;
+    color: #666 !important;
+    margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+    .col-left, .col-right {
+        flex: 0 0 100%;
+        margin-bottom: 20px;
+    }
+    
+    .line-qr-container div {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+/* スタッフ一覧専用のスタイル */
+.staff-list-table th {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.staff-list-table td {
+  font-size: 13px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 12px 8px;
+}
+
+.staff-list-row:hover {
+  background-color: #f5f5f5;
+}
+
+.staff-actions-cell form {
+  margin: 0;
+}
+
+.staff-list-actions {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+  .staff-list-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .staff-list-table th,
+  .staff-list-table td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+  
+  .staff-list-table .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    margin: 2px;
+  }
+}
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #b0b0b0 !important;
+        opacity: 1 !important;
+    }
+    
+    .option-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+    
+    .option-row input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .option-row input[type="text"] {
+        flex: 1;
+    }
+    
+    .option-row .delete-btn {
+        padding: 5px 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .add-option-btn {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    #optionsArea {
+        display: none;
+    }
+.btn-outline-secondary {
+    padding: 2px 6px;
+    background-color: #28a745;
+    color: #fff;
+    font-size: 12px;
+    }
+
+.btn-koushin-rating {
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: #fff;
+    }

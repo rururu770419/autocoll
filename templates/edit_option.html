@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}
+  オプション編集 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>オプション編集</h1>
+
+    {% if success %}
+      <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main_routes.update_option_route', store=store, option_id=option.option_id) }}">
+          <div class="form-group">
+            <label for="name" class="form-label">オプション名 (必須):</label>
+            <input type="text" class="form-control" id="name" name="name" required value="{{ option.name }}" placeholder="例）延長30分">
+          </div>
+          
+          <div class="form-group">
+            <label for="price" class="form-label">金額 (必須):</label>
+            <input type="number" class="form-control" id="price" name="price" required min="0" value="{{ option.price }}" placeholder="例）3000" step="1">
+            <small style="color: #6c757d; font-size: 0.875em;">金額は円単位で入力してください</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="cast_back_amount" class="form-label">バック金額 (必須):</label>
+            <input type="number" class="form-control" id="cast_back_amount" name="cast_back_amount" required min="0" value="{{ option.cast_back_amount }}" placeholder="例）1500" step="1">
+            <small style="color: #6c757d; font-size: 0.875em;">キャストへのバック金額を円単位で入力してください</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="is_active" class="form-label">状態設定:</label>
+            <select class="form-select" id="is_active" name="is_active">
+              <option value="true" {% if option.is_active %}selected{% endif %}>有効</option>
+              <option value="false" {% if not option.is_active %}selected{% endif %}>無効</option>
+            </select>
+            <small style="color: #6c757d; font-size: 0.875em;">無効にするとキャスト登録時に選択肢に表示されません</small>
+          </div>
+          
+          <div style="margin-top: 30px;">
+            <button type="submit" class="btn btn-success">更新</button>
+            <a href="{{ url_for('main_routes.options', store=store) }}" class="btn btn-secondary">キャンセル</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <h3>オプション情報</h3>
+      <table class="table">
+        <tr>
+          <th>オプションID</th>
+          <td>{{ option.option_id }}</td>
+        </tr>
+        <tr>
+          <th>並び順</th>
+          <td>{{ option.sort_order }}</td>
+        </tr>
+        <tr>
+          <th>登録日時</th>
+          <td>{{ option.created_at.strftime('%Y-%m-%d %H:%M:%S') if option.created_at else '不明' }}</td>
+        </tr>
+        <tr>
+          <th>更新日時</th>
+          <td>{{ option.updated_at.strftime('%Y-%m-%d %H:%M:%S') if option.updated_at else '不明' }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  // フォームバリデーション
+  document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('form');
+      const priceInput = document.getElementById('price');
+      const castBackAmountInput = document.getElementById('cast_back_amount');
+      
+      function validateAmounts() {
+          const price = parseInt(priceInput.value) || 0;
+          const castBackAmount = parseInt(castBackAmountInput.value) || 0;
+          
+          if (castBackAmount > price) {
+              castBackAmountInput.setCustomValidity('バック金額は金額以下で入力してください');
+          } else {
+              castBackAmountInput.setCustomValidity('');
+          }
+      }
+      
+      priceInput.addEventListener('input', validateAmounts);
+      castBackAmountInput.addEventListener('input', validateAmounts);
+      
+      form.addEventListener('submit', function(e) {
+          validateAmounts();
+          if (!castBackAmountInput.checkValidity()) {
+              e.preventDefault();
+              alert('バック金額は金額以下で入力してください');
+          }
+      });
+  });
+  </script>
+{% endblock %}

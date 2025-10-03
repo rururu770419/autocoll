@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}
+  ホテル編集 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+  <h1>ホテル編集</h1>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <div class="page-layout">
+    <!-- ホテル編集フォーム -->
+    <div class="form-div-left">
+      <h2>ホテル情報編集</h2>
+      <form method="post" action="{{ url_for('main_routes.edit_hotel', store=store, hotel_id=hotel.hotel_id) }}">
+        <div class="form-group">
+          <label for="name" class="form-label">ホテル名 (必須):</label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ hotel.hotel_name }}" required placeholder="例）○○ホテル">
+        </div>
+        <div class="form-group">
+          <label for="category_id" class="form-label">ホテル種別 (必須):</label>
+          <select class="form-control" id="category_id" name="category_id" required>
+            <option value="">ホテル種別を選択してください</option>
+            {% for category in categories %}
+              <option value="{{ category.category_id }}" {% if category.category_id == hotel.category_id %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="area_id" class="form-label">エリア (必須):</label>
+          <select class="form-control" id="area_id" name="area_id" required>
+            <option value="">エリアを選択してください</option>
+            {% for area in areas %}
+              <option value="{{ area.area_id }}" {% if area.area_id == hotel.area_id %}selected{% endif %}>{{ area.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="is_active" class="form-label">
+            <input type="checkbox" id="is_active" name="is_active" {% if hotel.is_active %}checked{% endif %}> 
+            有効
+          </label>
+        </div>
+        <div>
+          <button type="submit" class="btn-register">更新</button>
+          <a href="{{ url_for('main_routes.register_hotel', store=store) }}" class="btn btn-secondary">キャンセル</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- 現在の情報表示 -->
+    <div class="table-div-right">
+      <h2>現在のホテル情報</h2>
+      <div class="card">
+        <div class="card-body">
+          <table class="table">
+            <tr>
+              <th style="width: 30%; text-align: left;">ホテル名</th>
+              <td style="text-align: left;">{{ hotel.hotel_name }}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left;">ホテル種別</th>
+              <td style="text-align: left;">{{ hotel.category_name }}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left;">エリア</th>
+              <td style="text-align: left;">{{ hotel.area_name }}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left;">交通費</th>
+              <td style="text-align: left;">{{ (hotel.transportation_fee if hotel.transportation_fee is not none else 0) }}円</td>
+            </tr>
+            <tr>
+              <th style="text-align: left;">所要時間</th>
+              <td style="text-align: left;">{{ hotel.travel_time_minutes if hotel.travel_time_minutes is not none else 0 }}分</td>
+            </tr>
+            <tr>
+              <th style="text-align: left;">状態</th>
+              <td style="text-align: left;">{{ '有効' if hotel.is_active else '無効' }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      
+      <!-- 削除ボタン -->
+      <div style="margin-top: 20px;">
+        <form method="post" action="{{ url_for('main_routes.delete_hotel', store=store, hotel_id=hotel.hotel_id) }}" style="display: inline;">
+          <button type="submit" class="btn btn-delete" onclick="return confirm('本当にこのホテルを削除しますか？削除すると元に戻せません。')">このホテルを削除</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

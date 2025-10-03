@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}
+  送迎登録 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1>送迎登録</h1>
+    <a href="{{ url_for('main_routes.store_home', store=session['store']) }}" class="btn-sougei">ダッシュボード</a>
+  </div>
+  
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-body">
+      <!-- 登録タイプ選択 -->
+      <div class="form-group">
+        <div class="form-check form-check-inline">
+          <input type="radio" class="form-check-input" id="type_pickup" name="pickup_type" value="pickup" checked onchange="toggleForm()">
+          <label class="form-check-label" for="type_pickup">送迎</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input type="radio" class="form-check-input" id="type_other" name="pickup_type" value="other" onchange="toggleForm()">
+          <label class="form-check-label" for="type_other">その他</label>
+        </div>
+      </div>
+
+      <!-- 送迎登録フォーム -->
+      <form id="pickupForm" method="post" action="{{ url_for('main_routes.pickup_register', store=store) }}">
+        <input type="hidden" name="type" id="formType" value="pickup">
+        
+        <!-- 日付フィールド（共通） -->
+        <div class="form-group" style="margin-bottom: 25px;">
+          <label for="record_date" class="form-label">登録日:</label>
+          <input type="date" class="form-control" id="record_date" name="record_date" required style="max-width: 200px;">
+        </div>
+        
+        <!-- 送迎用フィールド -->
+        <div id="pickupFields">
+          <div class="row">
+            <div class="col-left">
+              <div class="form-group">
+                <label for="entry_time" class="form-label">入室時間 (必須):</label>
+                <input type="time" class="form-control" id="entry_time" name="entry_time" required>
+              </div>
+            </div>
+            <div class="col-right">
+              <div class="form-group">
+                <label for="course_id" class="form-label">コース (必須):</label>
+                <select class="form-control" id="course_id" name="course_id" required>
+                  <option value="">コースを選択してください</option>
+                  {% for course in courses %}
+                    <option value="{{ course.course_id }}" data-time="{{ course.time }}">{{ course.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-left">
+              <div class="form-group">
+                <label for="cast_id" class="form-label">キャスト名 (必須):</label>
+                <select class="form-control" id="cast_id" name="cast_id" required>
+                  <option value="">キャストを選択してください</option>
+                  {% for cast in casts %}
+                    <option value="{{ cast.cast_id }}">{{ cast.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <!-- 指名選択を追加 -->
+              <div class="form-group">
+                <label class="form-label">指名 (必須):</label>
+                <div class="form-check form-check-inline">
+                  <input type="radio" class="form-check-input" id="nomination_honshimei" name="nomination_type" value="本指名" checked required>
+                  <label class="form-check-label" for="nomination_honshimei">本指名</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input type="radio" class="form-check-input" id="nomination_tenripi" name="nomination_type" value="店リピ" required>
+                  <label class="form-check-label" for="nomination_tenripi">店リピ</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input type="radio" class="form-check-input" id="nomination_shinki" name="nomination_type" value="新規" required>
+                  <label class="form-check-label" for="nomination_shinki">新規</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input type="radio" class="form-check-input" id="nomination_free" name="nomination_type" value="フリー" required>
+                  <label class="form-check-label" for="nomination_free">フリー</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-right">
+              <div class="form-group">
+                <label for="hotel_id" class="form-label">ホテル名 (必須):</label>
+                <select class="form-control" id="hotel_id" name="hotel_id" required>
+                  <option value="">ホテルを選択してください</option>
+                  {% for hotel in hotels %}
+                    <option value="{{ hotel.hotel_id }}">{{ hotel.hotel_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- その他用フィールド -->
+        <div id="otherFields" style="display: none;">
+          <div class="form-group">
+            <label for="content" class="form-label">内容 (必須):</label>
+            <textarea class="form-control" id="content" name="content" rows="3" placeholder="その他の内容を入力してください"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="start_time" class="form-label">開始時間 (必須):</label>
+            <input type="time" class="form-control" id="start_time" name="start_time">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-register">登録</button>
+        
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// 今日の日付を取得してデフォルト値に設定
+function setDefaultDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayString = `${year}-${month}-${day}`;
+  
+  document.getElementById('record_date').value = todayString;
+}
+
+function toggleForm() {
+  const pickupRadio = document.getElementById('type_pickup');
+  const otherRadio = document.getElementById('type_other');
+  const pickupFields = document.getElementById('pickupFields');
+  const otherFields = document.getElementById('otherFields');
+  const formType = document.getElementById('formType');
+  
+  // 送迎用のフィールド
+  const entryTime = document.getElementById('entry_time');
+  const courseId = document.getElementById('course_id');
+  const castId = document.getElementById('cast_id');
+  const hotelId = document.getElementById('hotel_id');
+  const nominationRadios = document.querySelectorAll('input[name="nomination_type"]');
+  
+  // その他用のフィールド
+  const content = document.getElementById('content');
+  const startTime = document.getElementById('start_time');
+  
+  if (pickupRadio.checked) {
+    // 送迎モード
+    pickupFields.style.display = 'block';
+    otherFields.style.display = 'none';
+    formType.value = 'pickup';
+    
+    // 送迎フィールドを必須に
+    entryTime.required = true;
+    courseId.required = true;
+    castId.required = true;
+    hotelId.required = true;
+    nominationRadios.forEach(radio => radio.required = true);
+    
+    // その他フィールドを非必須に
+    content.required = false;
+    startTime.required = false;
+    
+  } else if (otherRadio.checked) {
+    // その他モード
+    pickupFields.style.display = 'none';
+    otherFields.style.display = 'block';
+    formType.value = 'other';
+    
+    // 送迎フィールドを非必須に
+    entryTime.required = false;
+    courseId.required = false;
+    castId.required = false;
+    hotelId.required = false;
+    nominationRadios.forEach(radio => radio.required = false);
+    
+    // その他フィールドを必須に
+    content.required = true;
+    startTime.required = true;
+  }
+}
+
+// ページ読み込み時に初期状態を設定
+document.addEventListener('DOMContentLoaded', function() {
+  setDefaultDate(); // 日付のデフォルト値を設定
+  toggleForm();
+});
+</script>
+
+{% endblock %}

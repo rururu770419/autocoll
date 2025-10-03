@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+{% endblock %}
+
+{% block title %}キャスト管理 - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>キャスト管理</h2>
+    
+    <!-- 新規登録ボタン -->
+    <div class="mb-3">
+        <a href="{{ url_for('main_routes.register_cast', store=store) }}" class="btn btn-primary cast-btn-registration">
+            新規登録
+        </a>
+    </div>
+    
+    <!-- キャスト一覧テーブル -->
+    <div class="card">
+        <div class="card-header">
+        
+        </div>
+        <div class="card-body">
+            {% if casts %}
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>キャスト名</th>
+                            <th>年齢</th>
+                            <th>ステータス</th>
+                            <th>ログインID</th>
+                            <th>対応コース</th>
+                            <th>交通費</th>
+                            <th>コメント</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cast in casts %}
+                        <tr>
+                            <!-- キャスト名 -->
+                            <td>{{ cast.name }}</td>
+                            
+                            <!-- 年齢 -->
+                            <td>
+                                {% if cast.age %}
+                                    {{ cast.age }}歳
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- ステータス -->
+                            <td>
+                                <span class="badge 
+                                    {% if cast.status == '在籍' %}badge-success
+                                    {% elif cast.status == '休職' %}badge-warning
+                                    {% elif cast.status == '退職' %}badge-secondary
+                                    {% else %}badge-secondary{% endif %}">
+                                    {{ cast.status or '未設定' }}
+                                </span>
+                            </td>
+                            
+                            <!-- ログインID -->
+                            <td>{{ cast.login_id or '-' }}</td>
+                            
+                            <!-- 対応コース -->
+                            <td>
+                                {% if cast.available_course_categories %}
+                                    {% set courses = cast.available_course_categories | parse_json %}
+                                    {% if courses %}
+                                        {{ courses | join(', ') }}
+                                    {% else %}
+                                        <span class="text-muted">未設定</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">未設定</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 交通費 -->
+                            <td>
+                                {% if cast.transportation_fee %}
+                                    {{ cast.transportation_fee }}円
+                                {% else %}
+                                    <span class="text-muted">0円</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- コメント -->
+                            <td>
+                                {% if cast.comments %}
+                                    {% if cast.comments | length > 20 %}
+                                        {{ cast.comments[:20] }}...
+                                    {% else %}
+                                        {{ cast.comments }}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 操作 -->
+                            <td>
+                                <a href="{{ url_for('main_routes.edit_cast', store=store, cast_id=cast.cast_id) }}" 
+                                   class="btn btn-sm btn-outline-primary btn-edit">
+                                    編集
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    キャストが登録されていません。「新規登録」ボタンから最初のキャストを登録してください。
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+{% endblock %}
+
+{% block title %}評価項目編集 - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>評価項目編集</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form id="editForm">
+                <input type="hidden" id="item_id" value="{{ item.item_id }}">
+                
+                <!-- 項目名 -->
+                <div class="form-group">
+                    <label for="item_name">項目名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="item_name" 
+                           value="{{ item.item_name }}" required>
+                </div>
+                
+                <!-- 評価タイプ -->
+                <div class="form-group">
+                    <label for="item_type">評価タイプ <span class="text-danger">*</span></label>
+                    <select class="form-control" id="item_type" required>
+                        <option value="radio" {% if item.item_type == 'radio' %}selected{% endif %}>
+                            ラジオボタン（1つだけ選択）
+                        </option>
+                        <option value="checkbox" {% if item.item_type == 'checkbox' %}selected{% endif %}>
+                            チェックボックス（複数選択可）
+                        </option>
+                        <option value="textarea" {% if item.item_type == 'textarea' %}selected{% endif %}>
+                            テキストエリア（自由記述）
+                        </option>
+                    </select>
+                </div>
+                
+                <!-- 選択肢設定（ラジオ・チェックボックスの場合のみ表示） -->
+                <div id="options-section" {% if item.item_type == 'textarea' %}style="display:none;"{% endif %}>
+                    <label>選択肢設定</label>
+                    <div id="options-container">
+                        {% for option in item.options_list %}
+                        <div class="option-item mb-2">
+                            <div class="input-group">
+                                <input type="text" class="form-control option-value" 
+                                       value="{{ option.value }}" placeholder="選択肢を入力">
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" class="option-enabled" 
+                                               {% if option.enabled %}checked{% endif %}>
+                                        <label class="mb-0 ml-1">有効</label>
+                                    </div>
+                                    <button type="button" class="btn btn-danger btn-sm btn-delete" 
+                                            onclick="removeOption(this)">削除</button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm mt-2" 
+                            onclick="addOption()">
+                        選択肢を追加
+                    </button>
+                </div>
+                
+                <!-- 有効/無効 -->
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" 
+                               {% if item.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            この項目を有効にする
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- ボタン -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-koushin-rating">更新</button>
+                    <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" 
+                       class="btn btn-secondary">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 評価タイプ変更時の処理
+document.getElementById('item_type').addEventListener('change', function() {
+    const optionsSection = document.getElementById('options-section');
+    if (this.value === 'textarea') {
+        optionsSection.style.display = 'none';
+    } else {
+        optionsSection.style.display = 'block';
+    }
+});
+
+// 選択肢を追加
+function addOption() {
+    const container = document.getElementById('options-container');
+    const optionHtml = `
+        <div class="option-item mb-2">
+            <div class="input-group">
+                <input type="text" class="form-control option-value" placeholder="選択肢を入力">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <input type="checkbox" class="option-enabled" checked>
+                        <label class="mb-0 ml-1">有効</label>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" 
+                            onclick="removeOption(this)">削除</button>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', optionHtml);
+}
+
+// 選択肢を削除
+function removeOption(button) {
+    button.closest('.option-item').remove();
+}
+
+// フォーム送信処理
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('item_id').value;
+    const itemName = document.getElementById('item_name').value.trim();
+    const itemType = document.getElementById('item_type').value;
+    const isActive = document.getElementById('is_active').checked;
+    
+    if (!itemName) {
+        alert('項目名を入力してください');
+        return;
+    }
+    
+    // 選択肢を収集
+    let options = [];
+    if (itemType !== 'textarea') {
+        const optionItems = document.querySelectorAll('.option-item');
+        optionItems.forEach(item => {
+            const value = item.querySelector('.option-value').value.trim();
+            const enabled = item.querySelector('.option-enabled').checked;
+            if (value) {
+                options.push({value: value, enabled: enabled});
+            }
+        });
+        
+        if (options.length === 0) {
+            alert('選択肢を1つ以上追加してください');
+            return;
+        }
+    }
+    
+    // APIに送信
+    fetch(`/{{ store }}/api/rating_item/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            item_id: itemId,
+            item_name: itemName,
+            item_type: itemType,
+            options: options,
+            is_active: isActive
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || '更新しました');
+            window.location.href = '/{{ store }}/rating_items_management';
+        } else {
+            alert('エラー: ' + (data.error || '更新に失敗しました'));
+        }
+    })
+    .catch(error => {
+        alert('通信エラー: ' + error);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,315 @@
+/* ================================
+   評価システム共通スタイル（スマホ対応）
+   ================================ */
+
+/* コンテナ */
+.rating-container {
+    max-width: 100%;
+    padding: 15px;
+}
+
+/* ヘッダー */
+.rating-header {
+    margin-bottom: 20px;
+}
+
+.rating-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.rating-back-btn {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* ボタン */
+.rating-btn-new {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #28a745;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border: none;
+}
+
+.rating-btn-submit {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.rating-btn-edit {
+    flex: 1;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.rating-btn-delete {
+    padding: 10px 15px;
+    background-color: #dc3545;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* アラート */
+.rating-alert {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+}
+
+.rating-alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.rating-alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* カード */
+.rating-item-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rating-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.rating-item-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.rating-item-options {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.rating-item-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* バッジ */
+.rating-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.rating-badge-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.rating-badge-inactive {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* フォーム */
+.rating-form {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.rating-form-group {
+    margin-bottom: 20px;
+}
+
+.rating-label {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.rating-required {
+    color: #dc3545;
+}
+
+.rating-input,
+.rating-textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.rating-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.rating-help {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* ラジオボタングループ */
+.rating-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.rating-radio-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rating-radio-item:active {
+    background-color: #e9ecef;
+}
+
+.rating-radio-item input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.rating-radio-item label {
+    flex: 1;
+    font-size: 15px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.rating-radio-item input[type="radio"]:checked + label {
+    font-weight: bold;
+    color: #007bff;
+}
+
+/* 評価セクション */
+.rating-section {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.rating-section-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #007bff;
+}
+
+/* 空メッセージ */
+.rating-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 15px;
+}
+
+/* チェックボックス */
+.rating-checkbox-group {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.rating-checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.rating-checkbox-group label {
+    font-size: 15px;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* 顧客情報表示 */
+.rating-customer-info {
+    background-color: #e7f3ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.rating-customer-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.rating-customer-detail {
+    font-size: 14px;
+    color: #666;
+}
+
+/* レスポンシブ対応 */
+@media (min-width: 768px) {
+    .rating-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+}

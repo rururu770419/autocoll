@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}設定管理{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+  
+  <h1 class="settings-title">設定管理</h1>
+  
+  {% if success %}
+    <div class="settings-alert settings-alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="settings-alert settings-alert-error">{{ error }}</div>
+  {% endif %}
+  
+  <!-- タブナビゲーション -->
+  <div class="settings-tabs">
+    <button class="settings-tab-btn active" onclick="switchTab('store_info')">店舗情報</button>
+    <button class="settings-tab-btn" onclick="switchTab('notification')">通知設定</button>
+    <button class="settings-tab-btn" onclick="switchTab('auto_call')">オートコール設定</button>
+    <button class="settings-tab-btn" onclick="switchTab('parking')">駐車場設定</button>
+  </div>
+  
+  <!-- タブコンテンツ -->
+  <form id="settingsForm">
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 店舗情報タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="store_info" class="settings-tab-content active">
+      <h2 class="settings-section-title">店舗情報</h2>
+      
+      <div class="settings-form-grid">
+        {% for setting in store_info %}
+          <div class="settings-form-group">
+            <label for="{{ setting.setting_key }}" class="settings-label">
+              {{ setting.description }}
+            </label>
+            
+            {% if setting.setting_type == 'textarea' %}
+              <textarea 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input settings-textarea"
+                placeholder="{{ setting.description }}">{{ setting.setting_value or '' }}</textarea>
+            {% else %}
+              <input 
+                type="text" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input"
+                value="{{ setting.setting_value or '' }}"
+                placeholder="{{ setting.description }}">
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="settings-button-group">
+        <button type="button" class="settings-btn settings-btn-primary" onclick="saveSettings()">保存</button>
+      </div>
+    </div>
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 通知設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="notification" class="settings-tab-content">
+      <h2 class="settings-section-title">通知設定</h2>
+      
+      <!-- メール通知 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">📧 メール通知</h3>
+        
+        {% for setting in notification %}
+          {% if setting.setting_key == 'email_notify_enabled' %}
+            <div class="settings-form-group">
+              <label class="settings-checkbox-label">
+                <input 
+                  type="checkbox" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}"
+                  {% if setting.setting_value == 'true' %}checked{% endif %}>
+                <span>{{ setting.description }}</span>
+              </label>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'notification_email' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <input 
+                type="email" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input"
+                value="{{ setting.setting_value or '' }}"
+                placeholder="example@example.com">
+              <small class="settings-help-text">システムからの通知がこのアドレスに届きます</small>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- LINE通知 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">📱 LINE通知（スタッフ用）</h3>
+        
+        {% for setting in notification %}
+          {% if setting.setting_key == 'line_notify_enabled' %}
+            <div class="settings-form-group">
+              <label class="settings-checkbox-label">
+                <input 
+                  type="checkbox" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}"
+                  {% if setting.setting_value == 'true' %}checked{% endif %}>
+                <span>{{ setting.description }}</span>
+              </label>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'line_notify_token' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <div class="settings-password-wrapper">
+                <input 
+                  type="password" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}" 
+                  class="settings-input"
+                  value="{{ setting.setting_value or '' }}"
+                  placeholder="LINE Notifyトークンを入力">
+                <button type="button" class="settings-show-btn" onclick="togglePassword('{{ setting.setting_key }}')">表示</button>
+              </div>
+              <small class="settings-help-text">
+                <a href="https://notify-bot.line.me/ja/" target="_blank">トークンの取得方法</a>
+              </small>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'line_message_template' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <textarea 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input settings-textarea"
+                rows="4"
+                placeholder="メッセージテンプレート">{{ setting.setting_value or '' }}</textarea>
+              <small class="settings-help-text">
+                使用可能な変数: {name} - キャスト名、{time} - 退室時刻、{hotel} - ホテル名
+              </small>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="settings-button-group">
+        <button type="button" class="settings-btn settings-btn-primary" onclick="saveSettings()">保存</button>
+      </div>
+    </div>
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- オートコール設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="auto_call" class="settings-tab-content">
+      <h2 class="settings-section-title">オートコール設定</h2>
+      
+      {% for setting in auto_call %}
+        {% if setting.setting_key == 'auto_call_enabled' %}
+          <div class="settings-form-group">
+            <label class="settings-checkbox-label">
+              <input 
+                type="checkbox" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}"
+                {% if setting.setting_value == 'true' %}checked{% endif %}>
+              <span>{{ setting.description }}</span>
+            </label>
+          </div>
+          <div class="settings-divider"></div>
+        {% endif %}
+      {% endfor %}
+      
+      <!-- Twilio接続情報 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">📞 接続情報</h3>
+        
+        {% for setting in auto_call %}
+          {% if setting.setting_key in ['twilio_account_sid', 'twilio_auth_token'] %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <div class="settings-password-wrapper">
+                <input 
+                  type="password" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}" 
+                  class="settings-input"
+                  value="{{ setting.setting_value or '' }}"
+                  placeholder="{{ setting.description }}">
+                <button type="button" class="settings-show-btn" onclick="togglePassword('{{ setting.setting_key }}')">表示</button>
+              </div>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'twilio_phone_number' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <input 
+                type="text" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input"
+                value="{{ setting.setting_value or '' }}"
+                placeholder="+1 (815) 686-1213">
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- 通話設定 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">⚙️ 通話設定</h3>
+        
+        {% for setting in auto_call %}
+          {% if setting.setting_key == 'default_reminder_minutes' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <div class="settings-input-with-unit">
+                <input 
+                  type="number" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}" 
+                  class="settings-input settings-input-number"
+                  value="{{ setting.setting_value or '15' }}"
+                  min="1"
+                  max="60">
+                <span class="settings-unit">分前</span>
+              </div>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'call_timeout_seconds' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <div class="settings-input-with-unit">
+                <input 
+                  type="number" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}" 
+                  class="settings-input settings-input-number"
+                  value="{{ setting.setting_value or '15' }}"
+                  min="5"
+                  max="60">
+                <span class="settings-unit">秒（約3コール）</span>
+              </div>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'call_message_template' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                {{ setting.description }}
+              </label>
+              <textarea 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input settings-textarea"
+                rows="3"
+                placeholder="音声メッセージ">{{ setting.setting_value or '' }}</textarea>
+              <small class="settings-help-text">
+                使用可能な変数: {name} - キャスト名
+              </small>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- テスト発信 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">🧪 テスト発信</h3>
+        
+        <div class="settings-form-group">
+          <label for="test_phone_number" class="settings-label">テスト用電話番号</label>
+          <input 
+            type="tel" 
+            id="test_phone_number" 
+            class="settings-input"
+            placeholder="090-1234-5678">
+          <small class="settings-help-text">
+            発信元番号 {{ auto_call[3].setting_value if auto_call|length > 3 else '+18156861213' }} からテスト発信します
+          </small>
+        </div>
+        
+        <button type="button" class="settings-btn settings-btn-secondary" onclick="testCall()">
+          📞 テスト発信する
+        </button>
+        
+        <div id="testCallResult" class="settings-test-result"></div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <div class="settings-button-group">
+        <button type="button" class="settings-btn settings-btn-primary" onclick="saveSettings()">保存</button>
+      </div>
+    </div>
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 駐車場設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="parking" class="settings-tab-content">
+      <h2 class="settings-section-title">駐車場設定</h2>
+      
+      <!-- 駐車場機能ON/OFF -->
+      <div class="settings-form-group">
+        <label class="settings-checkbox-label">
+          <input 
+            type="checkbox" 
+            id="parking_enabled" 
+            name="parking_enabled"
+            onchange="toggleParkingFeature(this.checked)">
+          <span>駐車場管理機能を有効にする</span>
+        </label>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- 駐車場一覧 -->
+      <div id="parkingListSection" style="display: none;">
+        <div class="settings-subsection">
+          <h3 class="settings-subsection-title">🅿️ 登録済み駐車場</h3>
+          
+          <div id="parkingList" class="parking-list">
+            <!-- JavaScriptで動的に生成 -->
+          </div>
+          
+          <button type="button" class="settings-btn settings-btn-secondary" onclick="showAddParkingModal()">
+            ➕ 駐車場を追加
+          </button>
+        </div>
+      </div>
+    </div>
+    
+  </form>
+  
+  <!-- メッセージ表示エリア -->
+  <div id="saveMessage" class="settings-message"></div>
+  
+</div>
+
+<!-- 駐車場追加・編集モーダル -->
+<div id="parkingModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="parkingModalTitle">駐車場を追加</h3>
+      <span class="modal-close" onclick="closeParkingModal()">&times;</span>
+    </div>
+    
+    <div class="modal-body">
+      <div class="settings-form-group">
+        <label for="parkingNameInput" class="settings-label">駐車場名</label>
+        <input 
+          type="text" 
+          id="parkingNameInput" 
+          class="settings-input"
+          placeholder="例: P1, 駅前パーキング"
+          maxlength="50">
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="settings-btn settings-btn-secondary" onclick="closeParkingModal()">
+        キャンセル
+      </button>
+      <button type="button" class="settings-btn settings-btn-primary" onclick="saveParkingLot()">
+        保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// URLを設定
+window.settingsUrls = {
+  store: "/{{ store }}",
+  save: "/{{ store }}/settings/save",
+  testCall: "/{{ store }}/settings/test_call"
+};
+</script>
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+
+{% endblock %}

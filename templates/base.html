@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ダッシュボード{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <header class="header">
+        <button class="hamburger-menu">
+            <span class="line"></span>
+            <span class="line"></span>
+            <span class="line"></span>
+        </button>
+        <div class="user-info">
+            <span class="user-name">{{ session['user_name'] }}</span> さん
+        </div>
+    </header>
+
+    <!-- メニューオーバーレイ（スマホ版のみ） -->
+    <div class="nav-overlay"></div>
+
+    <nav class="nav-menu">
+        <ul>
+            <li><a href="{{ url_for('main_routes.store_home', store=session['store']) }}">ダッシュボード</a></li>
+            <li><a href="{{ url_for('main_routes.money_management', store=session['store']) }}">お釣り管理</a></li>
+            <li><a href="{{ url_for('main_routes.customer_management', store=session.get('store', 'nagano')) }}">顧客管理</a></li>
+            {% if session['user_role'] == 'スタッフ' %}
+                <li><a href="{{ url_for('main_routes.pickup_register', store=session['store']) }}" class="nav-link">送迎登録</a></li>
+                
+                <!-- 項目登録の階層メニュー -->
+                <li class="nav-parent">
+                    <a href="#" class="nav-parent-link" onclick="toggleSubmenu(event, 'item-register')">
+                        <span>項目登録</span>
+                        <span class="nav-arrow">▶</span>
+                    </a>
+                    <ul class="nav-submenu" id="item-register">
+                        <li><a href="/{{ session['store'] }}/settings">⚙️ 設定</a></li>
+                        <li><a href="{{ url_for('main_routes.register_staff', store=session.get('store', 'nagano')) }}">スタッフ</a></li>
+                        <li><a href="{{ url_for('main_routes.cast_management', store=session.get('store', 'nagano')) }}">キャスト</a></li>
+                        <li><a href="{{ url_for('main_routes.register_course', store=session.get('store', 'nagano')) }}">コース</a></li>
+                        <li><a href="{{ url_for('main_routes.options', store=session.get('store', 'nagano')) }}">オプション</a></li>
+                        <li><a href="{{ url_for('main_routes.discount_management', store=session.get('store', 'nagano')) }}">割引</a></li>
+                        <li><a href="{{ url_for('main_routes.rating_items_management', store=session.get('store', 'nagano')) }}">評価項目</a></li>
+                        <li><a href="{{ url_for('main_routes.register_hotel', store=session.get('store', 'nagano')) }}">ホテル</a></li>
+                    </ul>
+                </li>
+                
+            {% endif %}
+            
+            <li><a href="{{ url_for('main_routes.logout', store=session['store']) }}">ログアウト</a></li>
+        </ul>
+    </nav>
+    
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <!-- 共通JavaScript関数 -->
+    <script>
+    // 共通のフォーム送信関数
+    function submitFormAction(actionData, targetUrl) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = targetUrl;
+        
+        Object.keys(actionData).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = actionData[key];
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // 編集モード切り替え関数
+    function toggleEditMode(type, id, isEdit) {
+        const nameElement = document.getElementById(`${type}-name-${id}`);
+        const editElement = document.getElementById(`${type}-edit-${id}`);
+        const editBtn = document.querySelector(`[onclick="edit${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
+        const saveBtn = document.querySelector(`[onclick="save${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
+        const cancelBtn = document.querySelector(`[onclick="cancelEdit${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
+        
+        if (isEdit) {
+            nameElement.classList.add('hidden');
+            editElement.classList.remove('hidden');
+            editBtn.classList.add('hidden');
+            saveBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+        } else {
+            nameElement.classList.remove('hidden');
+            editElement.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            saveBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+        }
+    }
+
+    // サブメニュー切り替え関数
+    function toggleSubmenu(event, submenuId) {
+        event.preventDefault();
+        
+        const submenu = document.getElementById(submenuId);
+        const arrow = event.currentTarget.querySelector('.nav-arrow');
+        
+        if (submenu.classList.contains('nav-submenu-open')) {
+            // 閉じる
+            submenu.classList.remove('nav-submenu-open');
+            arrow.textContent = '▶';
+        } else {
+            // 開く
+            submenu.classList.add('nav-submenu-open');
+            arrow.textContent = '▼';
+        }
+    }
+
+    // メニューオーバーレイ機能（スマホ版のみ）
+    document.addEventListener('DOMContentLoaded', function() {
+        const navOverlay = document.querySelector('.nav-overlay');
+        
+        // オーバーレイのクリック処理（メニューを閉じる）
+        if (navOverlay) {
+            navOverlay.addEventListener('click', function() {
+                const navMenu = document.querySelector('.nav-menu');
+                navMenu.classList.remove('active');
+                navOverlay.classList.remove('active');
+            });
+        }
+        
+        // 既存のハンバーガーメニューのクリックイベントを拡張
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
+        if (hamburgerMenu) {
+            hamburgerMenu.addEventListener('click', function() {
+                // script.jsの処理が実行された後にオーバーレイも制御
+                setTimeout(function() {
+                    const navMenu = document.querySelector('.nav-menu');
+                    if (navMenu.classList.contains('active')) {
+                        navOverlay.classList.add('active');
+                    } else {
+                        navOverlay.classList.remove('active');
+                    }
+                }, 10);
+            });
+        }
+        
+        // メニュー内のリンクをクリックした時もメニューを閉じる
+        const navLinks = document.querySelectorAll('.nav-menu a:not(.nav-parent-link)');
+        navLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                const navMenu = document.querySelector('.nav-menu');
+                navMenu.classList.remove('active');
+                navOverlay.classList.remove('active');
+            });
+        });
+    });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

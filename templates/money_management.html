@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}
+  金銭管理 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>お釣り管理 - {{ selected_date }}</h1>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <div class="money-layout">
+    <!-- 左側: カレンダー -->
+    <div class="calendar-section">
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" id="prevMonth">←</button>
+          <h3 id="calendarMonth">2025年9月</h3>
+          <button class="calendar-nav-btn" id="nextMonth">→</button>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-weekdays">
+            <div class="calendar-weekday">日</div>
+            <div class="calendar-weekday">月</div>
+            <div class="calendar-weekday">火</div>
+            <div class="calendar-weekday">水</div>
+            <div class="calendar-weekday">木</div>
+            <div class="calendar-weekday">金</div>
+            <div class="calendar-weekday">土</div>
+          </div>
+          <div class="calendar-days" id="calendarDays">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右側: 記録一覧 -->
+    <div class="records-section">
+      <h2>{{ selected_date }} の記録</h2>
+      <div class="table-responsive">
+        {% if records %}
+          <table class="table table-striped money-table">
+            <thead>
+              <tr>
+                <th>キャスト</th>
+                <th>退室</th>
+                <th>預かり</th>
+                <th>お釣り</th>
+                <th>売上</th>
+                <th>方法</th>
+                <th>スタッフ</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set current_cast = '' %}
+              {% for record in records %}
+                <!-- キャスト変更時にスペーサーを追加 -->
+                {% if current_cast != '' and current_cast != record.cast_name %}
+                  <tr class="money-table-spacer">
+                    <td colspan="8"></td>
+                  </tr>
+                {% endif %}
+                {% set current_cast = record.cast_name %}
+                
+                <tr class="money-table-row">
+                  <td>{{ record.cast_name }}</td>
+                  <td>{{ record.exit_time }}</td>
+                  <td>{{ "{:,}".format(record.received_amount) }}</td>
+                  <td class="money-change-amount">{{ "{:,}".format(record.change_amount) }}</td>
+                  <td>{{ "{:,}".format(record.received_amount - record.change_amount) }}</td>
+                  <td>{{ record.payment_method }}</td>
+                  <td>{{ record.staff_name }}</td>
+                  <td>
+                    <form method="post" action="{{ url_for('main_routes.delete_money_record', store=store, record_id=record.record_id) }}" style="display: inline;">
+                      <input type="hidden" name="date" value="{{ selected_date }}">
+                      <button type="submit" class="btn btn-delete" onclick="return confirm('本当にこの記録を削除しますか？')">削除</button>
+                    </form>
+                  </td>
+                </tr>
+                
+                <!-- キャスト別合計行 -->
+                {% if loop.last or records[loop.index].cast_name != record.cast_name %}
+                  <tr class="money-table-total">
+                    <td>合計</td>
+                    <td>—</td>
+                    <td>{{ "{:,}".format(cast_totals.get(record.cast_name, {}).get('received_total', 0)) }}</td>
+                    <td class="money-change-amount">{{ "{:,}".format(cast_totals.get(record.cast_name, {}).get('change_total', 0)) }}</td>
+                    <td>{{ "{:,}".format(cast_totals.get(record.cast_name, {}).get('sales_total', 0)) }}</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                  </tr>
+                  <!-- 合計行の後にスペーサーを追加（最後のレコードでない場合） -->
+                  {% if not loop.last %}
+                    <tr class="money-table-spacer">
+                      <td colspan="8"></td>
+                    </tr>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>{{ selected_date }} の記録はありません。</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+// カレンダー関連の変数
+let currentCalendarDate = new Date();
+const selectedDateStr = '{{ selected_date }}';
+const store = '{{ store }}';
+
+// 記録がある日付のリスト（将来的にサーバーから取得）
+const recordDates = []; // サーバーから取得予定
+
+// アクセス可能日の制限（1週間前まで）
+function isDateAccessible(date) {
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+    
+    // 今日以降、または1週間前以降の日付のみアクセス可能
+    return date >= oneWeekAgo && date <= today;
+}
+
+// 月切り替えボタンの有効/無効を設定
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+    
+    // 前月ボタンの制御
+    const prevMonth = new Date(currentCalendarDate);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    prevMonth.setDate(1);
+    
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+    
+    // 前月の末日が1週間前より新しい場合のみ有効
+    const prevMonthLastDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 0);
+    prevBtn.disabled = prevMonthLastDay < oneWeekAgo;
+    
+    // 次月ボタンの制御
+    const nextMonth = new Date(currentCalendarDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(1);
+    
+    // 次月の初日が今日より未来の場合は無効
+    nextBtn.disabled = nextMonth > today;
+}
+
+// カレンダー生成
+function generateCalendar() {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    // ヘッダー更新
+    document.getElementById('calendarMonth').textContent = `${year}年${month + 1}月`;
+    
+    // ナビゲーションボタンの状態更新
+    updateNavigationButtons();
+    
+    // 月の最初と最後の日を取得
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const calendarDays = document.getElementById('calendarDays');
+    calendarDays.innerHTML = '';
+    
+    // 6週間分の日付を生成
+    for (let week = 0; week < 6; week++) {
+        for (let day = 0; day < 7; day++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + (week * 7) + day);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.getDate();
+            
+            // 日付の文字列表現
+            const dateStr = date.getFullYear() + '-' + 
+            String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(date.getDate()).padStart(2, '0');
+            
+            // 他の月の日付
+            if (date.getMonth() !== month) {
+                dayElement.classList.add('other-month');
+            } else {
+                // アクセス可能かどうかをチェック
+                if (isDateAccessible(date)) {
+                    // クリックイベントを追加
+                    dayElement.onclick = () => {
+                        window.location.href = `/${store}/money_management?date=${dateStr}`;
+                    };
+                    
+                    // 今日の日付
+                    const today = new Date();
+                    if (date.toDateString() === today.toDateString()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // 選択中の日付
+                    if (dateStr === selectedDateStr) {
+                        dayElement.classList.add('selected');
+                    }
+                    
+                    // 記録がある日付（将来的に実装）
+                    if (recordDates.includes(dateStr)) {
+                        dayElement.classList.add('has-records');
+                    }
+                } else {
+                    // アクセス不可の日付
+                    dayElement.classList.add('disabled');
+                }
+            }
+            
+            calendarDays.appendChild(dayElement);
+        }
+    }
+}
+
+// 月切り替えイベント
+function setupCalendarNavigation() {
+    document.getElementById('prevMonth').onclick = () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+        generateCalendar();
+    };
+    
+    document.getElementById('nextMonth').onclick = () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+        generateCalendar();
+    };
+}
+
+// ページ読み込み時にカレンダー生成
+document.addEventListener('DOMContentLoaded', function() {
+    // 選択中の日付に基づいてカレンダーを表示
+    const selectedDate = new Date(selectedDateStr);
+    currentCalendarDate.setFullYear(selectedDate.getFullYear());
+    currentCalendarDate.setMonth(selectedDate.getMonth());
+    
+    generateCalendar();
+    setupCalendarNavigation();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,644 @@
+/* ======================
+   キャスト編集ページ専用CSS
+   ====================== */
+
+/* コンテナ */
+.cast-edit-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ヘッダー */
+.cast-edit-header {
+    margin-bottom: 30px;
+}
+
+.cast-edit-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 15px;
+}
+
+.cast-edit-title h1 {
+    margin: 0;
+    color: #007bff;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.cast-edit-back-btn {
+    background-color: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.cast-edit-back-btn:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+    color: white;
+}
+
+/* アラート */
+.cast-edit-alert {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.cast-edit-alert-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.cast-edit-alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+/* メインレイアウト */
+.cast-edit-main {
+    display: flex;
+    gap: 30px;
+}
+
+.cast-edit-form-area {
+    flex: 2;
+    min-width: 0;
+}
+
+.cast-edit-guide-area {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* タブナビゲーション */
+.cast-edit-tabs {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.cast-edit-tab {
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.cast-edit-tab:hover {
+    color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.cast-edit-tab-active {
+    color: #007bff !important;
+    border-bottom-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+/* タブコンテンツ */
+.cast-edit-tab-content {
+    display: none;
+}
+
+.cast-edit-tab-content.cast-edit-tab-active {
+    display: block;
+}
+
+/* フォームスタイル */
+.cast-edit-form {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.cast-edit-section {
+    padding: 30px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cast-edit-section:last-child {
+    border-bottom: none;
+}
+
+.cast-edit-section-title {
+    margin: 0 0 20px 0;
+    color: #343a40;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-left: 4px solid #007bff;
+    padding-left: 12px;
+}
+
+/* フォームグループ */
+.cast-edit-form-group {
+    margin-bottom: 20px;
+}
+
+
+
+.cast-edit-form-group-full {
+    width: 100%;
+}
+
+.cast-edit-form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.cast-edit-form-row .cast-edit-form-group {
+    flex: 1;
+}
+
+.cast-edit-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #343a40;
+    font-size: 0.95rem;
+}
+
+.cast-edit-required {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* 入力フィールド */
+.cast-edit-input,
+.cast-edit-select,
+.cast-edit-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: white;
+}
+
+.cast-edit-input-short {
+    max-width: 300px;
+}
+
+.cast-edit-input-readonly {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.cast-edit-input:focus,
+.cast-edit-select:focus,
+.cast-edit-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* ファイル管理 */
+.cast-edit-file-input {
+    margin-bottom: 10px;
+}
+
+.cast-edit-file-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cast-edit-file-item {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+
+.cast-edit-file-item-new {
+    border-color: #007bff;
+}
+
+.cast-edit-file-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cast-edit-file-remove,
+.cast-edit-file-remove-new {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.cast-edit-file-remove:hover,
+.cast-edit-file-remove-new:hover {
+    background-color: #c82333;
+}
+
+.cast-edit-file-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 10px;
+    padding: 2px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 住所1行レイアウト調整 */
+.cast-edit-address-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.cast-edit-select-prefecture {
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.cast-edit-select-city {
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.cast-edit-input-address {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* 入力グループ */
+.cast-edit-input-group {
+    display: flex;
+    align-items: center;
+}
+
+.cast-edit-input-group .cast-edit-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+.cast-edit-input-suffix {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-left: none;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #6c757d;
+}
+
+/* ヘルプテキスト */
+.cast-edit-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* フォームアクション */
+.cast-edit-form-actions {
+    padding: 30px;
+    background-color: #f8f9fa;
+    text-align: right;
+}
+
+.cast-edit-submit-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cast-edit-submit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* NG設定タブ */
+.cast-edit-ng-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    text-align: center;
+}
+
+.cast-edit-ng-message {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.cast-edit-ng-preview {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cast-edit-ng-preview li {
+    padding: 8px 0;
+    color: #6c757d;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cast-edit-ng-preview li:last-child {
+    border-bottom: none;
+}
+
+/* ガイドエリア */
+.cast-edit-guide-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.cast-edit-guide-title {
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #343a40;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cast-edit-guide-content {
+    padding: 20px;
+}
+
+/* 情報アイテム */
+.cast-edit-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.cast-edit-info-item:last-child {
+    border-bottom: none;
+}
+
+.cast-edit-info-label {
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.cast-edit-info-value {
+    font-weight: 500;
+    color: #343a40;
+    font-size: 0.9rem;
+}
+
+/* ガイドアイテム */
+.cast-edit-guide-item {
+    margin-bottom: 20px;
+}
+
+.cast-edit-guide-item:last-child {
+    margin-bottom: 0;
+}
+
+.cast-edit-guide-item h4 {
+    margin: 0 0 8px 0;
+    color: #007bff;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.cast-edit-guide-item p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+    .cast-edit-main {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .cast-edit-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .cast-edit-title {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .cast-edit-tabs {
+        flex-direction: column;
+    }
+    
+    .cast-edit-tab {
+        text-align: left;
+    }
+}
+
+/* 都道府県・市区町村セレクトを短く */
+.cast-edit-select-short {
+    width: 150px !important;
+    min-width: 150px;
+}
+
+.cast-edit-select-prefecture {
+    width: 150px !important;
+}
+
+.cast-edit-select-city {
+    width: 200px !important;
+}
+
+/* 住所入力欄の調整 */
+.cast-edit-input-address {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* ファイル名表示 */
+.cast-edit-file-name {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 4px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+}
+
+/* 新規アップロードファイルのスタイル */
+.cast-edit-file-item-new {
+    border: 2px dashed #4CAF50;
+    background-color: #f1f8f4;
+}
+
+.cast-edit-file-remove-new {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    cursor: pointer;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.cast-edit-file-remove-new:hover {
+    background-color: #d32f2f;
+}
+
+/* 都道府県・市区町村セレクトを短く */
+.cast-edit-select-short {
+    width: 150px !important;
+    min-width: 150px;
+}
+
+.cast-edit-select-prefecture {
+    width: 150px !important;
+}
+
+.cast-edit-select-city {
+    width: 200px !important;
+}
+
+/* 住所入力欄の調整 */
+.cast-edit-input-address {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* ファイル名表示 */
+.cast-edit-file-name {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 4px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+}
+
+/* 新規アップロードファイルのスタイル */
+.cast-edit-file-item-new {
+    border: 2px dashed #4CAF50;
+    background-color: #f1f8f4;
+}
+
+.cast-edit-file-remove-new {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    cursor: pointer;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.cast-edit-file-remove-new:hover {
+    background-color: #d32f2f;
+}
+
+/* 削除ボタン */
+.cast-edit-delete-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 10px;
+    transition: background-color 0.2s;
+}
+
+.cast-edit-delete-btn:hover {
+    background-color: #c82333;
+    color: white;
+    text-decoration: none;
+}
+
+/* ボタンエリアの調整 */
+.cast-edit-form-actions {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.cast-btn-registration {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+    margin: 0 0 20PX 0;
+}

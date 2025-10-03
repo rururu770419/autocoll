@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+<script src="{{ url_for('static', filename='js/customer_management.js') }}" defer></script>
+{% endblock %}
+
+{% block title %}顧客管理 - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="customer-container">
+    <!-- ヘッダー -->
+    <div class="customer-header">
+        <div class="customer-title-area">
+            <h1>顧客管理</h1>
+            
+        </div>
+    </div>
+
+    <!-- 検索エリア -->
+    <div class="customer-search-area">
+        <div class="customer-search-wrapper">
+
+            
+            <select id="searchType" class="customer-select customer-select-narrow">
+                <option value="phone">電話番号</option>
+                <option value="furigana">フリガナ</option>
+            </select>
+            <input type="tel" id="searchKeyword" class="customer-search-input" 
+                   placeholder="電話番号で検索（ハイフンなし）">
+            <button type="button" class="customer-search-btn" onclick="searchCustomers()">検索</button>
+        </div>
+        
+    </div>
+
+    <a href="{{ url_for('main_routes.customer_registration', store=store) }}" class="customer-btn customer-btn-primary">
+        ＋ 新規登録
+    </a>
+
+    <!-- メッセージエリア -->
+    <div id="messageArea"></div>
+
+    <!-- テーブルエリア -->
+    <div class="customer-table-wrapper">
+        <table class="customer-table">
+            <thead class="customer-table-header">
+                <tr>
+                    <th class="customer-table-header-cell">顧客ID</th>
+                    <th class="customer-table-header-cell">名前</th>
+                    <th class="customer-table-header-cell">フリガナ</th>
+                    <th class="customer-table-header-cell">電話番号</th>
+                    <th class="customer-table-header-cell">年齢</th>
+                    <th class="customer-table-header-cell">会員種別</th>
+                    <th class="customer-table-header-cell">ステータス</th>
+                    <th class="customer-table-header-cell">所持PT</th>
+                    <th class="customer-table-header-cell">操作</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <tr>
+                    <td colspan="9" class="customer-empty-message">
+                        <div class="customer-loading">読み込み中...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- ページネーションエリア -->
+    <div id="paginationArea"></div>
+</div>
+
+{% endblock %}

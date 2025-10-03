@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_management.css') }}">
+{% endblock %}
+
+{% block title %}
+  {% if mode == 'new' %}新規スタッフ登録{% else %}{{ user.name }}さんの編集{% endif %} | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_management.css') }}">
+
+<div class="container">
+  <h1>
+    {% if mode == 'new' %}
+      新規スタッフ登録
+    {% else %}
+      {{ user.name }}さんの編集
+    {% endif %}
+  </h1>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <!-- 戻るボタン -->
+  <div class="staff-edit-back-section">
+    <a href="{{ url_for('main_routes.register_staff', store=store) }}" class="btn btn-secondary">← スタッフ一覧に戻る</a>
+  </div>
+
+  <div class="page-layout">
+    <!-- 基本情報フォーム -->
+    <div class="form-section">
+      <h2>{% if mode == 'new' %}基本情報登録{% else %}基本情報編集{% endif %}</h2>
+      
+      <form method="post" action="{{ url_for('main_routes.save_staff', store=store) }}" class="staff-edit-form">
+        {% if mode == 'edit' and user %}
+          <input type="hidden" name="user_id" value="{{ user.id }}">
+        {% endif %}
+        
+        <!-- 基本情報 -->
+        <div class="form-group">
+          <label for="name" class="form-label">名前 <span class="required-mark">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" 
+                 value="{{ user.name if user else '' }}" required placeholder="例）店長">
+        </div>
+        
+        <div class="form-group">
+          <label for="color" class="form-label">カラー:</label>
+          <div class="color-picker-group">
+            <input type="color" class="form-control color-input" id="color" name="color" 
+                   value="{{ user.color if user and user.color else '#FFE5E5' }}" required>
+            <span id="color-preview" class="color-preview">選択した色</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="login_id" class="form-label">ログインID <span class="required-mark">*</span></label>
+          <input type="text" class="form-control" id="login_id" name="login_id" 
+                 value="{{ user.login_id if user else '' }}" required placeholder="半角英数字" autocomplete="new-username">
+        </div>
+        
+        <div class="form-group">
+          <label for="password" class="form-label">パスワード <span class="required-mark">*</span></label>
+          <input type="password" class="form-control" id="password" name="password" 
+                 value="{{ user.password if user else '' }}" required placeholder="半角英数字" autocomplete="new-password">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">権限 <span class="required-mark">*</span></label>
+          <div class="role-selection-group">
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" id="role_staff" name="role" value="スタッフ"
+                     {% if user and user.role == 'スタッフ' %}checked{% endif %}>
+              <label class="form-check-label" for="role_staff">スタッフ</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" id="role_driver" name="role" value="ドライバー"
+                     {% if not user or user.role == 'ドライバー' %}checked{% endif %} required>
+              <label class="form-check-label" for="role_driver">ドライバー</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- LINE設定 -->
+        <div class="form-group">
+          <label for="line_id" class="form-label">LINE User ID</label>
+          <input type="text" class="form-control" id="line_id" name="line_id" 
+                 value="{{ user.line_id if user and user.line_id else '' }}" 
+                 placeholder="U1a2b3c4d5e6f7g8h9... (Uで始まる文字列)">
+          <small class="line-id-help">管理者がLINE管理画面で確認したUser IDを入力</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="notification_minutes_before" class="form-label">通知タイミング</label>
+          <select class="form-control" id="notification_minutes_before" name="notification_minutes_before">
+            <option value="5" {% if user and user.notification_minutes_before == 5 %}selected{% endif %}>5分前</option>
+            <option value="10" {% if not user or user.notification_minutes_before == 10 %}selected{% endif %}>10分前</option>
+            <option value="15" {% if user and user.notification_minutes_before == 15 %}selected{% endif %}>15分前</option>
+            <option value="20" {% if user and user.notification_minutes_before == 20 %}selected{% endif %}>20分前</option>
+            <option value="30" {% if user and user.notification_minutes_before == 30 %}selected{% endif %}>30分前</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="line_notification_enabled" name="line_notification_enabled"
+                   {% if not user or user.line_notification_enabled %}checked{% endif %}>
+            <label class="form-check-label" for="line_notification_enabled">
+              LINE通知を有効にする
+            </label>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-register">
+          {% if mode == 'new' %}登録{% else %}更新{% endif %}
+        </button>
+      </form>
+      
+      <!-- 削除フォームをメインフォームの外に配置 -->
+      {% if mode == 'edit' and user %}
+      <form method="post" action="{{ url_for('main_routes.delete_staff_by_id', store=store, user_id=user.id) }}" class="staff-delete-form-separate" onsubmit="return confirm('本当に{{ user.name }}さんを削除しますか？削除すると復元できません。');">
+        <button type="submit" class="btn btn-delete">削除</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- LINE通知設定説明 -->
+    <div class="table-section">
+      <h2>🔔 LINE通知設定ガイド</h2>
+      
+      <!-- QRコード表示エリア -->
+      <div class="line-setup-section">
+        <h3 class="line-setup-title">📱 Bot友だち追加</h3>
+        <div class="line-qr-container">
+          <img src="{{ url_for('static', filename='images/line_qr.jpg') }}" alt="LINE Bot QRCode" style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
+          <p class="line-qr-description">上記QRコードでBot友だち追加</p>
+          <a href="https://line.me/R/ti/p/@275gmabd" target="_blank" class="btn btn-info line-open-btn">ブラウザで開く</a>
+        </div>
+        
+        <div class="line-instructions">
+          <p class="line-instructions-title">設定手順:</p>
+          <ol class="line-instructions-list">
+            <li>上記QRコードでBotを友だち追加</li>
+            <li>管理者に「友だち追加完了」を報告</li>
+            <li>管理者がLINE管理画面でUser IDを確認</li>
+            <li>左フォームの「LINE User ID」欄にUser IDを入力</li>
+            <li>通知設定を選択して保存</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 管理者向け説明 -->
+      <div class="line-admin-guide">
+        <h4 class="line-admin-title">👤 管理者向け: User ID確認方法</h4>
+        <div class="line-admin-steps">
+          <ol>
+            <li><strong>LINE Official Account Manager</strong> (https://manager.line.biz/) にログイン</li>
+            <li><strong>@275gmabd</strong> を選択</li>
+            <li><strong>「分析」</strong>または<strong>「メッセージ」</strong>メニューから友だち一覧を確認</li>
+            <li>新しく追加された友だちの<strong>User ID</strong>（Uで始まる文字列）をコピー</li>
+            <li>上記フォームに入力して保存</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 設定状況表示 -->
+      {% if user and user.line_id %}
+      <div class="line-status-connected-display">
+        <h4 class="line-status-title">✅ LINE連携済み</h4>
+        <p class="line-status-details">
+          User ID: {{ user.line_id[:15] }}...<br>
+          通知: {{ '有効' if user.line_notification_enabled else '無効' }} 
+          ({{ user.notification_minutes_before if user.notification_minutes_before else 10 }}分前)
+        </p>
+      </div>
+      {% else %}
+      <div class="line-status-not-connected-display">
+        <h4 class="line-status-title">⚠️ LINE未設定</h4>
+        <p class="line-status-details">
+          送迎時間の自動通知を受け取るにはLINE設定が必要です
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- 機能説明 -->
+      <div class="line-feature-info">
+        <h4 class="line-feature-title">💬 LINE通知機能について</h4>
+        <ul class="line-feature-list">
+          <li>送迎時間の指定分前に自動通知</li>
+          <li>通知時間は個別設定可能（5〜30分前）</li>
+          <li>通知のON/OFF切り替え可能</li>
+          <li>多店舗対応（管理者が各スタッフのUser IDを設定）</li>
+        </ul>
+      </div>
+
+      <!-- 送迎通知のプレビュー -->
+      <div class="line-preview-section">
+        <h4 class="line-preview-title">📱 通知メッセージ例</h4>
+        <div class="line-message-preview">
+          <div class="line-message-header">🚗 送迎時間のお知らせ</div>
+          <div class="line-message-body">
+            {{ user.name if user else 'スタッフ名' }}様<br><br>
+            16:30の送迎時間が近づいています。<br>
+            準備をお願いします。<br><br>
+            <small>送迎管理システム</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// カラーピッカーの変更を監視してプレビューを更新
+document.addEventListener('DOMContentLoaded', function() {
+    const colorInput = document.getElementById('color');
+    const colorPreview = document.getElementById('color-preview');
+    
+    if (colorInput && colorPreview) {
+        // 初期値を設定
+        colorPreview.style.backgroundColor = colorInput.value;
+        colorPreview.textContent = colorInput.value;
+        
+        // 変更時の処理
+        colorInput.addEventListener('input', function() {
+            colorPreview.style.backgroundColor = this.value;
+            colorPreview.textContent = this.value;
+        });
+    }
+});
+</script>
+{% endblock %}

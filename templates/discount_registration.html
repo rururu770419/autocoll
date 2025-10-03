@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+{% endblock %}
+
+{% block title %}割引登録 - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="cast-edit-container">
+    <!-- ヘッダー -->
+    <div class="cast-edit-header">
+        <div class="cast-edit-title">
+            <h1>割引登録</h1>
+            <a href="{{ url_for('main_routes.discount_management', store=store) }}" class="cast-edit-back-btn">
+                ← 一覧に戻る
+            </a>
+        </div>
+    </div>
+
+    <!-- メッセージエリア -->
+    {% if error %}
+        <div class="cast-edit-alert cast-edit-alert-error">{{ error }}</div>
+    {% endif %}
+
+    <!-- フォームエリア -->
+    <div class="cast-edit-main">
+        <div class="cast-edit-form-area" style="max-width: 800px;">
+            <form method="POST" class="cast-edit-form">
+                <!-- 基本情報セクション -->
+                <div class="cast-edit-section">
+                    <h3 class="cast-edit-section-title">割引情報</h3>
+                    
+                    <div class="cast-edit-form-row">
+                        <div class="cast-edit-form-group">
+                            <label class="cast-edit-label">
+                                割引名 <span class="cast-edit-required">*</span>
+                            </label>
+                            <input type="text" name="name" class="cast-edit-input" 
+                                   placeholder="例：新規顧客割引" required>
+                        </div>
+                    </div>
+
+                    <div class="cast-edit-form-row">
+                        <div class="cast-edit-form-group">
+                            <label class="cast-edit-label">
+                                割引種類 <span class="cast-edit-required">*</span>
+                            </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="discount_type" 
+                                       id="discount_type_fixed" value="fixed" checked>
+                                <label class="form-check-label" for="discount_type_fixed">
+                                    固定金額（円）
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="discount_type" 
+                                       id="discount_type_percent" value="percent">
+                                <label class="form-check-label" for="discount_type_percent">
+                                    パーセント（%）
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cast-edit-form-row">
+                        <div class="cast-edit-form-group">
+                            <label class="cast-edit-label">
+                                割引値 <span class="cast-edit-required">*</span>
+                            </label>
+                            <div class="cast-edit-input-group">
+                                <input type="number" name="value" class="cast-edit-input" 
+                                       placeholder="例：1000 または 10" min="0" step="1" required>
+                                <span class="cast-edit-input-suffix" id="value_suffix">円</span>
+                            </div>
+                            <small class="cast-edit-help">
+                                固定金額の場合は金額を、パーセントの場合は%値を入力してください
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="cast-edit-form-row">
+                        <div class="cast-edit-form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_active" 
+                                       id="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    有効な割引として登録
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 保存ボタン -->
+                <div class="cast-edit-form-actions">
+                    <button type="submit" class="cast-edit-submit-btn">
+                        登録
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 割引種類の切り替えで単位を変更
+document.addEventListener('DOMContentLoaded', function() {
+    const fixedRadio = document.getElementById('discount_type_fixed');
+    const percentRadio = document.getElementById('discount_type_percent');
+    const valueSuffix = document.getElementById('value_suffix');
+    
+    function updateSuffix() {
+        if (percentRadio.checked) {
+            valueSuffix.textContent = '%';
+        } else {
+            valueSuffix.textContent = '円';
+        }
+    }
+    
+    fixedRadio.addEventListener('change', updateSuffix);
+    percentRadio.addEventListener('change', updateSuffix);
+});
+</script>
+{% endblock %}

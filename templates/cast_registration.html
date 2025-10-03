@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+{% endblock %}
+
+{% block title %}
+  キャスト管理 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>キャスト管理</h1>
+
+    {% if success %}
+      <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="page-layout">
+      <div class="form-section">
+        <h2>キャスト登録フォーム</h2>
+        <form method="post" action="{{ url_for('main_routes.register_cast', store=store) }}">
+          <div class="form-group">
+            <label for="name" class="form-label">名前 (必須):</label>
+            <input type="text" class="form-control" id="name" name="name" required placeholder="例）まい">
+          </div>
+          <div class="form-group">
+            <label for="phone_number" class="form-label">電話番号:</label>
+            <input type="text" class="form-control" id="phone_number" name="phone_number" required placeholder="半角数字11桁">
+          </div>
+          <button type="submit" class="btn-register">登録</button>
+        </form>
+      </div>
+
+      <div class="table-section">
+        <h2>キャスト一覧</h2>
+        <div class="table-responsive">
+          {% if casts %}
+            <table class="table table-striped">
+              <thead>
+                  <tr>
+                      <th>名前</th>
+                      <th>電話番号</th>
+                      <th>操作</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for cast in casts %}
+                  <tr>
+                      <td>{{ cast.name }}</td>
+                      <td>
+                          {% if cast.phone_number %}
+                              {{ cast.phone_number[:6] }}*****
+                          {% else %}
+                              なし
+                          {% endif %}
+                      </td>
+                      <td>
+                          <a href="{{ url_for('main_routes.edit_cast', store=store, cast_id=cast.cast_id) }}" class="btn btn-edit">編集</a>
+                          <a href="{{ url_for('main_routes.delete_cast', store=store, cast_id=cast.cast_id) }}" class="btn btn-delete" onclick="return confirm('本当にこのキャストを削除しますか？');">削除</a>
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+          {% else %}
+            <p>登録されているキャストはいません。</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

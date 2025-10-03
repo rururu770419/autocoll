@@ -1,0 +1,435 @@
+/* ==========================
+   スタッフ管理専用CSS
+   ========================== */
+
+/* スタッフ一覧ページ */
+.staff-list-actions {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.staff-list-summary {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* スタッフ一覧テーブル */
+.staff-list-table th {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.staff-list-table td {
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+
+.staff-list-row:hover {
+    background-color: #f5f5f5;
+}
+
+/* テーブル列幅 */
+.staff-table-name { width: 15%; }
+.staff-table-color { width: 10%; }
+.staff-table-login { width: 15%; }
+.staff-table-role { width: 10%; }
+.staff-table-line { width: 12%; }
+.staff-table-notification { width: 10%; }
+.staff-table-time { width: 8%; }
+.staff-table-actions { width: 20%; }
+
+/* カラー表示 */
+.staff-color-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.staff-color-box {
+    width: 25px;
+    height: 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.staff-color-text {
+    font-size: 11px;
+    color: #666;
+}
+
+/* 権限バッジ */
+.staff-role-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.staff-role-driver {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.staff-role-staff {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* LINE連携ステータス */
+.line-status-connected {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.line-status-not-connected {
+    color: #dc3545;
+    font-size: 12px;
+}
+
+/* 通知設定 */
+.notification-enabled {
+    color: #28a745;
+    font-size: 12px;
+}
+
+.notification-disabled {
+    color: #666;
+    font-size: 12px;
+}
+
+.notification-time {
+    font-size: 12px;
+    color: #666;
+}
+
+/* アクション */
+.staff-actions-cell .staff-delete-form {
+    display: inline;
+    margin: 0;
+}
+
+.staff-actions-cell .btn {
+    margin-right: 5px;
+}
+
+/* LINE情報セクション */
+.staff-line-info {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.staff-line-info-title {
+    margin: 0 0 10px 0;
+    color: #007bff;
+    font-size: 16px;
+}
+
+.staff-line-info-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* 空の状態 */
+.staff-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.staff-empty-icon {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.staff-empty-title {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.staff-empty-text {
+    color: #999;
+    margin-bottom: 25px;
+}
+
+/* ==========================
+   スタッフ編集ページ
+   ========================== */
+
+.staff-edit-back-section {
+    margin-bottom: 25px;
+}
+
+.staff-edit-form .form-group {
+    margin-bottom: 20px;
+}
+
+.required-mark {
+    color: red;
+}
+
+/* カラーピッカー */
+.color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-input {
+    width: 60px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #ccc;
+}
+
+.color-preview {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* 権限選択 */
+.role-selection-group {
+    margin-top: 8px;
+}
+
+.role-selection-group .form-check-inline {
+    margin-right: 15px;
+}
+
+/* LINE ID入力 */
+.line-id-help {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    display: block;
+}
+
+/* LINE設定セクション */
+.line-setup-section {
+    margin-bottom: 25px;
+}
+
+.line-setup-title {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #007bff;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+/* QRコード */
+.line-qr-container {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.line-qr-placeholder {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    background-color: white;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.line-qr-text {
+    color: #999;
+    font-size: 12px;
+    text-align: center;
+}
+
+.line-qr-description {
+    margin: 15px 0 5px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.line-open-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+/* 設定手順 */
+.line-instructions {
+    font-size: 13px;
+    color: #666;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.line-instructions-title {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+}
+
+.line-instructions-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.line-instructions-list li {
+    margin-bottom: 5px;
+}
+
+/* 連携ステータス表示 */
+.line-status-connected-display {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #d4edda;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.line-status-not-connected-display {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.line-status-title {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.line-status-connected-display .line-status-title {
+    color: #155724;
+}
+
+.line-status-not-connected-display .line-status-title {
+    color: #856404;
+}
+
+.line-status-details {
+    margin: 0;
+    font-size: 13px;
+}
+
+.line-status-connected-display .line-status-details {
+    color: #155724;
+}
+
+.line-status-not-connected-display .line-status-details {
+    color: #856404;
+}
+
+/* 機能説明 */
+.line-feature-info {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.line-feature-title {
+    margin: 0 0 10px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.line-feature-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #666;
+}
+
+.line-feature-list li {
+    margin-bottom: 5px;
+}
+
+/* ==========================
+   レスポンシブ対応
+   ========================== */
+@media (max-width: 768px) {
+    /* 一覧ページ */
+    .staff-list-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .staff-list-table th,
+    .staff-list-table td {
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+    
+    .staff-list-table .btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 2px;
+    }
+    
+    .staff-color-display {
+        gap: 4px;
+    }
+    
+    .staff-color-box {
+        width: 20px;
+        height: 12px;
+    }
+    
+    .staff-color-text {
+        font-size: 10px;
+    }
+    
+    /* 編集ページ */
+    .page-layout {
+        display: block;
+    }
+    
+    .form-section, .table-section {
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .line-qr-placeholder {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .line-instructions-list {
+        padding-left: 15px;
+    }
+    
+    .color-picker-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .role-selection-group .form-check-inline {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+}
