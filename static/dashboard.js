@@ -116,6 +116,7 @@ function executeToggleCompleted(recordId, row, button, newCompleted) {
   // 済み状態の変更を記録
   recordChange(recordId, 'is_completed', newCompleted);
 }
+
 // メモの表示/非表示切り替え（展開状態も記録）
 function toggleMemo(recordId) {
   const memoRow = document.getElementById(`memo-row-${recordId}`);
@@ -132,7 +133,6 @@ function toggleMemo(recordId) {
   // 展開状態の変更を記録
   recordChange(recordId, 'memo_expanded', isExpanded);
 }
-
 
 // お知らせ更新関数を修正
 function updateAnnouncement(field, value) {
@@ -198,50 +198,6 @@ function selectCalendarDate(selectedDate) {
     window.location.href = `${storeUrl}/dashboard?date=${selectedDate}`;
 }
 
-// カレンダーの日付要素を作成（修正版）
-function createCalendarDay(day, isOtherMonth, year, month) {
-    const dayElement = document.createElement('div');
-    dayElement.classList.add('calendar-day');
-    dayElement.textContent = day;
-    
-    // 他の月の場合
-    if (isOtherMonth) {
-        dayElement.classList.add('other-month');
-        return dayElement;
-    }
-    
-    // 日付オブジェクトを作成
-    const currentDate = new Date(year, month, day);
-    const today = new Date();
-    const selectedDate = new Date(window.currentDate);
-    
-    // 今日の日付
-    if (currentDate.toDateString() === today.toDateString()) {
-        dayElement.classList.add('today');
-    }
-    
-    // 選択中の日付
-    if (currentDate.toDateString() === selectedDate.toDateString()) {
-        dayElement.classList.add('selected');
-    }
-    
-    // 予定のある日付
-    const dateString = formatDateForUrl(currentDate);
-    if (recordDates.includes(dateString)) {
-        dayElement.classList.add('has-records');
-    }
-    
-    // クリックイベント（修正版）
-    dayElement.addEventListener('click', function() {
-        const dateString = formatDateForUrl(currentDate);
-        closeCalendarModal();
-        
-        // 日付選択時にお知らせを保存してから移動
-        selectCalendarDate(dateString);
-    });
-    
-    return dayElement;
-}
 // 警告確認ダイアログ（赤いスタイル）
 function showRedConfirm(message, callback) {
   // ダイアログ作成
@@ -550,11 +506,6 @@ function calculateExitTimeBeforeSave(recordId) {
   }
 }
 
-
-
-
-
-
 // 更新機能
 function refreshDashboard() {
   const refreshBtn = document.querySelector('.dashboard-refresh-btn');
@@ -722,98 +673,10 @@ window.onclick = function(event) {
   }
 }
 
-// ページ読み込み後の初期化とイベントリスナー設定
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOMContentLoaded - イベントリスナー設定開始');
-  console.log('Store URL:', window.dashboardUrls.store);
-  
-  // お知らせの初期状態を設定
-  const announcementArea = document.getElementById('announcementArea');
-  if (announcementArea) {
-    announcementVisible = announcementArea.style.display !== 'none';
-  }
-  
-  // 時間入力フィールドのイベントリスナー
-  document.querySelectorAll('input[type="time"]').forEach(input => {
-    input.addEventListener('change', function() {
-      const recordId = this.getAttribute('data-record-id');
-      const field = this.getAttribute('data-field');
-      console.log('時間変更:', recordId, field, this.value);
-      recordChange(recordId, field, this.value);
-    });
-  });
-  
-  // キャスト選択フィールドのイベントリスナー
-  document.querySelectorAll('select[data-field="cast_id"]').forEach(select => {
-    select.addEventListener('change', function() {
-      const recordId = this.getAttribute('data-record-id');
-      console.log('キャスト変更:', recordId, this.value);
-      recordChange(recordId, 'cast_id', this.value);
-    });
-  });
-  
-  // ホテル選択フィールドのイベントリスナー
-  document.querySelectorAll('select[data-field="hotel_id"]').forEach(select => {
-    select.addEventListener('change', function() {
-      const recordId = this.getAttribute('data-record-id');
-      console.log('ホテル変更:', recordId, this.value);
-      recordChange(recordId, 'hotel_id', this.value);
-    });
-  });
-  
-  // その他内容フィールドのイベントリスナー
-  document.querySelectorAll('input[data-field="content"]').forEach(input => {
-    input.addEventListener('change', function() {
-      const recordId = this.getAttribute('data-record-id');
-      console.log('内容変更:', recordId, this.value);
-      recordChange(recordId, 'content', this.value);
-    });
-  });
-  
-  // スタッフ選択フィールドのイベントリスナー（色変更は既存の関数で処理）
-  document.querySelectorAll('select[data-field="staff_id"]').forEach(select => {
-    select.addEventListener('change', function() {
-      const recordId = this.getAttribute('data-record-id');
-      console.log('スタッフ変更:', recordId, this.value);
-      recordChange(recordId, 'staff_id', this.value);
-    });
-  });
-  
-  // お知らせテキストエリアのイベントリスナー
-  const announcementTextarea = document.getElementById('announcementContent');
-  if (announcementTextarea) {
-    // 初期値を保存
-    announcementTextarea.defaultValue = announcementTextarea.value;
-    
-    // 入力変更を検知
-    announcementTextarea.addEventListener('input', function() {
-      // リアルタイム更新はしない（保存ボタンで一括保存）
-    });
-  }
-  
-  console.log('イベントリスナー設定完了');
-});
-
 // カレンダー関連の変数
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
 let recordDates = []; // 予定のある日付リスト
-
-// 日付変更機能
-function changeDate(direction) {
-    const currentDateElement = document.getElementById('currentDateDisplay');
-    const currentDate = new Date(window.currentDate);
-    
-    // 日付を変更
-    currentDate.setDate(currentDate.getDate() + direction);
-    
-    // 日付文字列を更新
-    const newDateString = formatDateForUrl(currentDate);
-    
-    // URLパラメータを付けてページ遷移
-    const storeUrl = window.dashboardUrls.store;
-    window.location.href = `${storeUrl}/dashboard?date=${newDateString}`;
-}
 
 // カレンダーモーダルを開く
 function openCalendarModal() {
@@ -902,7 +765,7 @@ function renderCalendar() {
     }
 }
 
-// カレンダーの日付要素を作成
+// カレンダーの日付要素を作成（修正版）
 function createCalendarDay(day, isOtherMonth, year, month) {
     const dayElement = document.createElement('div');
     dayElement.classList.add('calendar-day');
@@ -935,14 +798,13 @@ function createCalendarDay(day, isOtherMonth, year, month) {
         dayElement.classList.add('has-records');
     }
     
-    // クリックイベント
+    // クリックイベント（修正版）
     dayElement.addEventListener('click', function() {
         const dateString = formatDateForUrl(currentDate);
         closeCalendarModal();
         
-        // 日付を変更してページ遷移
-        const storeUrl = window.dashboardUrls.store;
-        window.location.href = `${storeUrl}/dashboard?date=${dateString}`;
+        // 日付選択時にお知らせを保存してから移動
+        selectCalendarDate(dateString);
     });
     
     return dayElement;
@@ -1048,7 +910,7 @@ function showChangeNotEnteredDialog(message) {
   };
 }
 
-// 既存のDOMContentLoadedイベントを以下のように更新してください
+// ページ読み込み後の初期化とイベントリスナー設定
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOMContentLoaded - イベントリスナー設定開始');
   console.log('Store URL:', window.dashboardUrls.store);
@@ -1164,7 +1026,6 @@ function addMinutesToTime(timeStr, minutes) {
   return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;
 }
 
-// 関連レコード（入室・退室のペア）を見つける関数
 // 関連レコード（入室・退室のペア）を見つける関数（修正版）
 function findRelatedRecord(recordId, castId, isEntry) {
   const allRows = document.querySelectorAll('.dashboard-record-row');
@@ -1241,11 +1102,19 @@ function updateExitTimeOnEntryChange(recordId) {
   
   // 関連する退室レコードを探す
   const relatedRecord = findRelatedRecord(recordId, castId, isEntry);
-  if (!relatedRecord) return;
+  if (!relatedRecord) {
+    console.log('関連する退室レコードが見つかりません');
+    return;
+  }
   
   // コース情報を取得（data-course-id属性から）
   const courseId = row.getAttribute('data-course-id');
-  if (!courseId || !courseCache[courseId]) return;
+  console.log('コースID:', courseId, 'courseCache:', courseCache);
+  
+  if (!courseId || !courseCache[courseId]) {
+    console.log('コース情報が見つかりません。courseId:', courseId);
+    return;
+  }
   
   const courseTime = courseCache[courseId];
   const exitTime = addMinutesToTime(entryTime, courseTime);

@@ -9,7 +9,18 @@ from .cast import register_cast, edit_cast, delete_cast, cast_management
 from .course import register_course, edit_course, delete_course, move_course_up, move_course_down
 from .hotel import register_hotel, edit_hotel, delete_hotel, register_category, register_area, move_hotel_up_route, move_hotel_down_route
 from .pickup import pickup_register
-from .dashboard import store_home, update_record, delete_record, save_all, dashboard_data, check_change_status, update_announcement_endpoint
+# ★ dashboard関連のインポートを修正（get_record_dates, get_course_dataを追加）
+from .dashboard import (
+    store_home, 
+    update_record, 
+    delete_record, 
+    save_all, 
+    dashboard_data, 
+    check_change_status, 
+    update_announcement_endpoint,
+    get_record_dates,      # ★ 追加
+    get_course_data        # ★ 追加
+)
 from .money import money_management, delete_money_record, register_change, check_change_registration
 from .option import options, register_option, edit_option, update_option_route, delete_option_route, move_option_up_route, move_option_down_route
 # 割引管理を追加
@@ -99,6 +110,10 @@ main_routes.add_url_rule('/<store>/dashboard/update_record', 'update_record', up
 main_routes.add_url_rule('/<store>/dashboard/delete_record', 'delete_record', delete_record, methods=['POST'])
 main_routes.add_url_rule('/<store>/dashboard/save_all', 'save_all', save_all, methods=['POST'])
 main_routes.add_url_rule('/<store>/dashboard/update_announcement', 'update_announcement_endpoint', update_announcement_endpoint, methods=['POST'])
+# ★ カレンダー機能用エンドポイント（新規追加）
+main_routes.add_url_rule('/<store>/dashboard/get_record_dates', 'get_record_dates', get_record_dates, methods=['POST'])
+# ★ 時間自動計算機能用エンドポイント（新規追加）
+main_routes.add_url_rule('/<store>/dashboard/get_course_data', 'get_course_data', get_course_data, methods=['GET'])
 
 # オプション管理
 main_routes.add_url_rule('/<store>/options', 'options', options, methods=['GET'])

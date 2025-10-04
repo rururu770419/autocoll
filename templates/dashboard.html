@@ -173,6 +173,28 @@
             <td class="dashboard-cell dashboard-delete-cell">
               <button class="dashboard-btn dashboard-delete-btn" onclick="deleteRecord({{ record.record_id }})">削除</button>
             </td>
+            
+            <!-- オートコール発信予定時刻 -->
+            <td class="dashboard-cell dashboard-call-time-cell">
+              {% if record.type == 'pickup' and not record.is_entry %}
+                <span id="call-time-{{ record.record_id }}">{{ record.call_scheduled_time or '-' }}</span>
+              {% endif %}
+            </td>
+            
+            <!-- オートコール状態アイコン -->
+            <td class="dashboard-cell dashboard-call-status-cell">
+              {% if record.type == 'pickup' and not record.is_entry %}
+                <span id="call-status-{{ record.record_id }}" class="call-status-icon">
+                  {% if record.call_status == 'pending' %}📞
+                  {% elif record.call_status == 'success' %}✅
+                  {% elif record.call_status == 'failed' %}❌
+                  {% elif record.call_status == 'disabled' %}⏸️
+                  {% else %}📞
+                  {% endif %}
+                </span>
+              {% endif %}
+            </td>
+            
           </tr>
           <!-- メモ行（非表示） -->
           <tr class="dashboard-memo-row" id="memo-row-{{ record.record_id }}" style="display: {% if record.memo_expanded %}table-row{% else %}none{% endif %};">
@@ -184,6 +206,9 @@
                         data-record-id="{{ record.record_id }}"
                         data-field="memo">{{ record.memo or '' }}</textarea>
             </td>
+            <!-- 列数を揃えるための空セル -->
+            <td class="dashboard-cell"></td>
+            <td class="dashboard-cell"></td>
           </tr>
           {% endfor %}
         </tbody>

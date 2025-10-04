@@ -361,3 +361,218 @@ document.addEventListener('DOMContentLoaded', function() {
     // 駐車場設定を読み込み
     loadParkingSettings();
 });
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// シフト種別管理
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+let currentShiftTypeId = null;
+let shiftTypes = [];
+
+// シフト種別を読み込み
+async function loadShiftTypes() {
+    try {
+        const response = await fetch(`${window.settingsUrls.store}/settings/shift_types`);
+        const data = await response.json();
+        
+        if (data.success) {
+            shiftTypes = data.shift_types;
+            renderShiftTypeList();
+        }
+    } catch (error) {
+        console.error('シフト種別の読み込みエラー:', error);
+    }
+}
+
+// シフト種別一覧を表示
+function renderShiftTypeList() {
+    const listContainer = document.getElementById('shiftTypeList');
+    
+    if (shiftTypes.length === 0) {
+        listContainer.innerHTML = '<p class="no-data-message">登録されているシフト種別はありません</p>';
+        return;
+    }
+    
+    let html = '';
+    shiftTypes.forEach(shiftType => {
+        const workDayLabel = shiftType.is_work_day ? '出勤' : '休日';
+        html += `
+            <div class="shift-type-item">
+                <div class="shift-type-info">
+                    <span class="shift-type-color-box" style="background-color: ${shiftType.color}"></span>
+                    <span class="shift-type-name">${escapeHtml(shiftType.shift_name)}</span>
+                    <span class="shift-type-badge">${workDayLabel}</span>
+                </div>
+                <div class="shift-type-actions">
+                    <button class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'up')" title="上へ">↑</button>
+                    <button class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'down')" title="下へ">↓</button>
+                    <button class="settings-btn-small settings-btn-edit" onclick="editShiftType(${shiftType.shift_type_id})">編集</button>
+                    <button class="settings-btn-small settings-btn-delete" onclick="deleteShiftType(${shiftType.shift_type_id})">削除</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    listContainer.innerHTML = html;
+}
+
+// シフト種別追加モーダルを表示
+function showAddShiftTypeModal() {
+    currentShiftTypeId = null;
+    document.getElementById('shiftTypeModalTitle').textContent = 'シフト種別を追加';
+    document.getElementById('shiftTypeNameInput').value = '';
+    document.getElementById('shiftTypeIsWorkDay').checked = true;
+    document.getElementById('shiftTypeColorInput').value = '#4CAF50';
+    document.getElementById('shiftTypeColorText').value = '#4CAF50';
+    document.getElementById('shiftTypeModal').style.display = 'flex';
+}
+
+// シフト種別編集モーダルを表示
+function editShiftType(shiftTypeId) {
+    const shiftType = shiftTypes.find(st => st.shift_type_id === shiftTypeId);
+    if (!shiftType) return;
+    
+    currentShiftTypeId = shiftTypeId;
+    document.getElementById('shiftTypeModalTitle').textContent = 'シフト種別を編集';
+    document.getElementById('shiftTypeNameInput').value = shiftType.shift_name;
+    document.getElementById('shiftTypeIsWorkDay').checked = shiftType.is_work_day;
+    document.getElementById('shiftTypeColorInput').value = shiftType.color;
+    document.getElementById('shiftTypeColorText').value = shiftType.color;
+    document.getElementById('shiftTypeModal').style.display = 'flex';
+}
+
+// モーダルを閉じる
+function closeShiftTypeModal() {
+    document.getElementById('shiftTypeModal').style.display = 'none';
+    currentShiftTypeId = null;
+}
+
+// シフト種別を保存（追加または更新）
+async function saveShiftType() {
+    const shiftName = document.getElementById('shiftTypeNameInput').value.trim();
+    const isWorkDay = document.getElementById('shiftTypeIsWorkDay').checked;
+    const color = document.getElementById('shiftTypeColorInput').value;
+    
+    if (!shiftName) {
+        alert('シフト名を入力してください');
+        return;
+    }
+    
+    try {
+        let url, method;
+        if (currentShiftTypeId) {
+            // 更新
+            url = `${window.settingsUrls.store}/settings/shift_types/${currentShiftTypeId}`;
+            method = 'PUT';
+        } else {
+            // 新規作成
+            url = `${window.settingsUrls.store}/settings/shift_types/create`;
+            method = 'POST';
+        }
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                shift_name: shiftName,
+                is_work_day: isWorkDay,
+                color: color
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage(data.message, 'success');
+            closeShiftTypeModal();
+            loadShiftTypes(); // 再読み込み
+        } else {
+            showMessage(data.message, 'error');
+        }
+        
+    } catch (error) {
+        console.error('保存エラー:', error);
+        showMessage('保存に失敗しました', 'error');
+    }
+}
+
+// シフト種別を削除
+async function deleteShiftType(shiftTypeId) {
+    const shiftType = shiftTypes.find(st => st.shift_type_id === shiftTypeId);
+    if (!shiftType) return;
+    
+    if (!confirm(`「${shiftType.shift_name}」を削除してもよろしいですか？`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${window.settingsUrls.store}/settings/shift_types/${shiftTypeId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage(data.message, 'success');
+            loadShiftTypes(); // 再読み込み
+        } else {
+            showMessage(data.message, 'error');
+        }
+        
+    } catch (error) {
+        console.error('削除エラー:', error);
+        showMessage('削除に失敗しました', 'error');
+    }
+}
+
+// シフト種別の並び順を変更
+async function moveShiftType(shiftTypeId, direction) {
+    try {
+        const response = await fetch(`${window.settingsUrls.store}/settings/shift_types/move`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                shift_type_id: shiftTypeId,
+                direction: direction
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            loadShiftTypes(); // 再読み込み（メッセージ不要）
+        } else {
+            showMessage(data.message, 'error');
+        }
+        
+    } catch (error) {
+        console.error('並び順変更エラー:', error);
+        showMessage('並び順の変更に失敗しました', 'error');
+    }
+}
+
+// カラーピッカーとテキスト入力の同期
+document.addEventListener('DOMContentLoaded', function() {
+    const colorInput = document.getElementById('shiftTypeColorInput');
+    const colorText = document.getElementById('shiftTypeColorText');
+    
+    if (colorInput && colorText) {
+        colorInput.addEventListener('input', function() {
+            colorText.value = this.value;
+        });
+        
+        colorText.addEventListener('input', function() {
+            if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                colorInput.value = this.value;
+            }
+        });
+    }
+    
+    // シフト種別を読み込み
+    loadShiftTypes();
+});

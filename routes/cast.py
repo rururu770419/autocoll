@@ -189,7 +189,7 @@ def edit_cast(store, cast_id):
         # ログインIDの処理（空欄の場合は既存のIDを維持）
         new_login_id = request.form.get("login_id", "").strip()
         if not new_login_id:
-            new_login_id = cast.login_id  # 既存のIDを維持
+            new_login_id = cast['login_id']  # 既存のIDを維持
         
         cast_data = {
             'name': request.form.get("name"),
@@ -229,7 +229,7 @@ def edit_cast(store, cast_id):
         
         # 名前の重複チェック（編集中のキャスト自身は除く）
         existing_cast_by_name = find_cast_by_name(db, cast_data['name'])
-        if existing_cast_by_name and existing_cast_by_name.cast_id != cast_id:
+        if existing_cast_by_name and existing_cast_by_name['cast_id'] != cast_id:
             return render_template(
                 "cast_edit.html",
                 store=store,
@@ -241,7 +241,7 @@ def edit_cast(store, cast_id):
         # 電話番号の重複チェック
         if cast_data['phone_number']:
             existing_cast_by_phone = find_cast_by_phone_number(db, cast_data['phone_number'])
-            if existing_cast_by_phone and existing_cast_by_phone.cast_id != cast_id:
+            if existing_cast_by_phone and existing_cast_by_phone['cast_id'] != cast_id:
                 return render_template(
                     "cast_edit.html",
                     store=store,
@@ -255,7 +255,7 @@ def edit_cast(store, cast_id):
             from database.cast_db import find_cast_by_login_id
             existing_cast_by_login = find_cast_by_login_id(db, cast_data['login_id'])
             # 編集中のキャスト自身のログインIDは除外
-            if existing_cast_by_login and existing_cast_by_login.cast_id != cast_id:
+            if existing_cast_by_login and existing_cast_by_login['cast_id'] != cast_id:
                 return render_template(
                     "cast_edit.html",
                     store=store,
@@ -267,8 +267,8 @@ def edit_cast(store, cast_id):
         # === ファイルアップロード処理 ===
         
         # 既存のファイルパスを取得
-        existing_id_docs = json.loads(cast.id_document_paths) if cast.id_document_paths else []
-        existing_contract_docs = json.loads(cast.contract_document_paths) if cast.contract_document_paths else []
+        existing_id_docs = json.loads(cast['id_document_paths']) if cast.get('id_document_paths') else []
+        existing_contract_docs = json.loads(cast['contract_document_paths']) if cast.get('contract_document_paths') else []
         
         # 削除対象ファイルの処理
         deleted_id_docs = request.form.getlist('deleted_id_documents')

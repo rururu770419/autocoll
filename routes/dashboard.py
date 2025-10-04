@@ -1,5 +1,6 @@
 from flask import render_template, request, session, jsonify
 from datetime import datetime, timedelta
+from database.db_connection import get_db_connection
 from database.db_access import (
     get_display_name, get_db, get_pickup_records_by_date, get_staff_list,
     get_all_casts, get_all_hotels_with_details, update_pickup_record,
@@ -16,9 +17,6 @@ def store_home(store):
         return "店舗が見つかりません。", 404
     
     try:
-        # 自動クリーンアップをチェック
-        auto_cleanup_if_needed(db)
-        
         # URLパラメータから日付を取得（なければ今日）
         target_date = request.args.get('date')
         if target_date:
@@ -76,12 +74,12 @@ def format_date_display(date):
 def get_announcement(db, target_date):
     """指定日のお知らせ情報を取得"""
     try:
-        cursor = db.execute("""
-            SELECT content, is_visible 
-            FROM announcements 
-            WHERE store_name = %s AND announcement_date = %s
-            LIMIT 1
-        """, (session.get('store'), target_date))
+        # PostgreSQL形式に修正
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT content, is_visible FROM announcements WHERE store_name = %s AND announcement_date = %s LIMIT 1",
+            (session.get('store'), target_date)
+        )
         
         row = cursor.fetchone()
         if row:
@@ -107,36 +105,39 @@ def get_record_dates(store):
         month = data.get('month')
         
         if not year or not month:
-            return jsonify({'success': False, 'error': 'year と month が必要です'})
+            return jsonify({'success': False, 'error': 'yearとmonthが必要です'})
         
-        # 指定された月の日付範囲を取得
-        start_date = datetime(year, month, 1).date()
+        # その月の最初の日と最後の日
+        first_day = datetime(year, month, 1).date()
         if month == 12:
-            end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+            last_day = datetime(year + 1, 1, 1).date() - timedelta(days=1)
         else:
-            end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
+            last_day = datetime(year, month + 1, 1).date() - timedelta(days=1)
         
-        # その月に予定があるすべての日付を取得
-        cursor = db.execute("""
-            SELECT DISTINCT DATE(created_date) as record_date
-            FROM pickup_records 
-            WHERE DATE(created_date) BETWEEN %s AND %s
-            ORDER BY record_date
-        """, (start_date, end_date))
+        # PostgreSQL形式に修正
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT DISTINCT DATE(entry_time) as record_date FROM pickup_records WHERE DATE(entry_time) BETWEEN %s AND %s",
+            (first_day, last_day)
+        )
         
         dates = [row['record_date'] for row in cursor.fetchall()]
         
-        return jsonify({'success': True, 'dates': dates})
+        return jsonify({
+            'success': True,
+            'dates': dates
+        })
         
     except Exception as e:
         print(f"Error in get_record_dates: {e}")
-        return jsonify({'success': False, 'error': f'日付取得エラー: {str(e)}'})
+        return jsonify({'success': False, 'error': f'データ取得エラー: {str(e)}'})
     
     finally:
         if db:
             db.close()
 
 def update_record(store):
+    """レコード更新エンドポイント"""
     db = get_db(store)
     if db is None:
         return jsonify({'success': False, 'error': '店舗が見つかりません'})
@@ -147,14 +148,45 @@ def update_record(store):
         field = data.get('field')
         value = data.get('value')
         
-        success = update_pickup_record(db, record_id, field, value)
+        if not record_id or not field:
+            return jsonify({'success': False, 'error': 'record_idとfieldが必要です'})
         
-        return jsonify({'success': success})
+        # フィールド名をデータベースカラム名にマッピング
+        field_mapping = {
+            'entry_time': 'entry_time',
+            'exit_time': 'exit_time',
+            'cast_id': 'cast_id',
+            'hotel_id': 'hotel_id',
+            'content': 'content',
+            'staff_id': 'staff_id',
+            'is_completed': 'is_completed',
+            'memo': 'memo',
+            'memo_expanded': 'memo_expanded'
+        }
+        
+        db_field = field_mapping.get(field)
+        if not db_field:
+            return jsonify({'success': False, 'error': f'不正なフィールド: {field}'})
+        
+        # is_completedとmemo_expandedはbooleanとして処理
+        if field in ['is_completed', 'memo_expanded']:
+            value = True if value else False
+        
+        # レコードを更新
+        update_pickup_record(db, record_id, db_field, value)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error in update_record: {e}")
+        return jsonify({'success': False, 'error': f'更新エラー: {str(e)}'})
+    
     finally:
         if db:
             db.close()
 
 def delete_record(store):
+    """レコード削除エンドポイント"""
     db = get_db(store)
     if db is None:
         return jsonify({'success': False, 'error': '店舗が見つかりません'})
@@ -163,102 +195,38 @@ def delete_record(store):
         data = request.get_json()
         record_id = data.get('record_id')
         
-        success = delete_pickup_record(db, record_id)
+        if not record_id:
+            return jsonify({'success': False, 'error': 'record_idが必要です'})
         
-        return jsonify({'success': success})
+        delete_pickup_record(db, record_id)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error in delete_record: {e}")
+        return jsonify({'success': False, 'error': f'削除エラー: {str(e)}'})
+    
     finally:
         if db:
             db.close()
 
 def save_all(store):
-    # 実際には特に何もしない（リアルタイム更新しているため）
-    # ユーザーに保存完了の確認を与えるためのエンドポイント
-    return jsonify({'success': True, 'message': '更新できました'})
+    """全変更を保存"""
+    return jsonify({'success': True, 'message': '保存は個別に処理されます'})
 
 def dashboard_data(store):
-    """ダッシュボードの最新データを取得するAPI"""
+    """ダッシュボードデータ取得API"""
     db = get_db(store)
     if db is None:
         return jsonify({'success': False, 'error': '店舗が見つかりません'})
     
     try:
-        # URLパラメータから日付を取得
-        target_date = request.args.get('date')
-        if target_date:
-            try:
-                current_date = datetime.strptime(target_date, '%Y-%m-%d').date()
-            except ValueError:
-                current_date = datetime.now().date()
-        else:
-            current_date = datetime.now().date()
-        
-        # 最新データを取得
-        pickup_records = get_pickup_records_by_date(db, current_date)
-        staff_list = get_staff_list(db)
-        casts = get_all_casts(db)
-        hotels = get_all_hotels_with_details(db)
-        
-        # sqlite3.Rowオブジェクトを辞書に変換
-        pickup_records_dict = []
-        for record in pickup_records:
-            record_dict = {
-                'record_id': record.record_id,
-                'type': record.type,
-                'cast_id': record.cast_id,
-                'hotel_id': record.hotel_id,
-                'course_id': record.course_id,
-                'staff_id': record.staff_id,
-                'entry_time': record.entry_time,
-                'exit_time': record.exit_time,
-                'content': record.content,
-                'is_entry': record.is_entry,
-                'is_completed': record.is_completed,
-                'memo': record.memo,
-                'memo_expanded': record.memo_expanded,
-                'nomination_type': record.nomination_type,
-                'cast_name': record.cast_name,
-                'hotel_name': record.hotel_name,
-                'staff_name': record.staff_name,
-                'staff_color': record.staff_color
-            }
-            pickup_records_dict.append(record_dict)
-        
-        staff_list_dict = []
-        for staff in staff_list:
-            staff_dict = {
-                'login_id': staff.login_id,
-                'name': staff.name,
-                'color': staff.color
-            }
-            staff_list_dict.append(staff_dict)
-        
-        casts_dict = []
-        for cast in casts:
-            cast_dict = {
-                'cast_id': cast.cast_id,
-                'name': cast.name,
-                'phone_number': cast.phone_number
-            }
-            casts_dict.append(cast_dict)
-        
-        hotels_dict = []
-        for hotel in hotels:
-            hotel_dict = {
-                'hotel_id': hotel.hotel_id,
-                'hotel_name': hotel.hotel_name,
-                'category_id': hotel.category_id,
-                'area_id': hotel.area_id,
-                'category_name': hotel.category_name,
-                'area_name': hotel.area_name
-            }
-            hotels_dict.append(hotel_dict)
+        target_date = request.args.get('date', datetime.now().date())
+        pickup_records = get_pickup_records_by_date(db, target_date)
         
         return jsonify({
             'success': True,
-            'pickup_records': pickup_records_dict,
-            'staff_list': staff_list_dict,
-            'casts': casts_dict,
-            'hotels': hotels_dict
+            'records': [dict(record) for record in pickup_records]
         })
         
     except Exception as e:
@@ -282,12 +250,15 @@ def check_change_status(store):
         if not record_id:
             return jsonify({'success': False, 'error': 'record_idが必要です'})
         
-        # レコード情報を取得
-        cursor = db.execute("""
-            SELECT p.record_id, p.is_entry, p.cast_id, p.exit_time
-            FROM pickup_records p
-            WHERE p.record_id = %s
-        """, (record_id,))
+        # デバッグ用
+        print(f"DEBUG check_change_status: record_id = {record_id}, type = {type(record_id)}")
+        
+        # PostgreSQL形式に修正（%sプレースホルダー）
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT p.record_id, p.is_entry, p.cast_id, p.exit_time FROM pickup_records p WHERE p.record_id = %s",
+            (record_id,)
+        )
         
         record = cursor.fetchone()
         if not record:
@@ -309,14 +280,17 @@ def check_change_status(store):
                 'has_change': False
             })
         
-        # お釣り登録状況をチェック
-        cursor = db.execute("""
-            SELECT COUNT(*) as count
-            FROM money_records m
-            WHERE m.cast_id = %s AND m.exit_time = %s AND m.created_date = date('now', 'localtime')
-        """, (record['cast_id'], record['exit_time']))
+        # お釣り登録状況をチェック（PostgreSQL形式）
+        # money_recordsテーブルにmoney_typeカラムがないため、record_idで判定
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM money_records WHERE record_id = %s AND cast_id = %s",
+            (record_id, record['cast_id'])
+        )
         
-        money_count = cursor.fetchone()['count']
+        money_result = cursor.fetchone()
+        money_count = money_result['count'] if money_result else 0
+        
+        print(f"DEBUG: record_id={record_id}, cast_id={record['cast_id']}, money_count={money_count}")
         
         return jsonify({
             'success': True,
@@ -326,12 +300,60 @@ def check_change_status(store):
         
     except Exception as e:
         print(f"Error in check_change_status: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': f'確認エラー: {str(e)}'})
     
     finally:
         if db:
             db.close()
 
+def check_change_registration(store):
+    """お釣り登録済みかチェックするAPI"""
+    db = get_db(store)
+    if db is None:
+        return jsonify({'success': False, 'error': '店舗が見つかりません'})
+    
+    try:
+        data = request.get_json()
+        cast_id = data.get('cast_id')
+        exit_time = data.get('exit_time')
+        
+        if not cast_id or not exit_time:
+            return jsonify({'success': False, 'error': 'cast_idとexit_timeが必要です'})
+        
+        # 今日の日付
+        today = datetime.now().date()
+        
+        # デバッグ用
+        print(f"DEBUG check_change_registration: cast_id={cast_id}, exit_time={exit_time}, today={today}")
+        
+        # PostgreSQL形式に修正
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM money_records WHERE cast_id = %s AND exit_time = %s AND created_date = %s",
+            (cast_id, exit_time, today)
+        )
+        
+        money_result = cursor.fetchone()
+        money_count = money_result['count'] if money_result else 0
+        
+        print(f"DEBUG: money_count = {money_count}")
+        
+        return jsonify({
+            'success': True,
+            'already_registered': money_count > 0
+        })
+        
+    except Exception as e:
+        print(f"Error in check_change_registration: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'チェックエラー: {str(e)}'})
+    
+    finally:
+        if db:
+            db.close()
 def update_announcement_endpoint(store):
     """お知らせ更新エンドポイント"""
     db = get_db(store)
@@ -342,48 +364,52 @@ def update_announcement_endpoint(store):
         data = request.get_json()
         field = data.get('field')
         value = data.get('value')
-        target_date = data.get('date')  # 日付を受け取る
+        date = data.get('date')
         
-        if field not in ['content', 'is_visible']:
-            return jsonify({'success': False, 'error': '無効なフィールドです'})
+        if not field or date is None:
+            return jsonify({'success': False, 'error': 'fieldとdateが必要です'})
         
-        if not target_date:
-            return jsonify({'success': False, 'error': '日付が指定されていません'})
+        # PostgreSQL形式に修正
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT * FROM announcements WHERE store_name = %s AND announcement_date = %s",
+            (store, date)
+        )
+        existing = cursor.fetchone()
         
-        # その日のお知らせレコードが存在するかチェック
-        cursor = db.execute("""
-            SELECT COUNT(*) as count FROM announcements 
-            WHERE store_name = %s AND announcement_date = %s
-        """, (store, target_date))
-        
-        count = cursor.fetchone()['count']
-        
-        if count == 0:
-            # レコードが存在しない場合は作成
-            db.execute("""
-                INSERT INTO announcements (store_name, announcement_date, content, is_visible) 
-                VALUES (%s, %s, '', 0)
-            """, (store, target_date))
-        
-        # フィールドを更新
-        if field == 'content':
-            db.execute("""
-                UPDATE announcements 
-                SET content = %s 
-                WHERE store_name = %s AND announcement_date = %s
-            """, (value, store, target_date))
-        elif field == 'is_visible':
-            db.execute("""
-                UPDATE announcements 
-                SET is_visible = %s 
-                WHERE store_name = %s AND announcement_date = %s
-            """, (1 if value else 0, store, target_date))
+        if existing:
+            # 更新
+            if field == 'content':
+                cursor.execute(
+                    "UPDATE announcements SET content = %s WHERE store_name = %s AND announcement_date = %s",
+                    (value, store, date)
+                )
+            elif field == 'is_visible':
+                cursor.execute(
+                    "UPDATE announcements SET is_visible = %s WHERE store_name = %s AND announcement_date = %s",
+                    (True if value else False, store, date)
+                )
+        else:
+            # 新規作成
+            if field == 'content':
+                cursor.execute(
+                    "INSERT INTO announcements (store_name, announcement_date, content, is_visible) VALUES (%s, %s, %s, FALSE)",
+                    (store, date, value)
+                )
+            elif field == 'is_visible':
+                cursor.execute(
+                    "INSERT INTO announcements (store_name, announcement_date, content, is_visible) VALUES (%s, %s, '', %s)",
+                    (store, date, True if value else False)
+                )
         
         db.commit()
+        
         return jsonify({'success': True})
         
     except Exception as e:
-        print(f"Error in update_announcement: {e}")
+        print(f"Error in update_announcement_endpoint: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': f'更新エラー: {str(e)}'})
     
     finally:
@@ -399,15 +425,26 @@ def get_course_data(store):
     try:
         courses = get_all_courses(db)
         
-        # sqlite3.Rowオブジェクトを辞書に変換
+        # デバッグ用: 最初のコースのキーを確認
+        if courses:
+            print(f"DEBUG get_course_data: First course keys = {list(courses[0].keys())}")
+            print(f"DEBUG get_course_data: First course data = {dict(courses[0])}")
+        
+        # psycopg.Rowオブジェクトを辞書に変換
         courses_dict = []
         for course in courses:
+            # 正確なカラム名: time_minutes
+            time_value = course.get('time_minutes', 60)
+            
             course_dict = {
                 'course_id': course['course_id'],
                 'name': course['name'],
-                'time': course['time']
+                'time': time_value,
+                'price': course.get('price', 0)
             }
             courses_dict.append(course_dict)
+        
+        print(f"DEBUG: Returning {len(courses_dict)} courses")
         
         return jsonify({
             'success': True,
@@ -416,6 +453,8 @@ def get_course_data(store):
         
     except Exception as e:
         print(f"Error in get_course_data: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': f'データ取得エラー: {str(e)}'})
     
     finally:

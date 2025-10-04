@@ -164,6 +164,7 @@ def delete_money_record(store, record_id):
         if db:
             db.close()
 
+
 def register_change(store):
     """ダッシュボードからのお釣り登録API"""
     if request.method != 'POST':
@@ -176,10 +177,13 @@ def register_change(store):
     try:
         # JSONデータを取得
         data = request.get_json()
+        print(f"DEBUG register_change: Received data = {data}")
+        
         if not data:
             return jsonify({'success': False, 'error': 'JSONデータが無効です'})
         
         # 必要なフィールドを取得
+        record_id = data.get('record_id')
         cast_id = data.get('cast_id')
         exit_time = data.get('exit_time')
         received_amount = data.get('received_amount')
@@ -187,36 +191,70 @@ def register_change(store):
         payment_method = data.get('payment_method')
         staff_id = data.get('staff_id')
         
-        # バリデーション
-        if not all([cast_id, exit_time, received_amount, change_amount, payment_method, staff_id]):
+        # staff_idが空の場合、セッションから取得
+        if not staff_id or staff_id == '':
+            staff_id = session.get('login_id', '')
+            print(f"DEBUG: staff_id was empty, using session login_id: {staff_id}")
+        
+        print(f"DEBUG: record_id={record_id}, cast_id={cast_id}, exit_time={exit_time}")
+        print(f"DEBUG: received={received_amount}, change={change_amount}, method={payment_method}, staff={staff_id}")
+        
+        # バリデーション（空文字列もチェック）
+        if not cast_id or not exit_time or not received_amount or not change_amount or not payment_method or not staff_id:
+            print(f"DEBUG: Validation failed - missing required fields")
             return jsonify({'success': False, 'error': '必要な項目が不足しています'})
         
         try:
             cast_id = int(cast_id)
             received_amount = int(received_amount)
             change_amount = int(change_amount)
-        except (ValueError, TypeError):
+            if record_id:
+                record_id = int(record_id)
+            else:
+                record_id = 0
+        except (ValueError, TypeError) as e:
+            print(f"DEBUG: Conversion error: {e}")
             return jsonify({'success': False, 'error': '数値が無効です'})
         
-        # 金銭記録を登録
-        success = register_money_record(
-            db, cast_id, exit_time, received_amount, 
-            change_amount, payment_method, staff_id
-        )
+        # 今日の日付
+        today = datetime.now().date()
         
-        if success:
-            return jsonify({'success': True, 'message': 'お釣り登録が完了しました'})
-        else:
-            return jsonify({'success': False, 'error': '登録中にエラーが発生しました'})
+        # PostgreSQL形式で直接INSERT
+        cursor = db.cursor()
+        
+        print(f"DEBUG: Getting next money_record ID...")
+        cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM money_records")
+        result = cursor.fetchone()
+        new_id = result['next_id']
+        print(f"DEBUG: New money_record ID = {new_id}")
+        
+        print(f"DEBUG: Inserting money record...")
+        cursor.execute("""
+            INSERT INTO money_records 
+            (id, record_id, cast_id, exit_time, received_amount, change_amount, payment_method, staff_id, created_date, created_at) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+        """, (new_id, record_id, cast_id, exit_time, received_amount, change_amount, payment_method, staff_id, today))
+        
+        db.commit()
+        print(f"DEBUG: Money record inserted successfully with ID {new_id}")
+        
+        return jsonify({'success': True, 'message': 'お釣り登録が完了しました'})
             
     except Exception as e:
         print(f"Error in register_change: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            db.rollback()
+            print("DEBUG: Transaction rolled back")
+        except:
+            pass
         return jsonify({'success': False, 'error': f'サーバーエラー: {str(e)}'})
     
     finally:
-        # データベース接続を確実に閉じる
         if db:
             db.close()
+
 
 def check_change_registration(store):
     """お釣り登録済みかどうかをチェックするAPI"""
@@ -238,15 +276,24 @@ def check_change_registration(store):
         if not cast_id or not exit_time:
             return jsonify({'success': False, 'error': 'キャストIDと退室時間が必要です'})
         
-        # 同じキャストの同じ退室時間で今日のお釣り記録があるかチェック
-        cursor = db.execute("""
+        # デバッグ用
+        print(f"DEBUG check_change_registration: cast_id={cast_id}, exit_time={exit_time}")
+        
+        # 今日の日付
+        today = datetime.now().date()
+        
+        # PostgreSQL形式に修正（%sプレースホルダー + cursor作成）
+        cursor = db.cursor()
+        cursor.execute("""
             SELECT COUNT(*) as count
             FROM money_records 
-            WHERE cast_id = ? AND exit_time = ? AND created_date = date('now', 'localtime')
-        """, (cast_id, exit_time))
+            WHERE cast_id = %s AND exit_time = %s AND created_date = %s
+        """, (cast_id, exit_time, today))
         
         result = cursor.fetchone()
-        already_registered = result['count'] > 0
+        already_registered = result['count'] > 0 if result else False
+        
+        print(f"DEBUG: already_registered = {already_registered}")
         
         return jsonify({
             'success': True,
@@ -255,6 +302,8 @@ def check_change_registration(store):
         
     except Exception as e:
         print(f"Error in check_change_registration: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': f'チェックエラー: {str(e)}'})
     
     finally:

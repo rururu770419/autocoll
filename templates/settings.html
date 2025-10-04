@@ -24,6 +24,7 @@
     <button class="settings-tab-btn" onclick="switchTab('notification')">通知設定</button>
     <button class="settings-tab-btn" onclick="switchTab('auto_call')">オートコール設定</button>
     <button class="settings-tab-btn" onclick="switchTab('parking')">駐車場設定</button>
+    <button class="settings-tab-btn" onclick="switchTab('shift_types')">シフト種別設定</button>
   </div>
   
   <!-- タブコンテンツ -->
@@ -367,6 +368,26 @@
       </div>
     </div>
     
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- シフト種別設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="shift_types" class="settings-tab-content">
+      <h2 class="settings-section-title">シフト種別設定</h2>
+      
+      <!-- シフト種別一覧 -->
+      <div class="settings-subsection">
+        <h3 class="settings-subsection-title">📅 登録済みシフト種別</h3>
+        
+        <div id="shiftTypeList" class="shift-type-list">
+          <!-- JavaScriptで動的に生成 -->
+        </div>
+        
+        <button type="button" class="settings-btn settings-btn-secondary" onclick="showAddShiftTypeModal()">
+          ➕ シフト種別を追加
+        </button>
+      </div>
+    </div>
+    
   </form>
   
   <!-- メッセージ表示エリア -->
@@ -399,6 +420,65 @@
         キャンセル
       </button>
       <button type="button" class="settings-btn settings-btn-primary" onclick="saveParkingLot()">
+        保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- シフト種別追加・編集モーダル -->
+<div id="shiftTypeModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="shiftTypeModalTitle">シフト種別を追加</h3>
+      <span class="modal-close" onclick="closeShiftTypeModal()">&times;</span>
+    </div>
+    
+    <div class="modal-body">
+      <div class="settings-form-group">
+        <label for="shiftTypeNameInput" class="settings-label">シフト名</label>
+        <input 
+          type="text" 
+          id="shiftTypeNameInput" 
+          class="settings-input"
+          placeholder="例: 早番、遅番、夜勤"
+          maxlength="50">
+      </div>
+      
+      <div class="settings-form-group">
+        <label class="settings-checkbox-label">
+          <input 
+            type="checkbox" 
+            id="shiftTypeIsWorkDay"
+            checked>
+          <span>出勤日として扱う（休日の場合はチェックを外す）</span>
+        </label>
+      </div>
+      
+      <div class="settings-form-group">
+        <label for="shiftTypeColorInput" class="settings-label">表示色</label>
+        <div class="color-picker-wrapper">
+          <input 
+            type="color" 
+            id="shiftTypeColorInput" 
+            class="color-input"
+            value="#4CAF50">
+          <input 
+            type="text" 
+            id="shiftTypeColorText" 
+            class="settings-input color-text-input"
+            value="#4CAF50"
+            maxlength="7"
+            pattern="^#[0-9A-Fa-f]{6}$">
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="settings-btn settings-btn-secondary" onclick="closeShiftTypeModal()">
+        キャンセル
+      </button>
+      <button type="button" class="settings-btn settings-btn-primary" onclick="saveShiftType()">
         保存
       </button>
     </div>
