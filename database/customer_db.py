@@ -10,10 +10,10 @@ import psycopg
 from psycopg.rows import dict_row
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash
-from dotenv import load_dotenv  # ← これを追加
+from dotenv import load_dotenv
 
 # 環境変数を読み込む
-load_dotenv()  # ← これを追加
+load_dotenv()
 
 def get_db_connection(store_code):
     """データベース接続を取得"""
@@ -37,7 +37,6 @@ def create_customers_table(store_code):
             name VARCHAR(100) NOT NULL,
             furigana VARCHAR(100),
             phone VARCHAR(20),
-            email VARCHAR(100),
             birthday DATE,
             age INTEGER,
             postal_code VARCHAR(10),
@@ -48,6 +47,9 @@ def create_customers_table(store_code):
             current_points INTEGER DEFAULT 0,
             member_type VARCHAR(20) DEFAULT '通常会員',
             status VARCHAR(20) DEFAULT '普通',
+            web_member VARCHAR(20) DEFAULT 'web会員',
+            comment TEXT,
+            nickname VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -83,17 +85,10 @@ def add_customer(store_code, customer_data):
         if birthday == '':
             birthday = None
         
-        # 住所を結合（既存テーブルは1つのaddressフィールド）
-        address_parts = []
-        if customer_data.get('prefecture'):
-            address_parts.append(customer_data.get('prefecture'))
-        if customer_data.get('city'):
-            address_parts.append(customer_data.get('city'))
-        if customer_data.get('address_line'):
-            address_parts.append(customer_data.get('address_line'))
-        if customer_data.get('building'):
-            address_parts.append(customer_data.get('building'))
-        address = ' '.join(address_parts) if address_parts else None
+        # 住所は個別カラムで保存
+        prefecture = customer_data.get('prefecture')
+        city = customer_data.get('city')
+        address_detail = customer_data.get('address_detail')
         
         # 年齢計算（birthdayがある場合）
         age = None
@@ -105,23 +100,32 @@ def add_customer(store_code, customer_data):
         
         cur.execute('''
             INSERT INTO customers (
-                name, furigana, phone, email, 
-                birthday, age, address,
-                mypage_id, mypage_password_hash, status
+                name, furigana, phone, 
+                birthday, age, prefecture, city, address_detail,
+                mypage_id, mypage_password_hash, status,
+                web_member, comment, nickname, current_points, member_type,
+                recruitment_source
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
         ''', (
             customer_data.get('name'),
             customer_data.get('furigana'),
-            customer_data.get('phone_number'),  # フォームからはphone_number
-            customer_data.get('email'),
+            customer_data.get('phone_number') or customer_data.get('phone'),
             birthday,
             age,
-            address,
-            customer_data.get('login_id'),  # フォームからはlogin_id
-            customer_data.get('password'),  # ハッシュ化は後で対応
-            customer_data.get('status', '普通')
+            prefecture,
+            city,
+            address_detail,
+            customer_data.get('login_id') or customer_data.get('mypage_id'),
+            customer_data.get('password') or customer_data.get('mypage_password'),
+            customer_data.get('status', '普通'),
+            customer_data.get('web_member', 'web会員'),
+            customer_data.get('comment'),
+            customer_data.get('nickname'),
+            customer_data.get('current_points', 0),
+            customer_data.get('member_type', '通常会員'),
+            customer_data.get('recruitment_source')
         ))
         
         conn.commit()
@@ -142,13 +146,14 @@ def get_all_customers(store_code):
     """全顧客を取得"""
     try:
         conn = get_db_connection(store_code)
-        cur = conn.cursor(row_factory=dict_row)  # ← これを追加
+        cur = conn.cursor(row_factory=dict_row)
         
         cur.execute('''
             SELECT 
-                customer_id, name, furigana, phone, email,
-                birthday, age, address, recruitment_source,
+                customer_id, name, furigana, phone,
+                birthday, age, prefecture, city, address_detail, recruitment_source,
                 mypage_id, current_points, member_type, status,
+                web_member, comment, nickname,
                 created_at, updated_at
             FROM customers
             ORDER BY created_at DESC
@@ -173,10 +178,11 @@ def get_customer_by_id(store_code, customer_id):
     
     cur.execute('''
         SELECT 
-            customer_id, name, furigana, phone, email,
-            birthday, age, postal_code, address,
+            customer_id, name, furigana, phone,
+            birthday, age, postal_code, prefecture, city, address_detail,
             recruitment_source, mypage_id,
             current_points, member_type, status,
+            web_member, comment, nickname,
             created_at, updated_at
         FROM customers
         WHERE customer_id = %s
@@ -203,54 +209,66 @@ def update_customer(store_code, customer_id, customer_data):
         mypage_password_hash = generate_password_hash(customer_data['mypage_password'])
         cur.execute('''
             UPDATE customers SET
-                name = %s, furigana = %s, phone = %s, email = %s,
-                birthday = %s, age = %s, postal_code = %s, address = %s,
+                name = %s, furigana = %s, phone = %s,
+                birthday = %s, age = %s, postal_code = %s, 
+                prefecture = %s, city = %s, address_detail = %s,
                 recruitment_source = %s, mypage_id = %s,
                 mypage_password_hash = %s,
                 current_points = %s, member_type = %s, status = %s,
+                web_member = %s, comment = %s, nickname = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE customer_id = %s
         ''', (
             customer_data['name'],
             customer_data.get('furigana'),
             customer_data.get('phone'),
-            customer_data.get('email'),
             customer_data.get('birthday'),
             age,
             customer_data.get('postal_code'),
-            customer_data.get('address'),
+            customer_data.get('prefecture'),
+            customer_data.get('city'),
+            customer_data.get('address_detail'),
             customer_data.get('recruitment_source'),
             customer_data.get('mypage_id'),
             mypage_password_hash,
             customer_data.get('current_points', 0),
             customer_data.get('member_type', '通常会員'),
             customer_data.get('status', '普通'),
+            customer_data.get('web_member', 'web会員'),
+            customer_data.get('comment'),
+            customer_data.get('nickname'),
             customer_id
         ))
     else:
         # パスワード更新なし
         cur.execute('''
             UPDATE customers SET
-                name = %s, furigana = %s, phone = %s, email = %s,
-                birthday = %s, age = %s, postal_code = %s, address = %s,
+                name = %s, furigana = %s, phone = %s,
+                birthday = %s, age = %s, postal_code = %s,
+                prefecture = %s, city = %s, address_detail = %s,
                 recruitment_source = %s, mypage_id = %s,
                 current_points = %s, member_type = %s, status = %s,
+                web_member = %s, comment = %s, nickname = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE customer_id = %s
         ''', (
             customer_data['name'],
             customer_data.get('furigana'),
             customer_data.get('phone'),
-            customer_data.get('email'),
             customer_data.get('birthday'),
             age,
             customer_data.get('postal_code'),
-            customer_data.get('address'),
+            customer_data.get('prefecture'),
+            customer_data.get('city'),
+            customer_data.get('address_detail'),
             customer_data.get('recruitment_source'),
             customer_data.get('mypage_id'),
             customer_data.get('current_points', 0),
             customer_data.get('member_type', '通常会員'),
             customer_data.get('status', '普通'),
+            customer_data.get('web_member', 'web会員'),
+            customer_data.get('comment'),
+            customer_data.get('nickname'),
             customer_id
         ))
     
@@ -281,15 +299,19 @@ def search_customers(store_code, keyword):
                     name,
                     furigana,
                     phone,
-                    email,
                     birthday,
                     age,
-                    address,
+                    prefecture,
+                    city,
+                    address_detail,
                     recruitment_source,
                     mypage_id,
                     current_points,
                     member_type,
                     status,
+                    web_member,
+                    comment,
+                    nickname,
                     created_at,
                     updated_at
                 FROM customers 

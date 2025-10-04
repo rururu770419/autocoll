@@ -52,15 +52,19 @@ def api_get_customers_endpoint(store):
                 'name': customer['name'],
                 'furigana': customer.get('furigana'),
                 'phone': customer.get('phone'),
-                'email': customer.get('email'),
                 'birthday': customer['birthday'].isoformat() if customer.get('birthday') else None,
                 'age': customer.get('age'),
-                'address': customer.get('address'),
+                'prefecture': customer.get('prefecture'),
+                'city': customer.get('city'),
+                'address_detail': customer.get('address_detail'),
                 'recruitment_source': customer.get('recruitment_source'),
                 'mypage_id': customer.get('mypage_id'),
                 'current_points': customer.get('current_points', 0),
                 'member_type': customer.get('member_type', '通常会員'),
                 'status': customer.get('status', '普通'),
+                'web_member': customer.get('web_member', 'web会員'),
+                'comment': customer.get('comment'),
+                'nickname': customer.get('nickname'),
                 'created_at': customer['created_at'].isoformat() if customer.get('created_at') else None,
                 'updated_at': customer['updated_at'].isoformat() if customer.get('updated_at') else None
             }
@@ -174,8 +178,6 @@ def api_update_customer_endpoint(store, customer_id):
             error_message = 'このマイページIDはすでに登録されています。'
         elif 'customers_phone_key' in error_message:
             error_message = 'この電話番号はすでに登録されています。'
-        elif 'customers_email_key' in error_message:
-            error_message = 'このメールアドレスはすでに登録されています。'
         else:
             # それ以外のエラーはそのまま表示（開発時用）
             error_message = f'更新に失敗しました: {error_message}'
