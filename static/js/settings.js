@@ -229,8 +229,8 @@ function renderParkingList() {
             <div class="parking-item">
                 <span class="parking-name">${escapeHtml(parking.parking_name)}</span>
                 <div class="parking-actions">
-                    <button class="settings-btn-small settings-btn-edit" onclick="editParking(${parking.parking_id})">編集</button>
-                    <button class="settings-btn-small settings-btn-delete" onclick="deleteParking(${parking.parking_id})">削除</button>
+                    <button type="button" class="settings-btn-small settings-btn-edit" onclick="editParking(${parking.parking_id})">編集</button>
+                    <button type="button" class="settings-btn-small settings-btn-delete" onclick="deleteParking(${parking.parking_id})">削除</button>
                 </div>
             </div>
         `;
@@ -405,10 +405,10 @@ function renderShiftTypeList() {
                     <span class="shift-type-badge">${workDayLabel}</span>
                 </div>
                 <div class="shift-type-actions">
-                    <button class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'up')" title="上へ">↑</button>
-                    <button class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'down')" title="下へ">↓</button>
-                    <button class="settings-btn-small settings-btn-edit" onclick="editShiftType(${shiftType.shift_type_id})">編集</button>
-                    <button class="settings-btn-small settings-btn-delete" onclick="deleteShiftType(${shiftType.shift_type_id})">削除</button>
+                    <button type="button" class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'up')" title="上へ">↑</button>
+                    <button type="button" class="settings-btn-small settings-btn-move" onclick="moveShiftType(${shiftType.shift_type_id}, 'down')" title="下へ">↓</button>
+                    <button type="button" class="settings-btn-small settings-btn-edit" onclick="editShiftType(${shiftType.shift_type_id})">編集</button>
+                    <button type="button" class="settings-btn-small settings-btn-delete" onclick="deleteShiftType(${shiftType.shift_type_id})">削除</button>
                 </div>
             </div>
         `;

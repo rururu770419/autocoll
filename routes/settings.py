@@ -317,3 +317,185 @@ def register_settings_routes(app):
                 'success': False,
                 'message': '駐車場の削除に失敗しました'
             }), 500
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # シフト種別管理エンドポイント
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    @app.route('/<store>/settings/shift_types')
+    @admin_required
+    def get_shift_types(store):
+        """シフト種別一覧を取得"""
+        try:
+            from database.shift_db import get_all_shift_types
+            
+            shift_types = get_all_shift_types()
+            
+            return jsonify({
+                'success': True,
+                'shift_types': shift_types
+            })
+            
+        except Exception as e:
+            print(f"Error in get_shift_types: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'シフト種別の取得に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/shift_types/create', methods=['POST'])
+    @admin_required
+    def create_shift_type(store):
+        """シフト種別を新規作成"""
+        try:
+            from database.shift_db import create_shift_type as db_create_shift_type, get_all_shift_types
+            
+            data = request.get_json()
+            shift_name = data.get('shift_name')
+            is_work_day = data.get('is_work_day', True)
+            color = data.get('color', '#3498db')
+            
+            if not shift_name:
+                return jsonify({
+                    'success': False,
+                    'message': 'シフト名を入力してください'
+                }), 400
+            
+  
+            
+            shift_type_id = db_create_shift_type(
+                shift_name=shift_name,
+                is_work_day=is_work_day,
+                color=color,
+     
+            )
+            
+            if shift_type_id:
+                return jsonify({
+                    'success': True,
+                    'message': 'シフト種別を追加しました',
+                    'shift_type_id': shift_type_id
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'シフト種別の追加に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in create_shift_type: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'シフト種別の追加に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/shift_types/<int:shift_type_id>', methods=['PUT'])
+    @admin_required
+    def update_shift_type(store, shift_type_id):
+        """シフト種別を更新"""
+        try:
+            from database.shift_db import update_shift_type as db_update_shift_type
+            
+            data = request.get_json()
+            shift_name = data.get('shift_name')
+            is_work_day = data.get('is_work_day')
+            color = data.get('color')
+            
+            if not shift_name:
+                return jsonify({
+                    'success': False,
+                    'message': 'シフト名を入力してください'
+                }), 400
+            
+            success = db_update_shift_type(
+                shift_type_id=shift_type_id,
+                shift_name=shift_name,
+                is_work_day=is_work_day,
+                color=color
+            )
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': 'シフト種別を更新しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'シフト種別の更新に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in update_shift_type: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'シフト種別の更新に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/shift_types/<int:shift_type_id>', methods=['DELETE'])
+    @admin_required
+    def delete_shift_type(store, shift_type_id):
+        """シフト種別を削除"""
+        try:
+            from database.shift_db import delete_shift_type as db_delete_shift_type
+            
+            success = db_delete_shift_type(shift_type_id)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': 'シフト種別を削除しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'シフト種別の削除に失敗しました（使用中の可能性があります）'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in delete_shift_type: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'シフト種別の削除に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/shift_types/move', methods=['POST'])
+    @admin_required
+    def move_shift_type(store):
+        """シフト種別の表示順を変更"""
+        try:
+            from database.shift_db import update_shift_type_order
+            
+            data = request.get_json()
+            shift_type_id = data.get('shift_type_id')
+            new_order = data.get('new_order')
+            
+            if shift_type_id is None or new_order is None:
+                return jsonify({
+                    'success': False,
+                    'message': 'パラメータが不足しています'
+                }), 400
+            
+            success = update_shift_type_order(shift_type_id, new_order)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '表示順を変更しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '表示順の変更に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in move_shift_type: {e}")
+            return jsonify({
+                'success': False,
+                'message': '表示順の変更に失敗しました'
+            }), 500

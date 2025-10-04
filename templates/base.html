@@ -50,7 +50,7 @@
                 </li>
                 
             {% endif %}
-            
+            <li><a href="/{{ session.get('store', 'nagano') }}/shift_management">シフト管理</a></li>
             <li><a href="{{ url_for('main_routes.logout', store=session['store']) }}">ログアウト</a></li>
         </ul>
     </nav>

@@ -1347,3 +1347,32 @@ ease-in-out;
     background-color: #28a745;
     color: #fff;
     }
+
+
+    /* LINE通知切り替えボタン */
+.line-notification-toggle {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.btn-toggle {
+    padding: 8px 20px;
+    border: 2px solid #ddd;
+    background: white;
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-toggle:hover {
+    border-color: #007bff;
+}
+
+.btn-toggle.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}

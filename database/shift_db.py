@@ -222,7 +222,7 @@ def get_shifts_by_month(year, month):
             SELECT s.shift_id, s.staff_id, s.shift_date, s.shift_type_id, 
                    s.start_time, s.end_time, s.parking_id, s.memo,
                    st.shift_name, st.is_work_day, st.color,
-                   u.name as staff_name, u.user_role
+                   u.name as staff_name, u.role
             FROM shifts s
             LEFT JOIN shift_types st ON s.shift_type_id = st.shift_type_id
             LEFT JOIN users u ON s.staff_id = u.login_id
@@ -330,6 +330,66 @@ def update_parking_assignment(staff_id, shift_date, parking_id):
         return cursor.rowcount > 0
     except Exception as e:
         print(f"Error in update_parking_assignment: {e}")
+        if db:
+            db.rollback()
+        return False
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 日付別備考関連
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def get_date_memos_by_month(year, month):
+    """指定月の日付別備考を取得"""
+    try:
+        db = get_db()
+        if db is None:
+            return []
+        
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT memo_date, memo_text
+            FROM date_memos
+            WHERE EXTRACT(YEAR FROM memo_date) = %s
+            AND EXTRACT(MONTH FROM memo_date) = %s
+            ORDER BY memo_date
+        """, (year, month))
+        
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"Error in get_date_memos_by_month: {e}")
+        return []
+
+
+def upsert_date_memo(memo_date, memo_text):
+    """日付別備考を登録または更新"""
+    try:
+        db = get_db()
+        if db is None:
+            return False
+        
+        cursor = db.cursor()
+        
+        # 空文字の場合は削除
+        if not memo_text or memo_text.strip() == '':
+            cursor.execute("""
+                DELETE FROM date_memos
+                WHERE memo_date = %s
+            """, (memo_date,))
+        else:
+            cursor.execute("""
+                INSERT INTO date_memos (memo_date, memo_text)
+                VALUES (%s, %s)
+                ON CONFLICT (memo_date)
+                DO UPDATE SET
+                    memo_text = EXCLUDED.memo_text,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (memo_date, memo_text))
+        
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error in upsert_date_memo: {e}")
         if db:
             db.rollback()
         return False

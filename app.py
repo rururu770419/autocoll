@@ -54,5 +54,9 @@ app.register_blueprint(main_routes)
 from routes.settings import register_settings_routes
 register_settings_routes(app)
 
+# シフト管理ルートの登録
+from routes.shift_management import register_shift_management_routes
+register_shift_management_routes(app)
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5001)

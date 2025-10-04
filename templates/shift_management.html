@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}シフト管理 - {{ store }}{% endblock %}
+
+<!-- 専用CSSを追加 -->
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shift_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="shift-management-container">
+    <!-- 月選択 -->
+    <div class="shift-management-month-selector">
+        <button class="shift-management-btn-nav" onclick="changeMonth(-1)">◀ 前月</button>
+        <h2 id="current-month"></h2>
+        <button class="shift-management-btn-nav" onclick="changeMonth(1)">次月 ▶</button>
+    </div>
+
+    <!-- シフト表 -->
+    <div class="shift-management-table-container">
+        <table class="shift-management-table" id="shift-table">
+            <thead>
+                <tr id="staff-header">
+                    <th class="shift-date-column">日付</th>
+                    <!-- スタッフ名が動的に追加される -->
+                </tr>
+            </thead>
+            <tbody id="shift-body">
+                <!-- シフトデータが動的に追加される -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ローディング -->
+    <div id="loading" class="shift-management-loading" style="display: none;">
+        <div class="shift-management-spinner"></div>
+        <p>読み込み中...</p>
+    </div>
+</div>
+
+<!-- シフト編集モーダル -->
+<div id="shift-modal" class="shift-management-modal">
+    <div class="shift-management-modal-content">
+        <span class="shift-management-modal-close" onclick="closeShiftModal()">&times;</span>
+        <h2>シフト登録</h2>
+        
+        <form id="shift-form">
+            <input type="hidden" id="shift-id">
+            <input type="hidden" id="staff-id">
+            <input type="hidden" id="shift-date">
+            
+            <div class="shift-management-form-group">
+                <label>スタッフ名</label>
+                <input type="text" id="staff-name" readonly class="shift-management-readonly-input">
+            </div>
+            
+            <div class="shift-management-form-group">
+                <label>日付</label>
+                <input type="text" id="date-display" readonly class="shift-management-readonly-input">
+            </div>
+            
+            <div class="shift-management-form-group">
+                <label>シフト種別 <span class="shift-management-required">*</span></label>
+                <select id="shift-type-id" required>
+                    <option value="">選択してください</option>
+                    <!-- シフト種別が動的に追加される -->
+                </select>
+            </div>
+            
+            <div class="shift-management-form-group shift-management-time-inputs" id="time-inputs" style="display: none;">
+                <label>勤務時間（アルバイトの場合）</label>
+                <div class="shift-management-time-row">
+                    <input type="time" id="start-time" placeholder="開始時間">
+                    <span>〜</span>
+                    <input type="time" id="end-time" placeholder="終了時間">
+                </div>
+                <small class="shift-management-note">※時間を入力すると「確定」、未入力で「予定」になります</small>
+            </div>
+            
+            <div class="shift-management-form-group">
+                <label>メモ</label>
+                <textarea id="memo" rows="3" placeholder="備考があれば記入"></textarea>
+            </div>
+            
+            <div class="shift-management-modal-actions">
+                <button type="button" class="shift-management-btn shift-management-btn-secondary" onclick="closeShiftModal()">キャンセル</button>
+                <button type="button" class="shift-management-btn shift-management-btn-danger" id="delete-btn" onclick="deleteShift()" style="display: none;">削除</button>
+                <button type="submit" class="shift-management-btn shift-management-btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const store = "{{ store }}";
+</script>
+<script src="{{ url_for('static', filename='js/shift_management.js') }}"></script>
+{% endblock %}
