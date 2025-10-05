@@ -1,216 +1,322 @@
-// 顧客編集画面JavaScript
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 顧客編集画面スクリプト
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-let originalCustomer = null;
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 初期化
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// ページ読み込み時の処理
-document.addEventListener('DOMContentLoaded', function() {
-    loadCustomerData();
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Customer edit page initialized');
     
-    // フォーム送信
-    const form = document.getElementById('customerForm');
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            await updateCustomer();
-        });
-    }
+    // 選択肢を読み込む（完了を待つ）
+    await loadCustomerFieldOptions();
     
-    // 生年月日変更時に年齢を自動計算
+    // 顧客データを読み込む
+    await loadCustomerData();
+    
+    // フォーム送信イベント
+    document.getElementById('customerForm').addEventListener('submit', handleFormSubmit);
+    
+    // 年齢自動計算
     const birthdayInput = document.getElementById('birthday');
     if (birthdayInput) {
-        birthdayInput.addEventListener('change', function() {
-            calculateAge();
-        });
+        birthdayInput.addEventListener('change', calculateAge);
     }
     
-    // ========== ここから追加 ==========
-    
-    // 電話番号：数字のみ、11桁まで
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            // 数字以外を削除
-            this.value = this.value.replace(/[^0-9]/g, '');
-            // 11桁を超える部分をカット
-            if (this.value.length > 11) {
-                this.value = this.value.slice(0, 11);
-            }
-        });
+    // 削除ボタン
+    const deleteBtn = document.getElementById('deleteBtn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', deleteCustomer);
     }
     
-    // 現在の所持PT：数字のみ
-    const pointsInput = document.getElementById('current_points');
-    if (pointsInput) {
-        pointsInput.addEventListener('input', function() {
-            // 数字以外を削除
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
-    }
+    // 入力制限を設定
+    setupInputRestrictions();
     
-    // マイページID：半角英数字と記号のみ
-    const mypageIdInput = document.getElementById('mypage_id');
-    if (mypageIdInput) {
-        mypageIdInput.addEventListener('input', function() {
-            // 半角英数字と許可された記号のみ残す
-            this.value = this.value.replace(/[^a-zA-Z0-9_\-@.]/g, '');
-        });
-    }
-    
-    // マイページパスワード：半角文字のみ
-    const passwordInput = document.getElementById('mypage_password');
-    if (passwordInput) {
-        passwordInput.addEventListener('input', function() {
-            // 全角文字を削除（半角スペース~チルダの範囲のみ許可）
-            this.value = this.value.replace(/[^\x20-\x7E]/g, '');
-        });
-    }
-    
-    // ========== ここまで追加 ==========
+    // セレクトボックスの変更イベント（色を反映）
+    setupSelectChangeEvents();
 });
 
-// 顧客データ読み込み
-async function loadCustomerData() {
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 選択肢データ読み込み
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadCustomerFieldOptions() {
     const store = getStoreCode();
+    
+    try {
+        const response = await fetch(`/${store}/api/customer_fields/options`);
+        const result = await response.json();
+        
+        if (result.success && result.options) {
+            // 会員種別
+            populateSelect('member_type', result.options.member_type || []);
+            
+            // ステータス
+            populateSelect('status', result.options.status || []);
+            
+            // WEB会員
+            populateSelect('web_member', result.options.web_member || []);
+            
+            // 募集媒体
+            populateSelect('recruitment_source', result.options.recruitment_source || []);
+        }
+    } catch (error) {
+        console.error('選択肢の読み込みエラー:', error);
+    }
+}
+
+function populateSelect(selectId, options) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    
+    // 既存のoptionを削除（空白選択は残す）
+    while (select.options.length > 1) {
+        select.remove(1);
+    }
+    
+    // 選択肢を追加
+    options.forEach(option => {
+        // is_hiddenがtrueの場合はスキップ
+        if (option.is_hidden) return;
+        
+        const optElement = document.createElement('option');
+        optElement.value = option.value;
+        optElement.textContent = option.value;  // labelではなくvalueを表示
+        
+        // 色情報があれば設定
+        if (option.color) {
+            optElement.style.backgroundColor = option.color;
+            optElement.style.color = getContrastColor(option.color);
+        }
+        
+        select.appendChild(optElement);
+    });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 顧客データ読み込み
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadCustomerData() {
     const customerId = document.getElementById('customerId').value;
+    const store = getStoreCode();
     
     try {
         const response = await fetch(`/${store}/api/customers/${customerId}`);
         const result = await response.json();
         
-        console.log('API Response:', result);
-        
-        if (result.success) {
-            originalCustomer = result.customer;
-            fillForm(result.customer);
-        } else {
-            showMessage(result.message || '顧客情報の取得に失敗しました', 'error');
+        if (result.success && result.data) {
+            const customer = result.data;
+            
+            // 基本情報
+            setFieldValue('name', customer.name);
+            setFieldValue('furigana', customer.furigana);
+            setFieldValue('phone', customer.phone);
+            setFieldValue('birthday', customer.birthday);
+            setFieldValue('age', customer.age);
+            setFieldValue('nickname', customer.nickname);
+            
+            // 住所情報
+            setFieldValue('prefecture', customer.prefecture);
+            setFieldValue('address_detail', customer.address_detail);
+            
+            // 会員情報
+            setFieldValue('member_type', customer.member_type);
+            setFieldValue('status', customer.status);
+            setFieldValue('web_member', customer.web_member);
+            setFieldValue('current_points', customer.current_points);
+            setFieldValue('recruitment_source', customer.recruitment_source);
+            
+            // マイページ情報
+            setFieldValue('mypage_id', customer.mypage_id);
+            setFieldValue('mypage_password', customer.mypage_password);
+            
+            // コメント
+            setFieldValue('comment', customer.comment);
+            
+            // 都道府県が選択されていたら市区町村を読み込む
+            if (customer.prefecture) {
+                await loadCityOptions(customer.prefecture);
+                setFieldValue('city', customer.city);
+            }
+            
+            // 選択肢の色を反映（少し待ってからトリガー）
+            setTimeout(() => {
+                applySelectColors();
+            }, 100);
         }
     } catch (error) {
-        console.error('Error:', error);
-        showMessage('エラーが発生しました: ' + error.message, 'error');
+        console.error('顧客データの読み込みエラー:', error);
+        showMessage('顧客データの読み込みに失敗しました', 'error');
     }
 }
 
-// フォームに値を設定
-function fillForm(customer) {
-    console.log('Filling form with:', customer);
-    
-    // 安全な値設定関数
-    const setValue = (id, value) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.value = value || '';
-        } else {
-            console.warn(`Element not found: ${id}`);
-        }
-    };
-    
-    // 基本情報
-    setValue('customer_number', customer.customer_id);
-    setValue('name', customer.name);
-    setValue('furigana', customer.furigana);
-    setValue('phone', customer.phone);
-    setValue('birthday', customer.birthday);
-    setValue('age', customer.age);
-    
-    // セレクトボックス
-    setValue('member_type', customer.member_type || '通常会員');
-    setValue('status', customer.status || '普通');
-    setValue('web_member', customer.web_member || 'web会員');
-    setValue('recruitment_source', customer.recruitment_source);
-    
-    // 住所：都道府県を先に設定
-setValue('prefecture', customer.prefecture);
-setValue('address_detail', customer.address_detail);
+function setFieldValue(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field && value !== null && value !== undefined) {
+        field.value = value;
+    }
+}
 
-// 市区町村は都道府県のchangeイベント後に設定
-if (customer.prefecture && customer.city) {
-    const prefectureSelect = document.getElementById('prefecture');
-    const citySelect = document.getElementById('city');
-    
-    // 都道府県の変更イベントをリッスン
-    const setCityValue = () => {
-        // 市区町村リストが生成されるまで待つ
-        const checkAndSet = () => {
-            if (citySelect.options.length > 1) {
-                // リストが生成された
-                setValue('city', customer.city);
-                console.log('市区町村を設定:', customer.city);
-            } else {
-                // まだ生成されていない場合は50ms後に再試行
-                setTimeout(checkAndSet, 50);
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 市区町村の読み込み（address.jsと連携）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadCityOptions(prefecture) {
+    return new Promise((resolve) => {
+        // address.jsのcityDataを使用
+        if (typeof cityData !== 'undefined' && cityData[prefecture]) {
+            const citySelect = document.getElementById('city');
+            if (citySelect) {
+                // 既存の選択肢をクリア
+                citySelect.innerHTML = '<option value="">選択してください</option>';
+                
+                // 新しい選択肢を追加
+                cityData[prefecture].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
             }
-        };
-        checkAndSet();
-    };
-    
-    // 都道府県のchangeイベント発火
-    if (prefectureSelect) {
-        prefectureSelect.addEventListener('change', setCityValue, { once: true });
-        prefectureSelect.dispatchEvent(new Event('change'));
-    }
+        }
+        
+        // 少し待ってから完了（DOMの更新を確実にするため）
+        setTimeout(resolve, 50);
+    });
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 選択肢の色を反映
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function applySelectColors() {
+    const selects = ['member_type', 'status', 'web_member', 'recruitment_source'];
     
-    // マイページ情報
-    setValue('mypage_id', customer.mypage_id);
-    setValue('mypage_password', customer.mypage_password);  // ← この行を追加
-    setValue('current_points', customer.current_points || 0);
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select || !select.value) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.style.backgroundColor) {
+            select.style.backgroundColor = selectedOption.style.backgroundColor;
+            select.style.color = selectedOption.style.color;
+        }
+    });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 入力制限
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function setupInputRestrictions() {
+    // 電話番号（数字のみ、11桁）
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+        });
+    }
     
-    // 新規フィールド
-    setValue('comment', customer.comment);
-    setValue('nickname', customer.nickname);
+    // 所持PT（数字のみ）
+    const pointsInput = document.getElementById('current_points');
+    if (pointsInput) {
+        pointsInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
     
-    // 生年月日があれば年齢を計算
-    if (customer.birthday) {
-        calculateAge();
+    // マイページID（半角英数字と記号のみ）
+    const mypageIdInput = document.getElementById('mypage_id');
+    if (mypageIdInput) {
+        mypageIdInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^a-zA-Z0-9_\-@.]/g, '');
+        });
+    }
+    
+    // マイページパスワード（半角文字のみ）
+    const passwordInput = document.getElementById('mypage_password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^\x20-\x7E]/g, '');
+        });
     }
 }
 
-// 年齢計算
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// セレクトボックスの色変更イベント
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function setupSelectChangeEvents() {
+    const selectIds = ['member_type', 'status', 'web_member', 'recruitment_source'];
+    
+    selectIds.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        select.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.style.backgroundColor) {
+                this.style.backgroundColor = selectedOption.style.backgroundColor;
+                this.style.color = selectedOption.style.color;
+            } else {
+                // 選択解除時は色をリセット
+                this.style.backgroundColor = '';
+                this.style.color = '';
+            }
+        });
+    });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 年齢自動計算
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 function calculateAge() {
     const birthdayInput = document.getElementById('birthday');
     const ageInput = document.getElementById('age');
     
-    if (!birthdayInput || !ageInput) return;
+    if (!birthdayInput || !birthdayInput.value || !ageInput) return;
     
-    const birthday = birthdayInput.value;
-    if (!birthday) {
-        ageInput.value = '';
-        return;
-    }
-    
-    const birthDate = new Date(birthday);
+    const birthday = new Date(birthdayInput.value);
     const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    let age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
         age--;
     }
     
-    ageInput.value = age;
+    ageInput.value = age >= 0 ? age : '';
 }
 
-// 更新
-async function updateCustomer() {
-    const store = getStoreCode();
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// フォーム送信
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
     const customerId = document.getElementById('customerId').value;
+    const store = getStoreCode();
     
-    // デバッグ：保存直前の値を確認
-    console.log('保存直前のcity値:', document.getElementById('city').value);
-    
-    // 値を取得
+    // フォームデータを取得
     const getValue = (id) => {
         const element = document.getElementById(id);
         return element ? element.value.trim() : '';
     };
     
+    // 🔧 修正: 空の日付フィールドをnullに変換
+    const birthdayValue = getValue('birthday');
+    const ageValue = getValue('age');
+    
     const data = {
         name: getValue('name'),
         furigana: getValue('furigana'),
         phone: getValue('phone'),
-        birthday: getValue('birthday') || null,
-        age: getValue('age') ? parseInt(getValue('age')) : null,
+        birthday: birthdayValue || null,  // 空文字列の場合はnull
+        age: ageValue ? parseInt(ageValue) : null,  // 空文字列の場合はnull
         prefecture: getValue('prefecture'),
         city: getValue('city'),
         address_detail: getValue('address_detail'),
@@ -222,15 +328,10 @@ async function updateCustomer() {
         mypage_id: getValue('mypage_id'),
         mypage_password: getValue('mypage_password'),
         comment: getValue('comment'),
-        nickname: getValue('nickname')
+        nickname: getValue('nickname') || getValue('name')  // ニックネームが空なら名前をコピー
     };
-
-    // ニックネームが空なら名前をコピー
-if (!data.nickname) {
-    data.nickname = data.name;
-}
     
-    console.log('Update data:', data);
+    console.log('送信データ:', data);
     
     // 必須チェック
     if (!data.name) {
@@ -251,63 +352,28 @@ if (!data.nickname) {
         
         if (result.success) {
             showMessage('顧客情報を更新しました', 'success');
-            // リダイレクトを削除（そのままページに留まる）
             // データを再読み込み
             await loadCustomerData();
         } else {
             showMessage(result.message || '更新に失敗しました', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        showMessage('エラーが発生しました: ' + error.message, 'error');
+        console.error('更新エラー:', error);
+        showMessage('顧客情報を更新に失敗しました: ' + error.message, 'error');
     }
 }
 
-// メッセージ表示
-function showMessage(message, type) {
-    const messageArea = document.getElementById('messageArea');
-    if (!messageArea) return;
-    
-    const alertClass = type === 'success' ? 'customer-alert-success' : 
-                      type === 'info' ? 'customer-alert-info' : 'customer-alert-error';
-    messageArea.innerHTML = `<div class="customer-alert ${alertClass}">${escapeHtml(message)}</div>`;
-    
-    // 成功メッセージは5秒後に消す
-    if (type === 'success') {
-        setTimeout(() => {
-            messageArea.innerHTML = '';
-        }, 5000);
-    }
-}
-
-// ユーティリティ関数
-function getStoreCode() {
-    const pathParts = window.location.pathname.split('/');
-    return pathParts[1] || 'nagano';
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.toString().replace(/[&<>"']/g, m => map[m]);
-}
-
-// 削除機能を追加（ファイルの最後に追加）
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 削除
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 async function deleteCustomer() {
-    if (!confirm('本当にこの顧客を削除しますか？\nこの操作は取り消せません。')) {
+    if (!confirm('この顧客を削除してもよろしいですか？\nこの操作は取り消せません。')) {
         return;
     }
     
-    const store = getStoreCode();
     const customerId = document.getElementById('customerId').value;
+    const store = getStoreCode();
     
     try {
         const response = await fetch(`/${store}/api/customers/${customerId}/delete`, {
@@ -318,8 +384,6 @@ async function deleteCustomer() {
         
         if (result.success) {
             showMessage('顧客を削除しました', 'success');
-            
-            // 1秒後に一覧ページにリダイレクト
             setTimeout(() => {
                 window.location.href = `/${store}/customer_management`;
             }, 1000);
@@ -327,7 +391,42 @@ async function deleteCustomer() {
             showMessage(result.message || '削除に失敗しました', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        showMessage('エラーが発生しました: ' + error.message, 'error');
+        console.error('削除エラー:', error);
+        showMessage('エラーが発生しました', 'error');
     }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ユーティリティ関数
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function getStoreCode() {
+    const pathSegments = window.location.pathname.split('/');
+    return pathSegments[1] || 'nagano';
+}
+
+function getContrastColor(hexColor) {
+    if (!hexColor) return '#000000';
+    
+    const r = parseInt(hexColor.substr(1, 2), 16);
+    const g = parseInt(hexColor.substr(3, 2), 16);
+    const b = parseInt(hexColor.substr(5, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155 ? '#000000' : '#ffffff';
+}
+
+function showMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    if (!messageArea) return;
+    
+    const alertClass = type === 'success' ? 'customer-alert-success' : 
+                      type === 'info' ? 'customer-alert-info' : 
+                      'customer-alert-error';
+    
+    messageArea.innerHTML = `<div class="customer-alert ${alertClass}">${message}</div>`;
+    messageArea.style.display = 'block';
+    
+    setTimeout(() => {
+        messageArea.style.display = 'none';
+    }, 3000);
 }

@@ -1,11 +1,15 @@
-// 顧客管理画面JavaScript
+// 顧客管理画面JavaScript（バッジ色動的化版）
 
 let allCustomers = [];
 let currentPage = 1;
 const itemsPerPage = 30;
+let customerFieldOptions = {}; // 設定から取得する選択肢データ
 
 // ページ読み込み時の処理
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // 設定から選択肢を読み込み（完了を待つ）
+    await loadCustomerFieldOptions();
+    
     // 初期表示で全件取得
     loadAllCustomers();
     
@@ -20,7 +24,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 全件取得関数を追加
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 設定から選択肢を取得
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadCustomerFieldOptions() {
+    try {
+        const store = getStoreCode();
+        const response = await fetch(`/${store}/api/customer_fields/options`);
+        const result = await response.json();
+        
+        if (result.success) {
+            customerFieldOptions = result.options;
+        }
+    } catch (error) {
+        console.error('選択肢の読み込みエラー:', error);
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 全件取得
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 async function loadAllCustomers() {
     const store = getStoreCode();
     
@@ -45,20 +70,10 @@ async function loadAllCustomers() {
     }
 }
 
-// 空メッセージ表示
-function showEmptyMessage() {
-    const tbody = document.getElementById('customerTableBody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="10" class="customer-empty-message">
-                検索条件を入力して検索してください
-            </td>
-        </tr>
-    `;
-    document.getElementById('paginationArea').innerHTML = '';
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 統合検索
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// 統合検索機能
 async function searchCustomers() {
     const store = getStoreCode();
     const keyword = document.getElementById('searchKeyword').value.trim();
@@ -68,20 +83,16 @@ async function searchCustomers() {
         return;
     }
     
-    // 検索キーワードの最小文字数チェック
     if (keyword.length < 2) {
         showMessage('検索キーワードは2文字以上で入力してください', 'error');
         return;
     }
     
-    // 検索タイプの自動判定
     const searchType = detectSearchType(keyword);
     
     try {
-        // 検索タイプに応じたパラメータを設定
         let url = `/${store}/api/customers/search?keyword=${encodeURIComponent(keyword)}`;
         
-        // 検索タイプをクエリパラメータとして追加
         if (searchType) {
             url += `&type=${searchType}`;
         }
@@ -111,31 +122,40 @@ async function searchCustomers() {
     }
 }
 
-// 検索タイプの自動判定
 function detectSearchType(keyword) {
-    // ハイフンを除去
     const cleanKeyword = keyword.replace(/-/g, '');
     
-    // 数字のみの場合は電話番号検索
     if (/^\d+$/.test(cleanKeyword)) {
         return 'phone';
     }
     
-    // カタカナを含む場合はフリガナ検索
     if (/[ァ-ヴー]/.test(keyword)) {
         return 'furigana';
     }
     
-    // ひらがなを含む場合もフリガナ検索として扱う（カタカナに変換）
     if (/[ぁ-ん]/.test(keyword)) {
         return 'furigana';
     }
     
-    // どちらでもない場合は両方で検索（nullを返す）
     return null;
 }
 
-// ページネーション付き表示
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 表示
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function showEmptyMessage() {
+    const tbody = document.getElementById('customerTableBody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="10" class="customer-empty-message">
+                検索条件を入力して検索してください
+            </td>
+        </tr>
+    `;
+    document.getElementById('paginationArea').innerHTML = '';
+}
+
 function displayCustomersWithPagination() {
     const tbody = document.getElementById('customerTableBody');
     const store = getStoreCode();
@@ -172,14 +192,10 @@ function displayCustomersWithPagination() {
             <td class="customer-table-cell">${escapeHtml(customer.phone || '')}</td>
             <td class="customer-table-cell">${customer.age ? customer.age + '歳' : ''}</td>
             <td class="customer-table-cell">
-                <span class="customer-badge ${getBadgeClass(customer.member_type)}">
-                    ${escapeHtml(customer.member_type || '通常会員')}
-                </span>
+                ${renderBadge('member_type', customer.member_type || '通常会員')}
             </td>
             <td class="customer-table-cell">
-                <span class="customer-badge ${getStatusBadgeClass(customer.status)}">
-                    ${escapeHtml(customer.status || '普通')}
-                </span>
+                ${renderBadge('status', customer.status || '普通')}
             </td>
             <td class="customer-table-cell">${customer.current_points || 0} pt</td>
             <td class="customer-table-cell">${escapeHtml(customer.comment || '')}</td>
@@ -190,7 +206,42 @@ function displayCustomersWithPagination() {
     displayPagination();
 }
 
-// ページネーション表示
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// バッジ描画（設定から色を取得）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function renderBadge(fieldKey, value) {
+    const options = customerFieldOptions[fieldKey] || [];
+    const optionData = options.find(opt => opt.value === value);
+    
+    let bgColor = '#f0f0f0';
+    if (optionData) {
+        bgColor = optionData.color;
+    }
+    
+    const textColor = getContrastColor(bgColor);
+    
+    return `<span class="customer-badge" style="background-color: ${bgColor}; color: ${textColor};">
+        ${escapeHtml(value)}
+    </span>`;
+}
+
+function getContrastColor(hexColor) {
+    if (!hexColor || hexColor.length !== 7) {
+        return '#000000';
+    }
+    
+    const r = parseInt(hexColor.substr(1, 2), 16);
+    const g = parseInt(hexColor.substr(3, 2), 16);
+    const b = parseInt(hexColor.substr(5, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155 ? '#000000' : '#ffffff';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ページネーション
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 function displayPagination() {
     const totalPages = Math.ceil(allCustomers.length / itemsPerPage);
     const paginationArea = document.getElementById('paginationArea');
@@ -228,7 +279,6 @@ function displayPagination() {
     paginationArea.innerHTML = html;
 }
 
-// ページ変更
 function changePage(page) {
     currentPage = page;
     displayCustomersWithPagination();
@@ -237,23 +287,10 @@ function changePage(page) {
     document.querySelector('.customer-table-wrapper').scrollIntoView({ behavior: 'smooth' });
 }
 
-// 会員種別バッジクラス
-function getBadgeClass(memberType) {
-    if (memberType === '本会員') return 'customer-badge-premium';
-    return 'customer-badge-normal';
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ユーティリティ関数
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// ステータスバッジクラス
-function getStatusBadgeClass(status) {
-    switch(status) {
-        case '優良': return 'customer-badge-excellent';
-        case '要注意': return 'customer-badge-caution';
-        case '出禁': return 'customer-badge-banned';
-        default: return 'customer-badge-average';
-    }
-}
-
-// メッセージ表示
 function showMessage(message, type) {
     const messageArea = document.getElementById('messageArea');
     const alertClass = type === 'success' ? 'customer-alert-success' : 
@@ -265,7 +302,6 @@ function showMessage(message, type) {
     }, 5000);
 }
 
-// ユーティリティ関数
 function getStoreCode() {
     const pathParts = window.location.pathname.split('/');
     return pathParts[1] || 'nagano';

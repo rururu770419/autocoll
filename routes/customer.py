@@ -105,7 +105,8 @@ def api_get_customer_endpoint(store, customer_id):
         if customer_dict.get('updated_at'):
             customer_dict['updated_at'] = customer_dict['updated_at'].isoformat()
         
-        return jsonify({'success': True, 'customer': customer_dict})
+        # 🔧 修正: 'customer' → 'data' に変更
+        return jsonify({'success': True, 'data': customer_dict})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
