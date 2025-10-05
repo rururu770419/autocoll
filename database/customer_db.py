@@ -40,7 +40,9 @@ def create_customers_table(store_code):
             birthday DATE,
             age INTEGER,
             postal_code VARCHAR(10),
-            address TEXT,
+            prefecture VARCHAR(50),
+            city VARCHAR(50),
+            address_detail TEXT,
             recruitment_source VARCHAR(50),
             mypage_id VARCHAR(50) UNIQUE,
             mypage_password_hash VARCHAR(255),
@@ -107,18 +109,18 @@ def add_customer(store_code, customer_data):
                 recruitment_source
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
+            ) RETURNING customer_id
         ''', (
             customer_data.get('name'),
             customer_data.get('furigana'),
-            customer_data.get('phone_number') or customer_data.get('phone'),
+            customer_data.get('phone_number') or customer_data.get('phone') or None,
             birthday,
             age,
             prefecture,
             city,
             address_detail,
-            customer_data.get('login_id') or customer_data.get('mypage_id'),
-            customer_data.get('password') or customer_data.get('mypage_password'),
+            customer_data.get('login_id') or customer_data.get('mypage_id') or None,
+            customer_data.get('password') or customer_data.get('mypage_password') or None,
             customer_data.get('status', '普通'),
             customer_data.get('web_member', 'web会員'),
             customer_data.get('comment'),
@@ -128,12 +130,14 @@ def add_customer(store_code, customer_data):
             customer_data.get('recruitment_source')
         ))
         
+        customer_id = cur.fetchone()[0]
+        
         conn.commit()
         cur.close()
         conn.close()
         
         print(f"顧客追加成功: {customer_data.get('name')}")
-        return True
+        return customer_id
         
     except Exception as e:
         print(f"Error in add_customer: {e}")
@@ -180,7 +184,7 @@ def get_customer_by_id(store_code, customer_id):
         SELECT 
             customer_id, name, furigana, phone,
             birthday, age, postal_code, prefecture, city, address_detail,
-            recruitment_source, mypage_id,
+            recruitment_source, mypage_id, mypage_password_hash,
             current_points, member_type, status,
             web_member, comment, nickname,
             created_at, updated_at
@@ -206,7 +210,6 @@ def update_customer(store_code, customer_id, customer_data):
     
     # マイページパスワード更新（入力があった場合のみ）
     if customer_data.get('mypage_password'):
-        mypage_password_hash = generate_password_hash(customer_data['mypage_password'])
         cur.execute('''
             UPDATE customers SET
                 name = %s, furigana = %s, phone = %s,
@@ -230,7 +233,7 @@ def update_customer(store_code, customer_id, customer_data):
             customer_data.get('address_detail'),
             customer_data.get('recruitment_source'),
             customer_data.get('mypage_id'),
-            mypage_password_hash,
+            customer_data.get('mypage_password'),  # ← ここを修正
             customer_data.get('current_points', 0),
             customer_data.get('member_type', '通常会員'),
             customer_data.get('status', '普通'),

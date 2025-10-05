@@ -9,6 +9,50 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ========== リアルタイム入力制限 ==========
+    
+    // 電話番号：数字のみ、11桁まで
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            // 数字以外を削除
+            this.value = this.value.replace(/[^0-9]/g, '');
+            // 11桁を超える部分をカット
+            if (this.value.length > 11) {
+                this.value = this.value.slice(0, 11);
+            }
+        });
+    }
+    
+    // 現在の所持PT：数字のみ
+    const pointsInput = document.getElementById('current_points');
+    if (pointsInput) {
+        pointsInput.addEventListener('input', function() {
+            // 数字以外を削除
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+    
+    // マイページID：半角英数字と記号のみ
+    const mypageIdInput = document.getElementById('mypage_id');
+    if (mypageIdInput) {
+        mypageIdInput.addEventListener('input', function() {
+            // 半角英数字と許可された記号のみ残す
+            this.value = this.value.replace(/[^a-zA-Z0-9_\-@.]/g, '');
+        });
+    }
+    
+    // マイページパスワード：半角文字のみ
+    const passwordInput = document.getElementById('mypage_password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            // 全角文字を削除（半角スペース~チルダの範囲のみ許可）
+            this.value = this.value.replace(/[^\x20-\x7E]/g, '');
+        });
+    }
+    
+    // ========== リアルタイム入力制限ここまで ==========
+    
     // フォーム送信
     const customerForm = document.getElementById('customerForm');
     if (customerForm) {
@@ -32,7 +76,7 @@ function calculateAge(birthdayValue) {
         age--;
     }
     
-    document.getElementById('age').value = age >= 0 ? age + '歳' : '';
+    document.getElementById('age').value = age >= 0 ? age : '';
 }
 
 // フォーム送信処理
@@ -42,16 +86,10 @@ async function handleFormSubmit(e) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
-    // 住所を結合
-    const prefecture = data.prefecture || '';
-    const city = data.city || '';
-    const addressDetail = data.address_detail || '';
-    data.address = `${prefecture} ${city} ${addressDetail}`.trim();
-    
-    // 不要なフィールドを削除
-    delete data.prefecture;
-    delete data.city;
-    delete data.address_detail;
+    // ニックネームが空なら名前をコピー
+    if (!data.nickname) {
+        data.nickname = data.name;
+    }
     
     const store = getStoreCode();
     
@@ -74,9 +112,10 @@ async function handleFormSubmit(e) {
         
         if (result.success) {
             showMessage('顧客を登録しました', 'success');
+            // 登録した顧客の編集ページにリダイレクト
             setTimeout(() => {
-                location.href = `/${store}/customer_management`;
-            }, 1500);
+                window.location.href = `/${store}/customer_edit/${result.customer_id}`;
+            }, 500);
         } else {
             showMessage(result.message || '登録に失敗しました', 'error');
         }
@@ -93,7 +132,9 @@ function showMessage(message, type) {
     messageArea.innerHTML = `<div class="customer-alert ${alertClass}">${escapeHtml(message)}</div>`;
     
     setTimeout(() => {
-        messageArea.innerHTML = '';
+        if (type === 'success') {
+            messageArea.innerHTML = '';
+        }
     }, 5000);
 }
 

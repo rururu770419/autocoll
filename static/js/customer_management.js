@@ -65,15 +65,13 @@ function showEmptyMessage() {
     const tbody = document.getElementById('customerTableBody');
     tbody.innerHTML = `
         <tr>
-            <td colspan="9" class="customer-empty-message">
+            <td colspan="10" class="customer-empty-message">
                 検索条件を入力して検索してください
             </td>
         </tr>
     `;
     document.getElementById('paginationArea').innerHTML = '';
 }
-
-
 
 // 検索
 async function searchCustomers() {
@@ -146,7 +144,7 @@ function displayCustomersWithPagination() {
     if (allCustomers.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="customer-empty-message">
+                <td colspan="10" class="customer-empty-message">
                     顧客データがありません
                 </td>
             </tr>
@@ -163,6 +161,12 @@ function displayCustomersWithPagination() {
     // テーブル表示
     tbody.innerHTML = pageCustomers.map(customer => `
         <tr class="customer-table-row">
+            <td class="customer-table-cell">
+                <div class="customer-table-actions">
+                    <a href="/${store}/customer_edit/${customer.customer_id}" 
+                       class="customer-btn customer-btn-primary">詳細</a>
+                </div>
+            </td>
             <td class="customer-table-cell">${customer.customer_id}</td>
             <td class="customer-table-cell">${escapeHtml(customer.name || '')}</td>
             <td class="customer-table-cell">${escapeHtml(customer.furigana || '')}</td>
@@ -179,14 +183,7 @@ function displayCustomersWithPagination() {
                 </span>
             </td>
             <td class="customer-table-cell">${customer.current_points || 0} pt</td>
-            <td class="customer-table-cell">
-                <div class="customer-table-actions">
-                    <a href="/${store}/customer_edit/${customer.customer_id}" 
-                       class="customer-btn customer-btn-primary">詳細</a>
-                    <button onclick="deleteCustomer(${customer.customer_id})" 
-                            class="customer-btn customer-btn-danger">削除</button>
-                </div>
-            </td>
+            <td class="customer-table-cell">${escapeHtml(customer.comment || '')}</td>
         </tr>
     `).join('');
     
@@ -254,35 +251,6 @@ function getStatusBadgeClass(status) {
         case '要注意': return 'customer-badge-caution';
         case '出禁': return 'customer-badge-banned';
         default: return 'customer-badge-average';
-    }
-}
-
-// 削除
-async function deleteCustomer(customerId) {
-    if (!confirm('本当にこの顧客を削除しますか？')) {
-        return;
-    }
-    
-    const store = getStoreCode();
-    
-    try {
-        const response = await fetch(`/${store}/api/customers/${customerId}/delete`, {
-            method: 'POST'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('顧客を削除しました', 'success');
-            
-            // 削除後に再検索
-            searchCustomers();
-        } else {
-            showMessage(result.message || '削除に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('エラーが発生しました', 'error');
     }
 }
 

@@ -93,6 +93,9 @@ def api_get_customer_endpoint(store, customer_id):
         
         # dict_rowを通常のdictに変換
         customer_dict = dict(customer)
+
+        # パスワードを追加（mypage_password_hashカラムをmypage_passwordとして返す）
+        customer_dict['mypage_password'] = customer_dict.get('mypage_password_hash')
         
         # date型をJSON対応形式に変換
         if customer_dict.get('birthday'):
@@ -148,6 +151,7 @@ def api_update_customer_endpoint(store, customer_id):
     try:
         store_code = session['store']
         data = request.get_json()
+
         
         # 必須項目チェック
         if not data.get('name'):

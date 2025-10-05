@@ -262,12 +262,13 @@
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
+    overflow-x: auto;  /* hidden を auto に変更 */
 }
 
 .customer-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 1200px;  /* この行を追加 */
 }
 
 .customer-table-header {
