@@ -47,6 +47,17 @@ from .customer import (
     api_delete_customer_endpoint,
     api_search_customers_endpoint
 )
+# 顧客情報設定APIを追加
+from .settings_customer_api import (
+    api_get_customer_fields,
+    api_get_customer_field_options_for_edit,
+    api_update_category_label,
+    api_add_field_option,
+    api_update_field_option,
+    api_toggle_field_option_visibility,
+    api_delete_field_option,
+    api_move_field_option
+)
 
 
 # メインのBlueprint作成
@@ -153,3 +164,15 @@ main_routes.add_url_rule('/<store>/api/customers/add', 'api_add_customer', api_a
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>/update', 'api_update_customer', api_update_customer_endpoint, methods=['POST'])
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>/delete', 'api_delete_customer', api_delete_customer_endpoint, methods=['POST'])
 main_routes.add_url_rule('/<store>/api/customers/search', 'api_search_customers', api_search_customers_endpoint, methods=['GET'])
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 顧客情報設定API（新規追加）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+main_routes.add_url_rule('/<store>/api/customer_fields', 'api_get_customer_fields', api_get_customer_fields, methods=['GET'])
+main_routes.add_url_rule('/<store>/api/customer_fields/options', 'api_get_customer_field_options', api_get_customer_field_options_for_edit, methods=['GET'])
+main_routes.add_url_rule('/<store>/api/customer_fields/category', 'api_update_category_label', api_update_category_label, methods=['PUT'])
+main_routes.add_url_rule('/<store>/api/customer_fields/option', 'api_add_field_option', api_add_field_option, methods=['POST'])
+main_routes.add_url_rule('/<store>/api/customer_fields/option/<int:option_id>', 'api_update_field_option', api_update_field_option, methods=['PUT'])
+main_routes.add_url_rule('/<store>/api/customer_fields/option/<int:option_id>/visibility', 'api_toggle_field_option_visibility', api_toggle_field_option_visibility, methods=['PUT'])
+main_routes.add_url_rule('/<store>/api/customer_fields/option/<int:option_id>', 'api_delete_field_option', api_delete_field_option, methods=['DELETE'])
+main_routes.add_url_rule('/<store>/api/customer_fields/option/<int:option_id>/move', 'api_move_field_option', api_move_field_option, methods=['PUT'])

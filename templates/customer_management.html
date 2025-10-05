@@ -16,15 +16,11 @@
         </div>
     </div>
 
-    <!-- 検索エリア -->
+    <!-- 検索エリア（統合検索） -->
     <div class="customer-search-area">
         <div class="customer-search-wrapper">
-            <select id="searchType" class="customer-select customer-select-narrow">
-                <option value="phone">電話番号</option>
-                <option value="furigana">フリガナ</option>
-            </select>
-            <input type="tel" id="searchKeyword" class="customer-search-input" 
-                   placeholder="電話番号で検索（ハイフンなし）">
+            <input type="text" id="searchKeyword" class="customer-search-input" 
+                   placeholder="フリガナまたは電話番号で検索">
             <button type="button" class="customer-search-btn" onclick="searchCustomers()">検索</button>
         </div>
     </div>

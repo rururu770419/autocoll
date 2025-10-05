@@ -290,41 +290,85 @@ def delete_customer(store_code, customer_id):
     cur.close()
     conn.close()
 
-def search_customers(store_code, keyword):
-    """顧客を検索（電話番号またはフリガナ）"""
+def search_customers(store_code, keyword, search_type=None):
+    """
+    顧客を検索（統合検索対応）
+    
+    Args:
+        store_code: 店舗コード
+        keyword: 検索キーワード
+        search_type: 検索タイプ ('phone', 'furigana', None)
+                    None の場合は両方で検索
+    
+    Returns:
+        検索結果のリスト
+    """
     conn = get_db_connection(store_code)
     try:
         with conn.cursor(row_factory=dict_row) as cursor:
-            # 電話番号、フリガナ、名前のいずれかで部分一致検索
-            sql = """
-                SELECT 
-                    customer_id,
-                    name,
-                    furigana,
-                    phone,
-                    birthday,
-                    age,
-                    prefecture,
-                    city,
-                    address_detail,
-                    recruitment_source,
-                    mypage_id,
-                    current_points,
-                    member_type,
-                    status,
-                    web_member,
-                    comment,
-                    nickname,
-                    created_at,
-                    updated_at
-                FROM customers 
-                WHERE phone LIKE %s 
-                   OR furigana LIKE %s
-                   OR name LIKE %s
-                ORDER BY customer_id DESC
-            """
-            search_pattern = f"%{keyword}%"
-            cursor.execute(sql, (search_pattern, search_pattern, search_pattern))
+            if search_type == 'phone':
+                # 電話番号検索（ハイフンを除去して部分一致）
+                clean_keyword = keyword.replace('-', '')
+                sql = """
+                    SELECT 
+                        customer_id, name, furigana, phone, birthday, age,
+                        prefecture, city, address_detail, recruitment_source,
+                        mypage_id, current_points, member_type, status,
+                        web_member, comment, nickname, created_at, updated_at
+                    FROM customers 
+                    WHERE REPLACE(phone, '-', '') LIKE %s
+                    ORDER BY customer_id DESC
+                """
+                cursor.execute(sql, (f'%{clean_keyword}%',))
+                
+            elif search_type == 'furigana':
+                # フリガナ検索（部分一致）
+                # ひらがなが含まれている場合はカタカナに変換
+                search_keyword = keyword
+                if any('\u3041' <= c <= '\u3096' for c in keyword):
+                    # ひらがなをカタカナに変換
+                    search_keyword = ''.join(
+                        chr(ord(c) + 0x60) if '\u3041' <= c <= '\u3096' else c 
+                        for c in keyword
+                    )
+                
+                sql = """
+                    SELECT 
+                        customer_id, name, furigana, phone, birthday, age,
+                        prefecture, city, address_detail, recruitment_source,
+                        mypage_id, current_points, member_type, status,
+                        web_member, comment, nickname, created_at, updated_at
+                    FROM customers 
+                    WHERE furigana LIKE %s
+                    ORDER BY customer_id DESC
+                """
+                cursor.execute(sql, (f'%{search_keyword}%',))
+                
+            else:
+                # タイプ指定なし：フリガナと電話番号の両方で検索（OR検索）
+                clean_keyword = keyword.replace('-', '')
+                
+                # ひらがなが含まれている場合はカタカナに変換
+                search_keyword = keyword
+                if any('\u3041' <= c <= '\u3096' for c in keyword):
+                    search_keyword = ''.join(
+                        chr(ord(c) + 0x60) if '\u3041' <= c <= '\u3096' else c 
+                        for c in keyword
+                    )
+                
+                sql = """
+                    SELECT 
+                        customer_id, name, furigana, phone, birthday, age,
+                        prefecture, city, address_detail, recruitment_source,
+                        mypage_id, current_points, member_type, status,
+                        web_member, comment, nickname, created_at, updated_at
+                    FROM customers 
+                    WHERE furigana LIKE %s 
+                       OR REPLACE(phone, '-', '') LIKE %s
+                    ORDER BY customer_id DESC
+                """
+                cursor.execute(sql, (f'%{search_keyword}%', f'%{clean_keyword}%'))
+            
             return cursor.fetchall()
     finally:
         conn.close()

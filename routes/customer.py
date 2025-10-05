@@ -205,18 +205,20 @@ def api_delete_customer_endpoint(store, customer_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 def api_search_customers_endpoint(store):
-    """顧客検索API"""
+    """顧客検索API（統合検索対応）"""
     if 'store' not in session:
         return jsonify({'success': False, 'message': '未ログイン'}), 401
     
     try:
         store_code = session['store']
-        keyword = request.args.get('keyword', '')
+        keyword = request.args.get('keyword', '').strip()
+        search_type = request.args.get('type', None)  # フロントエンドから送られる検索タイプ
         
         if not keyword:
             return jsonify({'success': False, 'message': '検索キーワードを入力してください'}), 400
         
-        customers = search_customers(store_code, keyword)
+        # 検索タイプに応じて検索を実行
+        customers = search_customers(store_code, keyword, search_type)
         
         # dict_rowを通常のdictに変換してからJSON対応形式に
         customers_list = []
@@ -233,6 +235,13 @@ def api_search_customers_endpoint(store):
             
             customers_list.append(customer_dict)
         
-        return jsonify({'success': True, 'customers': customers_list})
+        return jsonify({
+            'success': True, 
+            'customers': customers_list,
+            'count': len(customers_list)
+        })
     except Exception as e:
+        print(f"検索エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500

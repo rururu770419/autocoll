@@ -294,7 +294,7 @@
 }
 
 .customer-table-cell {
-    padding: 12px;
+    padding: 6px;
     font-size: 14px;
     color: #333;
 }
@@ -394,7 +394,7 @@
 .customer-search-wrapper {
     display: flex;
     gap: 10px;
-    max-width: 800px;
+    max-width: 400px;
 }
 
 .customer-select-narrow {

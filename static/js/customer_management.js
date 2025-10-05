@@ -18,21 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // 検索タイプ切り替え
-    const searchType = document.getElementById('searchType');
-    const searchInput2 = document.getElementById('searchKeyword');
-    if (searchType && searchInput2) {
-        searchType.addEventListener('change', function() {
-            if (this.value === 'phone') {
-                searchInput2.placeholder = '電話番号で検索（ハイフンなし）';
-                searchInput2.type = 'tel';
-            } else {
-                searchInput2.placeholder = 'フリガナで検索（カタカナ）';
-                searchInput2.type = 'text';
-            }
-        });
-    }
 });
 
 // 全件取得関数を追加
@@ -73,45 +58,32 @@ function showEmptyMessage() {
     document.getElementById('paginationArea').innerHTML = '';
 }
 
-// 検索
+// 統合検索機能
 async function searchCustomers() {
     const store = getStoreCode();
     const keyword = document.getElementById('searchKeyword').value.trim();
-    const searchType = document.getElementById('searchType').value;
     
     if (!keyword) {
         showMessage('検索キーワードを入力してください', 'error');
         return;
     }
     
-    // 検索タイプ別のバリデーション
-    if (searchType === 'phone') {
-        // 電話番号検索（数字とハイフンのみ）
-        const cleanPhone = keyword.replace(/-/g, '');
-        if (!/^\d+$/.test(cleanPhone)) {
-            showMessage('電話番号は数字で入力してください', 'error');
-            return;
-        }
-        if (cleanPhone.length < 4) {
-            showMessage('電話番号は4文字以上で入力してください', 'error');
-            return;
-        }
-    } else if (searchType === 'furigana') {
-        if (!/^[ァ-ヴー]+$/.test(keyword)) {
-            showMessage('フリガナはカタカナで入力してください', 'error');
-            return;
-        }
+    // 検索キーワードの最小文字数チェック
+    if (keyword.length < 2) {
+        showMessage('検索キーワードは2文字以上で入力してください', 'error');
+        return;
     }
     
+    // 検索タイプの自動判定
+    const searchType = detectSearchType(keyword);
+    
     try {
-        let url;
-        if (searchType === 'phone') {
-            // 電話番号で検索（ハイフンを除去）
-            const cleanPhone = keyword.replace(/-/g, '');
-            url = `/${store}/api/customers/search?keyword=${encodeURIComponent(cleanPhone)}`;
-        } else {
-            // フリガナで検索
-            url = `/${store}/api/customers/search?keyword=${encodeURIComponent(keyword)}`;
+        // 検索タイプに応じたパラメータを設定
+        let url = `/${store}/api/customers/search?keyword=${encodeURIComponent(keyword)}`;
+        
+        // 検索タイプをクエリパラメータとして追加
+        if (searchType) {
+            url += `&type=${searchType}`;
         }
         
         const response = await fetch(url);
@@ -125,7 +97,10 @@ async function searchCustomers() {
             if (allCustomers.length === 0) {
                 showMessage('該当する顧客が見つかりませんでした', 'info');
             } else {
-                showMessage(`${allCustomers.length}件の顧客が見つかりました`, 'success');
+                const searchTypeText = searchType === 'phone' ? '電話番号' : 
+                                      searchType === 'furigana' ? 'フリガナ' : 
+                                      'フリガナ・電話番号';
+                showMessage(`${allCustomers.length}件の顧客が見つかりました（${searchTypeText}検索）`, 'success');
             }
         } else {
             showMessage(result.message || '検索に失敗しました', 'error');
@@ -134,6 +109,30 @@ async function searchCustomers() {
         console.error('Error:', error);
         showMessage('エラーが発生しました', 'error');
     }
+}
+
+// 検索タイプの自動判定
+function detectSearchType(keyword) {
+    // ハイフンを除去
+    const cleanKeyword = keyword.replace(/-/g, '');
+    
+    // 数字のみの場合は電話番号検索
+    if (/^\d+$/.test(cleanKeyword)) {
+        return 'phone';
+    }
+    
+    // カタカナを含む場合はフリガナ検索
+    if (/[ァ-ヴー]/.test(keyword)) {
+        return 'furigana';
+    }
+    
+    // ひらがなを含む場合もフリガナ検索として扱う（カタカナに変換）
+    if (/[ぁ-ん]/.test(keyword)) {
+        return 'furigana';
+    }
+    
+    // どちらでもない場合は両方で検索（nullを返す）
+    return null;
 }
 
 // ページネーション付き表示
