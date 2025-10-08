@@ -32,6 +32,67 @@ def store_home(store):
         
         # 送迎記録とその他のデータを取得
         pickup_records = get_pickup_records_by_date(db, current_date)
+        
+        # 各レコードに通知情報を追加
+        cursor = db.cursor()
+        for record in pickup_records:
+            if record['type'] == 'pickup' and not record['is_entry'] and record.get('exit_time'):
+                # キャストの通知設定とオートコール状態を取得
+                cast_id = record.get('cast_id')
+                if cast_id:
+                    cursor.execute(
+                        """
+                        SELECT notification_minutes_before 
+                        FROM casts 
+                        WHERE cast_id = %s
+                        """,
+                        (cast_id,)
+                    )
+                    cast_result = cursor.fetchone()
+                    
+                    if cast_result and cast_result['notification_minutes_before']:
+                        # 通知予定時刻を計算
+                        notification_time = record['exit_time'] - timedelta(minutes=cast_result['notification_minutes_before'])
+                        record['call_scheduled_time'] = notification_time.strftime('%H:%M')
+                    else:
+                        record['call_scheduled_time'] = '-'
+                else:
+                    record['call_scheduled_time'] = '-'
+                
+                # データベースからオートコール状態フラグを取得
+                record_id = record.get('record_id')
+                
+                cursor.execute(
+                    """
+                    SELECT cast_auto_call_sent, cast_auto_call_disabled
+                    FROM pickup_records
+                    WHERE record_id = %s
+                    """,
+                    (record_id,)
+                )
+                call_flags = cursor.fetchone()
+                
+                # フラグをrecordに追加
+                if call_flags:
+                    record['cast_auto_call_sent'] = call_flags['cast_auto_call_sent'] or False
+                    record['cast_auto_call_disabled'] = call_flags['cast_auto_call_disabled'] or False
+                else:
+                    record['cast_auto_call_sent'] = False
+                    record['cast_auto_call_disabled'] = False
+                
+                # 通知状態を設定
+                if record['cast_auto_call_disabled']:
+                    record['call_status'] = 'disabled'
+                elif record['cast_auto_call_sent']:
+                    record['call_status'] = 'success'
+                else:
+                    record['call_status'] = 'pending'
+            else:
+                record['call_scheduled_time'] = '-'
+                record['call_status'] = None
+                record['cast_auto_call_sent'] = False
+                record['cast_auto_call_disabled'] = False
+        
         staff_list = get_staff_list(db)
         casts = get_all_casts(db)
         hotels = get_all_hotels_with_details(db)
@@ -354,6 +415,7 @@ def check_change_registration(store):
     finally:
         if db:
             db.close()
+
 def update_announcement_endpoint(store):
     """お知らせ更新エンドポイント"""
     db = get_db(store)

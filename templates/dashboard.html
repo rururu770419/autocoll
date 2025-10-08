@@ -62,21 +62,21 @@
     id="record-{{ record.record_id }}" 
     data-course-id="{{ record.course_id }}">
             
-            <td class="dashboard-cell dashboard-time-cell">
-              {% if record.type == 'pickup' %}
-                <input type="time" class="dashboard-input dashboard-time-input" 
-                       id="time-{{ record.record_id }}"
-                       value="{{ record.entry_time if record.is_entry else record.exit_time }}"
-                       data-field="{% if record.is_entry %}entry_time{% else %}exit_time{% endif %}"
-                       data-record-id="{{ record.record_id }}">
-              {% else %}
-                <input type="time" class="dashboard-input dashboard-time-input" 
-                       id="time-{{ record.record_id }}"
-                       value="{{ record.entry_time }}"
-                       data-field="entry_time"
-                       data-record-id="{{ record.record_id }}">
-              {% endif %}
-            </td>
+    <td class="dashboard-cell dashboard-time-cell">
+      {% if record.type == 'pickup' %}
+        <input type="time" class="dashboard-input dashboard-time-input" 
+               id="time-{{ record.record_id }}"
+               value="{% if record.is_entry %}{{ record.entry_time.strftime('%H:%M') if record.entry_time else '' }}{% else %}{{ record.exit_time.strftime('%H:%M') if record.exit_time else '' }}{% endif %}"
+               data-field="{% if record.is_entry %}entry_time{% else %}exit_time{% endif %}"
+               data-record-id="{{ record.record_id }}">
+      {% else %}
+        <input type="time" class="dashboard-input dashboard-time-input" 
+               id="time-{{ record.record_id }}"
+               value="{{ record.entry_time.strftime('%H:%M') if record.entry_time else '' }}"
+               data-field="entry_time"
+               data-record-id="{{ record.record_id }}">
+      {% endif %}
+    </td>
             
             <!-- 指名バッジセル -->
             <td class="dashboard-cell dashboard-nomination-cell">
@@ -184,13 +184,11 @@
             <!-- オートコール状態アイコン -->
             <td class="dashboard-cell dashboard-call-status-cell">
               {% if record.type == 'pickup' and not record.is_entry %}
-                <span id="call-status-{{ record.record_id }}" class="call-status-icon">
-                  {% if record.call_status == 'pending' %}📞
-                  {% elif record.call_status == 'success' %}✅
-                  {% elif record.call_status == 'failed' %}❌
-                  {% elif record.call_status == 'disabled' %}⏸️
-                  {% else %}📞
-                  {% endif %}
+                <!-- アイコン表示 -->
+                <span id="call-status-{{ record.record_id }}" class="call-status-icon" style="font-size: 18px;">
+                  {% if record.cast_auto_call_disabled %}⏸️
+                  {% elif record.cast_auto_call_sent %}✅
+                  {% else %}📞{% endif %}
                 </span>
               {% endif %}
             </td>

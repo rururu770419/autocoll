@@ -99,13 +99,16 @@ def get_all_casts_with_details(db):
             recruitment_source,
             transportation_fee,
             available_course_categories,
+            work_type,
             comments,
             login_id,
             last_login,
             profile_image_path,
             is_active,
             created_at,
-            updated_at
+            updated_at,
+            notification_minutes_before,
+            auto_call_enabled
         FROM casts 
         WHERE is_active = TRUE
         ORDER BY name
@@ -133,11 +136,11 @@ def register_cast_extended(db, cast_data):
             INSERT INTO casts (
                 cast_id, name, phone_number, email, birth_date, address,
                 join_date, status, recruitment_source, transportation_fee,
-                available_course_categories, comments, login_id, password_hash,
+                available_course_categories, work_type, comments, login_id, password_hash,
                 profile_image_path, id_document_paths, contract_document_paths,
                 store_id, is_active, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
         """, (
@@ -152,6 +155,7 @@ def register_cast_extended(db, cast_data):
             cast_data.get('recruitment_source'),
             cast_data.get('transportation_fee', 0),
             course_categories_json,
+            cast_data.get('work_type'),
             cast_data.get('comments'),
             cast_data.get('login_id'),
             password_hash,
@@ -176,7 +180,7 @@ def register_cast_extended(db, cast_data):
         return False
 
 def update_cast(db, cast_id, cast_data):
-    """キャスト情報を更新"""
+    """キャスト情報を更新（オートコール設定 + work_type対応）"""
     try:
         cursor = db.cursor()
         
@@ -199,9 +203,11 @@ def update_cast(db, cast_id, cast_data):
         update_fields = []
         params = []
         
+        # 基本フィールド + オートコール設定フィールド + work_type
         for field in ['name', 'phone_number', 'email', 'birth_date', 'address', 
                      'join_date', 'status', 'recruitment_source', 'transportation_fee', 
-                     'comments', 'login_id', 'profile_image_path']:
+                     'work_type', 'comments', 'login_id', 'profile_image_path', 
+                     'notification_minutes_before', 'auto_call_enabled']:
             if field in cast_data:
                 update_fields.append(f"{field} = %s")
                 params.append(cast_data[field])
@@ -281,7 +287,7 @@ def verify_cast_password(db, login_id, password):
     return False
 
 def get_cast_with_age(db, cast_id):
-    """年齢計算込みの特定キャスト詳細情報"""
+    """年齢計算込みの特定キャスト詳細情報（オートコール設定 + work_type含む）"""
     cursor = db.cursor()
     cursor.execute("""
         SELECT 
@@ -301,6 +307,7 @@ def get_cast_with_age(db, cast_id):
             recruitment_source,
             transportation_fee,
             available_course_categories,
+            work_type,
             comments,
             login_id,
             last_login,
@@ -309,7 +316,9 @@ def get_cast_with_age(db, cast_id):
             contract_document_paths,
             is_active,
             created_at,
-            updated_at
+            updated_at,
+            notification_minutes_before,
+            auto_call_enabled
         FROM casts 
         WHERE cast_id = %s
     """, (cast_id,))

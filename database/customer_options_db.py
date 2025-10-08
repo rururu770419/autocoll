@@ -6,16 +6,32 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_db_connection():
-    """データベース接続を取得"""
-    conn = psycopg.connect(
-        host=os.getenv('DB_HOST', '127.0.0.1'),
-        port=os.getenv('DB_PORT', '5432'),
-        dbname='pickup_system',
-        user=os.getenv('DB_USER', 'postgres'),
-        password=os.getenv('DB_PASSWORD', 'diary8475ftkb')
-    )
-    return conn
+# config.pyから設定を読み込む
+try:
+    from config import DATABASE_CONFIG
+    
+    def get_db_connection():
+        """データベース接続を取得（config.pyの設定を使用）"""
+        conn = psycopg.connect(
+            host=DATABASE_CONFIG['host'],
+            port=DATABASE_CONFIG['port'],
+            dbname=DATABASE_CONFIG['database'],
+            user=DATABASE_CONFIG['user'],
+            password=DATABASE_CONFIG['password']
+        )
+        return conn
+except ImportError:
+    # config.pyがない場合は環境変数を使用
+    def get_db_connection():
+        """データベース接続を取得（環境変数を使用）"""
+        conn = psycopg.connect(
+            host=os.getenv('DB_HOST', '127.0.0.1'),
+            port=os.getenv('DB_PORT', '5432'),
+            dbname='pickup_system',
+            user=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', 'diary8475ftkb')
+        )
+        return conn
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -28,7 +44,7 @@ def get_all_categories(store_code):
     try:
         with conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute("""
-                SELECT id, field_key, field_label, display_order, is_deletable
+                SELECT id, field_key, field_label, display_order
                 FROM customer_field_categories
                 WHERE store_code = %s
                 ORDER BY display_order
@@ -68,7 +84,7 @@ def get_field_options(store_code, field_key):
     try:
         with conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute("""
-                SELECT id, option_value, display_color, display_order, is_hidden
+                SELECT id, field_key, option_value, display_color, display_order, is_hidden
                 FROM customer_field_options
                 WHERE store_code = %s AND field_key = %s
                 ORDER BY display_order
@@ -134,6 +150,8 @@ def add_field_option(store_code, field_key, option_value, display_color='#f0f0f0
     except Exception as e:
         conn.rollback()
         print(f"Error adding field option: {e}")
+        import traceback
+        traceback.print_exc()
         return None
     finally:
         conn.close()
@@ -230,8 +248,8 @@ def delete_field_option(store_code, option_id):
             # 使用中の顧客がいるかチェック
             cursor.execute(f"""
                 SELECT COUNT(*) FROM customers
-                WHERE {column_name} = %s
-            """, (option_value,))
+                WHERE store_code = %s AND {column_name} = %s
+            """, (store_code, option_value))
             
             count = cursor.fetchone()[0]
             
@@ -253,6 +271,8 @@ def delete_field_option(store_code, option_id):
     except Exception as e:
         conn.rollback()
         print(f"Error deleting field option: {e}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'message': f'エラーが発生しました: {str(e)}'}
     finally:
         conn.close()
@@ -331,6 +351,8 @@ def move_field_option(store_code, option_id, direction):
     except Exception as e:
         conn.rollback()
         print(f"Error moving field option: {e}")
+        import traceback
+        traceback.print_exc()
         return {'success': False, 'message': f'エラーが発生しました: {str(e)}'}
     finally:
         conn.close()

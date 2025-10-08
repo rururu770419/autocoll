@@ -26,10 +26,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async function loadCustomerFieldSettings() {
+    console.log('loadCustomerFieldSettings called'); // デバッグ
     try {
         const store = getStoreCode();
-        const response = await fetch(`/${store}/api/customer_fields`);
+        console.log('Store code:', store); // デバッグ
+        
+        const url = `/${store}/api/customer_fields`;
+        console.log('Fetching URL:', url); // デバッグ
+        
+        const response = await fetch(url);
+        console.log('Response status:', response.status); // デバッグ
+        
         const result = await response.json();
+        console.log('Result:', result); // デバッグ
         
         if (result.success) {
             customerFieldData = result.data;

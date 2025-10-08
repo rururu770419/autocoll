@@ -90,7 +90,9 @@
           <input type="text" class="form-control" id="line_id" name="line_id" 
                  value="{{ user.line_id if user and user.line_id else '' }}" 
                  placeholder="U1a2b3c4d5e6f7g8h9... (Uで始まる文字列)">
-          <small class="line-id-help">管理者がLINE管理画面で確認したUser IDを入力</small>
+          <small class="line-id-help">
+            右の手順に従ってLINE Botを友だち追加し、「ID確認」と送信してUser IDを取得してください
+          </small>
         </div>
         
         <div class="form-group">
@@ -134,40 +136,45 @@
     <div class="table-section">
       <h2>🔔 LINE通知設定ガイド</h2>
       
-      <!-- QRコード表示エリア -->
+      <!-- QRコード表示エリア（動的） -->
       <div class="line-setup-section">
         <h3 class="line-setup-title">📱 Bot友だち追加</h3>
+        
+        {% if line_bot_id %}
         <div class="line-qr-container">
-          <img src="{{ url_for('static', filename='images/line_qr.jpg') }}" alt="LINE Bot QRCode" style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
+          <!-- 動的QRコード生成 -->
+          <img src="https://qr-official.line.me/gs/M_{{ line_bot_id.replace('@', '') }}_GW.png" 
+               alt="LINE Bot QRCode" 
+               style="width: 200px; height: 200px; border: 2px solid #ddd; border-radius: 8px;">
           <p class="line-qr-description">上記QRコードでBot友だち追加</p>
-          <a href="https://line.me/R/ti/p/@275gmabd" target="_blank" class="btn btn-info line-open-btn">ブラウザで開く</a>
+          <p class="line-bot-id-display">Bot ID: <strong>{{ line_bot_id }}</strong></p>
+          <a href="https://line.me/R/ti/p/{{ line_bot_id }}" target="_blank" class="btn btn-info line-open-btn">
+            📱 スマホで開く
+          </a>
         </div>
+        {% else %}
+        <div class="line-qr-container" style="background: #fff3cd; padding: 20px; border-radius: 8px;">
+          <p style="color: #856404; margin: 0;">
+            ⚠️ LINE Bot IDが設定されていません。<br>
+            管理者に連絡して、設定画面でLINE Bot IDを設定してもらってください。
+          </p>
+        </div>
+        {% endif %}
         
         <div class="line-instructions">
-          <p class="line-instructions-title">設定手順:</p>
+          <p class="line-instructions-title">✨ かんたん3ステップ:</p>
           <ol class="line-instructions-list">
-            <li>上記QRコードでBotを友だち追加</li>
-            <li>管理者に「友だち追加完了」を報告</li>
-            <li>管理者がLINE管理画面でUser IDを確認</li>
-            <li>左フォームの「LINE User ID」欄にUser IDを入力</li>
-            <li>通知設定を選択して保存</li>
+            <li>上記QRコード{% if line_bot_id %}（{{ line_bot_id }}）{% endif %}でBotを友だち追加</li>
+            <li>トークで「<strong>ID確認</strong>」と送信</li>
+            <li>返信されたUser IDをコピーして、左の「LINE User ID」欄に貼り付けて保存</li>
           </ol>
+          <div style="background: #e7f3ff; padding: 12px; border-radius: 6px; margin-top: 12px;">
+            <strong>💡 ポイント:</strong> 管理者に確認してもらう必要はありません！自分で完結できます。
+          </div>
         </div>
       </div>
 
-      <!-- 管理者向け説明 -->
-      <div class="line-admin-guide">
-        <h4 class="line-admin-title">👤 管理者向け: User ID確認方法</h4>
-        <div class="line-admin-steps">
-          <ol>
-            <li><strong>LINE Official Account Manager</strong> (https://manager.line.biz/) にログイン</li>
-            <li><strong>@275gmabd</strong> を選択</li>
-            <li><strong>「分析」</strong>または<strong>「メッセージ」</strong>メニューから友だち一覧を確認</li>
-            <li>新しく追加された友だちの<strong>User ID</strong>（Uで始まる文字列）をコピー</li>
-            <li>上記フォームに入力して保存</li>
-          </ol>
-        </div>
-      </div>
+      <!-- 管理者向け説明は削除（不要になったため） -->
 
       <!-- 設定状況表示 -->
       {% if user and user.line_id %}
@@ -195,7 +202,7 @@
           <li>送迎時間の指定分前に自動通知</li>
           <li>通知時間は個別設定可能（5〜30分前）</li>
           <li>通知のON/OFF切り替え可能</li>
-          <li>多店舗対応（管理者が各スタッフのUser IDを設定）</li>
+          <li>多店舗対応（各店舗のLINE Botに対応）</li>
         </ul>
       </div>
 

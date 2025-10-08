@@ -2,8 +2,8 @@ from flask import Blueprint
 
 # 各機能モジュールからインポート
 from .auth import index, login, logout
-# スタッフ関連に新しい関数を追加
-from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info
+# スタッフ関連に新しい関数を追加（get_line_bot_idを追加）
+from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id
 from .cast import register_cast, edit_cast, delete_cast, cast_management
 # コース関連（move_course_up, move_course_downを追加）
 from .course import register_course, edit_course, delete_course, move_course_up, move_course_down

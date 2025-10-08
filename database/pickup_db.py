@@ -10,6 +10,7 @@ from database.connection import get_db
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 # 環境変数を読み込む
 load_dotenv()
@@ -52,29 +53,37 @@ def register_pickup_record(db, type, cast_id=None, hotel_id=None, course_id=None
         new_record_id = result['next_id']
         print(f"New record_id: {new_record_id}")
         
-        if record_date is None:
-            record_date = 'CURRENT_DATE'
-        print(f"Using date: {record_date}")
+        # record_dateの判定を変更
+        use_current_date_sql = (record_date is None or record_date == 'CURRENT_DATE')
+        
+        if use_current_date_sql:
+            actual_date = datetime.now().strftime('%Y-%m-%d')
+            print(f"Using CURRENT_DATE (actual: {actual_date})")
+        else:
+            actual_date = str(record_date)
+            print(f"Using specified date: {actual_date}")
         
         if type == 'pickup':
             print("Processing pickup registration...")
             
+            # entry_timeをTIMESTAMP形式に変換
+            entry_time_full = actual_date + ' ' + entry_time
+            print(f"   Entry time (TIMESTAMP): {entry_time_full}")
+            
             print("Creating entry record...")
-            if record_date == 'CURRENT_DATE':
-                print("   Using CURRENT_DATE")
+            if use_current_date_sql:
                 cursor.execute(
                     """INSERT INTO pickup_records 
                        (record_id, type, cast_id, hotel_id, course_id, entry_time, is_entry, created_date, nomination_type) 
                        VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s)""",
-                    (new_record_id, type, cast_id, hotel_id, course_id, entry_time, True, nomination_type)
+                    (new_record_id, type, cast_id, hotel_id, course_id, entry_time_full, True, nomination_type)
                 )
             else:
-                print(f"   Using specific date: {record_date}")
                 cursor.execute(
                     """INSERT INTO pickup_records 
                        (record_id, type, cast_id, hotel_id, course_id, entry_time, is_entry, created_date, nomination_type) 
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (new_record_id, type, cast_id, hotel_id, course_id, entry_time, True, record_date, nomination_type)
+                    (new_record_id, type, cast_id, hotel_id, course_id, entry_time_full, True, record_date, nomination_type)
                 )
             print("Entry record created")
             
@@ -88,45 +97,53 @@ def register_pickup_record(db, type, cast_id=None, hotel_id=None, course_id=None
                 print(f"Course duration: {course_minutes} minutes")
                 
                 print("Calculating exit time...")
-                from datetime import datetime, timedelta
                 entry_dt = datetime.strptime(entry_time, '%H:%M')
                 exit_dt = entry_dt + timedelta(minutes=course_minutes)
-                exit_time = exit_dt.strftime('%H:%M')
+                
+                # exit_timeもTIMESTAMP形式で作成
+                exit_time = actual_date + ' ' + exit_dt.strftime('%H:%M')
+                
                 print(f"   Entry time: {entry_time}")
-                print(f"   Exit time: {exit_time}")
+                print(f"   Exit time (TIMESTAMP): {exit_time}")
                 
                 print("Creating exit record...")
                 exit_record_id = new_record_id + 1
                 print(f"   Exit record_id: {exit_record_id}")
                 
-                if record_date == 'CURRENT_DATE':
+                if use_current_date_sql:
                     cursor.execute(
                         """INSERT INTO pickup_records 
                            (record_id, type, cast_id, hotel_id, course_id, entry_time, exit_time, is_entry, created_date, nomination_type) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s)""",
-                        (exit_record_id, type, cast_id, hotel_id, course_id, entry_time, exit_time, False, nomination_type)
+                        (exit_record_id, type, cast_id, hotel_id, course_id, entry_time_full, exit_time, False, nomination_type)
                     )
                 else:
                     cursor.execute(
                         """INSERT INTO pickup_records 
                            (record_id, type, cast_id, hotel_id, course_id, entry_time, exit_time, is_entry, created_date, nomination_type) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (exit_record_id, type, cast_id, hotel_id, course_id, entry_time, exit_time, False, record_date, nomination_type)
+                        (exit_record_id, type, cast_id, hotel_id, course_id, entry_time_full, exit_time, False, record_date, nomination_type)
                     )
                 print("Exit record created")
+                print(f"   Entry time stored: {entry_time_full}")
+                print(f"   Exit time stored: {exit_time}")
             else:
                 print("Course not found - skipping exit record creation")
             
         elif type == 'other':
             print("Processing other type registration...")
             
-            if record_date == 'CURRENT_DATE':
+            # entry_timeをTIMESTAMP形式に変換
+            entry_time_full = actual_date + ' ' + entry_time
+            print(f"   Entry time (TIMESTAMP): {entry_time_full}")
+            
+            if use_current_date_sql:
                 print("   Using CURRENT_DATE")
                 cursor.execute(
                     """INSERT INTO pickup_records 
                        (record_id, type, content, entry_time, is_entry, created_date) 
                        VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)""",
-                    (new_record_id, type, content, entry_time, True)
+                    (new_record_id, type, content, entry_time_full, True)
                 )
             else:
                 print(f"   Using specific date: {record_date}")
@@ -134,7 +151,7 @@ def register_pickup_record(db, type, cast_id=None, hotel_id=None, course_id=None
                     """INSERT INTO pickup_records 
                        (record_id, type, content, entry_time, is_entry, created_date) 
                        VALUES (%s, %s, %s, %s, %s, %s)""",
-                    (new_record_id, type, content, entry_time, True, record_date)
+                    (new_record_id, type, content, entry_time_full, True, record_date)
                 )
             print("Other type record created")
         
@@ -145,9 +162,7 @@ def register_pickup_record(db, type, cast_id=None, hotel_id=None, course_id=None
         
     except Exception as e:
         print(f"Error in register_pickup_record:")
-        print(f"   Exception type: {type(e)}")
-        print(f"   Exception message: {e}")
-        print(f"   Exception args: {e.args}")
+        print(f"   Exception: {str(e)}")
         
         import traceback
         print("Full traceback:")
@@ -240,8 +255,14 @@ def update_pickup_record(db, record_id, field, value):
         
         elif field in ['entry_time', 'exit_time']:
             import re
+            from datetime import datetime
             if value and not re.match(r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', str(value)):
                 return False
+            
+            # TIMESTAMP型に変換（今日の日付 + 時刻）
+            if value:
+                today = datetime.now().strftime('%Y-%m-%d')
+                value = f"{today} {value}"
         
         elif field == 'nomination_type':
             valid_nominations = ['本指名', '店リピ', '新規', 'フリー']

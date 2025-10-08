@@ -372,3 +372,288 @@ def search_customers(store_code, keyword, search_type=None):
             return cursor.fetchall()
     finally:
         conn.close()
+
+def get_customer_field_categories():
+    """顧客項目のカテゴリ一覧を取得"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT field_key, field_label, display_order
+            FROM customer_field_categories
+            ORDER BY display_order
+        """)
+        
+        categories = []
+        for row in cursor.fetchall():
+            categories.append({
+                'field_key': row[0],
+                'field_label': row[1],
+                'display_order': row[2]
+            })
+        
+        return categories
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_customer_field_options_all():
+    """全ての顧客項目の選択肢を取得（セッションのstore_codeを使用）"""
+    from flask import session
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        store_code = session.get('store', 'naganoe')
+        
+        cursor.execute("""
+            SELECT id, field_key, option_value, display_color, display_order, is_hidden
+            FROM customer_field_options
+            WHERE store_code = %s
+            ORDER BY field_key, display_order
+        """, (store_code,))
+        
+        options = {}
+        for row in cursor.fetchall():
+            field_key = row[1]
+            if field_key not in options:
+                options[field_key] = []
+            
+            options[field_key].append({
+                'id': row[0],
+                'field_key': row[1],
+                'option_value': row[2],
+                'display_color': row[3],
+                'display_order': row[4],
+                'is_hidden': row[5]
+            })
+        
+        return options
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+def update_customer_field_label(field_key, field_label):
+    """カテゴリ名を更新"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE customer_field_categories
+            SET field_label = %s
+            WHERE field_key = %s
+        """, (field_label, field_key))
+        
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error updating field label: {e}")
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def add_customer_field_option(field_key, option_value, display_color='#f0f0f0'):
+    """選択肢を追加"""
+    from flask import session
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        store_code = session.get('store', 'naganoe')
+        
+        # 現在の最大display_orderを取得
+        cursor.execute("""
+            SELECT COALESCE(MAX(display_order), 0)
+            FROM customer_field_options
+            WHERE store_code = %s AND field_key = %s
+        """, (store_code, field_key))
+        
+        max_order = cursor.fetchone()[0]
+        new_order = max_order + 1
+        
+        cursor.execute("""
+            INSERT INTO customer_field_options 
+            (store_code, field_key, option_value, display_color, display_order, is_hidden)
+            VALUES (%s, %s, %s, %s, %s, FALSE)
+            RETURNING id
+        """, (store_code, field_key, option_value, display_color, new_order))
+        
+        option_id = cursor.fetchone()[0]
+        conn.commit()
+        return option_id
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error adding option: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def update_customer_field_option(option_id, option_value=None, display_color=None):
+    """選択肢を更新"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        updates = []
+        params = []
+        
+        if option_value is not None:
+            updates.append("option_value = %s")
+            params.append(option_value)
+        
+        if display_color is not None:
+            updates.append("display_color = %s")
+            params.append(display_color)
+        
+        if not updates:
+            return False
+        
+        params.append(option_id)
+        
+        cursor.execute(f"""
+            UPDATE customer_field_options
+            SET {', '.join(updates)}
+            WHERE id = %s
+        """, params)
+        
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error updating option: {e}")
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def toggle_customer_field_option_visibility(option_id, is_hidden):
+    """選択肢の表示/非表示を切り替え"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE customer_field_options
+            SET is_hidden = %s
+            WHERE id = %s
+        """, (is_hidden, option_id))
+        
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error toggling visibility: {e}")
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def move_customer_field_option(option_id, direction):
+    """選択肢の並び順を変更"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 現在の情報を取得
+        cursor.execute("""
+            SELECT field_key, display_order
+            FROM customer_field_options
+            WHERE id = %s
+        """, (option_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return False
+        
+        field_key, current_order = row
+        
+        # 入れ替え対象を取得
+        if direction == 'up':
+            cursor.execute("""
+                SELECT id, display_order
+                FROM customer_field_options
+                WHERE field_key = %s AND display_order < %s
+                ORDER BY display_order DESC
+                LIMIT 1
+            """, (field_key, current_order))
+        else:  # down
+            cursor.execute("""
+                SELECT id, display_order
+                FROM customer_field_options
+                WHERE field_key = %s AND display_order > %s
+                ORDER BY display_order ASC
+                LIMIT 1
+            """, (field_key, current_order))
+        
+        target = cursor.fetchone()
+        if not target:
+            return False
+        
+        target_id, target_order = target
+        
+        # 順序を入れ替え
+        cursor.execute("""
+            UPDATE customer_field_options
+            SET display_order = %s
+            WHERE id = %s
+        """, (target_order, option_id))
+        
+        cursor.execute("""
+            UPDATE customer_field_options
+            SET display_order = %s
+            WHERE id = %s
+        """, (current_order, target_id))
+        
+        conn.commit()
+        return True
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error moving option: {e}")
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def delete_customer_field_option(option_id):
+    """選択肢を削除"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            DELETE FROM customer_field_options
+            WHERE id = %s
+        """, (option_id,))
+        
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting option: {e}")
+        return False
+    finally:
+        cursor.close()
+        conn.close()

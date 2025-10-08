@@ -26,6 +26,7 @@
     <button class="settings-tab-btn" onclick="switchTab('parking')">駐車場設定</button>
     <button class="settings-tab-btn" onclick="switchTab('shift_types')">シフト種別設定</button>
     <button class="settings-tab-btn" onclick="switchTab('customer_info')">顧客情報</button>
+    <button class="settings-tab-btn" onclick="switchTab('ng_items')">キャストNG項目設定</button>
   </div>
   
   <!-- タブコンテンツ -->
@@ -114,7 +115,14 @@
       
       <!-- LINE通知 -->
       <div class="settings-subsection">
-        <h3 class="settings-subsection-title">📱 LINE通知（スタッフ用）</h3>
+        <h3 class="settings-subsection-title">📱 LINE通知設定</h3>
+        <p class="settings-help-text" style="margin-bottom: 1rem; padding: 0.75rem; background-color: #e3f2fd; border-left: 4px solid #2196F3; border-radius: 4px;">
+          <strong>【送信元の設定】</strong><br>
+          LINE Messaging APIを使用して通知を送信します。以下のChannel Access Tokenを設定してください。<br><br>
+          <strong>【受信先の設定】</strong><br>
+          ① <strong>スタッフ個別:</strong> ユーザー管理でスタッフごとにLINE IDを登録<br>
+          ② <strong>店舗共通:</strong> 下記の「店舗用LINE ID」に店舗グループまたは担当者のLINE IDを登録
+        </p>
         
         {% for setting in notification %}
           {% if setting.setting_key == 'line_notify_enabled' %}
@@ -125,15 +133,15 @@
                   id="{{ setting.setting_key }}" 
                   name="{{ setting.setting_key }}"
                   {% if setting.setting_value == 'true' %}checked{% endif %}>
-                <span>{{ setting.description }}</span>
+                <span>LINE通知を有効にする</span>
               </label>
             </div>
           {% endif %}
           
-          {% if setting.setting_key == 'line_notify_token' %}
+          {% if setting.setting_key == 'line_channel_access_token' %}
             <div class="settings-form-group">
               <label for="{{ setting.setting_key }}" class="settings-label">
-                {{ setting.description }}
+                LINE Channel Access Token <span style="color: #e74c3c; font-weight: bold;">*必須</span>
               </label>
               <div class="settings-password-wrapper">
                 <input 
@@ -142,11 +150,71 @@
                   name="{{ setting.setting_key }}" 
                   class="settings-input"
                   value="{{ setting.setting_value or '' }}"
-                  placeholder="LINE Notifyトークンを入力">
+                  placeholder="Channel Access Tokenを入力してください">
                 <button type="button" class="settings-show-btn" onclick="togglePassword('{{ setting.setting_key }}')">表示</button>
               </div>
               <small class="settings-help-text">
-                <a href="https://notify-bot.line.me/ja/" target="_blank">トークンの取得方法</a>
+                📖 取得方法: 
+                <a href="https://developers.line.biz/console/" target="_blank" style="color: #06C755; font-weight: 500;">LINE Developers Console</a> 
+                → プロバイダー選択 → チャネル選択 → 「Messaging API設定」タブ → 「Channel access token (long-lived)」
+              </small>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'line_channel_secret' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                LINE Channel Secret <span style="color: #6c757d;">（任意・推奨）</span>
+              </label>
+              <div class="settings-password-wrapper">
+                <input 
+                  type="password" 
+                  id="{{ setting.setting_key }}" 
+                  name="{{ setting.setting_key }}" 
+                  class="settings-input"
+                  value="{{ setting.setting_value or '' }}"
+                  placeholder="Channel Secretを入力してください">
+                <button type="button" class="settings-show-btn" onclick="togglePassword('{{ setting.setting_key }}')">表示</button>
+              </div>
+              <small class="settings-help-text">
+                Webhook署名検証用（セキュリティ強化のため設定を推奨）
+              </small>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'line_bot_id' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                LINE Bot ID <span style="color: #e74c3c; font-weight: bold;">*必須</span>
+              </label>
+              <input 
+                type="text" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input"
+                value="{{ setting.setting_value or '' }}"
+                placeholder="@から始まるBot ID（例: @275gmabd）">
+              <small class="settings-help-text">
+                📖 スタッフがQRコードから友だち追加するBot IDを設定してください。<br>
+                LINE Official Account Manager → 設定 → アカウント設定 → ベーシックID で確認できます。
+              </small>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'store_line_id' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                店舗用LINE ID <span style="color: #6c757d;">（オートコール結果通知用）</span>
+              </label>
+              <input 
+                type="text" 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input"
+                value="{{ setting.setting_value or '' }}"
+                placeholder="Uから始まるLINE IDを入力">
+              <small class="settings-help-text">
+                オートコール実行結果を受け取るLINE IDを設定（グループまたは個人）
               </small>
             </div>
           {% endif %}
@@ -154,16 +222,33 @@
           {% if setting.setting_key == 'line_message_template' %}
             <div class="settings-form-group">
               <label for="{{ setting.setting_key }}" class="settings-label">
-                {{ setting.description }}
+                スタッフ用メッセージテンプレート
               </label>
               <textarea 
                 id="{{ setting.setting_key }}" 
                 name="{{ setting.setting_key }}" 
                 class="settings-input settings-textarea"
                 rows="4"
-                placeholder="メッセージテンプレート">{{ setting.setting_value or '' }}</textarea>
+                placeholder="【ピックアップリマインダー】&#10;キャスト: {name}さん&#10;退室時刻: {time}&#10;ホテル: {hotel}">{{ setting.setting_value or '' }}</textarea>
               <small class="settings-help-text">
-                使用可能な変数: {name} - キャスト名、{time} - 退室時刻、{hotel} - ホテル名
+                使用可能な変数: <code>{name}</code> キャスト名、<code>{time}</code> 退室時刻、<code>{hotel}</code> ホテル名
+              </small>
+            </div>
+          {% endif %}
+          
+          {% if setting.setting_key == 'store_line_message_template' %}
+            <div class="settings-form-group">
+              <label for="{{ setting.setting_key }}" class="settings-label">
+                店舗用メッセージテンプレート（オートコール結果通知）
+              </label>
+              <textarea 
+                id="{{ setting.setting_key }}" 
+                name="{{ setting.setting_key }}" 
+                class="settings-input settings-textarea"
+                rows="5"
+                placeholder="【オートコール{result}】&#10;{name}さんへの発信{result_text}&#10;退室予定: {time}&#10;発信時刻: {call_time}">{{ setting.setting_value or '' }}</textarea>
+              <small class="settings-help-text">
+                使用可能な変数: <code>{result}</code> 結果（完了/失敗）、<code>{result_text}</code> 結果詳細、<code>{name}</code> キャスト名、<code>{time}</code> 退室時刻、<code>{call_time}</code> 発信時刻
               </small>
             </div>
           {% endif %}
@@ -407,6 +492,68 @@
       </div>
     </div>
     
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- キャストNG項目設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="ng_items" class="settings-tab-content">
+      <h2 class="settings-section-title">キャストNG項目設定</h2>
+      
+      <!-- NGエリア管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">🚫 NGエリア管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-area-btn">
+            ➕ 新規エリア追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 70%;">エリア名</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="ng-areas-tbody">
+              <tr>
+                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- 年齢NG管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">👤 年齢NG管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-age-btn">
+            ➕ 新規年齢NG追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 40%;">パターン名</th>
+                <th style="width: 30%;">備考</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="ng-ages-tbody">
+              <tr>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
   </form>
   
   <!-- メッセージ表示エリア -->
@@ -579,6 +726,79 @@
   </div>
 </div>
 
+<!-- NGエリア追加/編集モーダル -->
+<div id="ng-area-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="ng-area-modal-title">新規エリア追加</h3>
+      <span class="modal-close settings-modal-close" data-modal="ng-area-modal">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="ng-area-form">
+        <input type="hidden" id="ng-area-id" name="ng_area_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            エリア名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="ng-area-name" name="area_name" 
+                 class="settings-input" placeholder="例: 新宿区" required>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  data-modal-close="ng-area-modal">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 年齢NG追加/編集モーダル -->
+<div id="ng-age-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="ng-age-modal-title">新規年齢NG追加</h3>
+      <span class="modal-close settings-modal-close" data-modal="ng-age-modal">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="ng-age-form">
+        <input type="hidden" id="ng-age-id" name="ng_age_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            パターン名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="ng-age-pattern-name" name="pattern_name" 
+                 class="settings-input" placeholder="例: 20代NG" required>
+        </div>
+
+        <div class="settings-form-group">
+          <label class="settings-label">備考</label>
+          <textarea id="ng-age-description" name="description" 
+                    class="settings-input settings-textarea" rows="3" 
+                    placeholder="補足説明があれば入力してください"></textarea>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  data-modal-close="ng-age-modal">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 // URLを設定
 window.settingsUrls = {
@@ -589,5 +809,6 @@ window.settingsUrls = {
 </script>
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 <script src="{{ url_for('static', filename='js/settings_customer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/settings_ng.js') }}"></script>
 
 {% endblock %}

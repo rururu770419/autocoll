@@ -76,6 +76,24 @@ def get_db(store=None):
         print(f"PostgreSQL接続エラー: {e}")
         return None
 
+def get_connection():
+    """
+    標準的なPostgreSQL接続を取得（psycopg2互換用）
+    customer_options_db.pyなどから使用される
+    """
+    try:
+        conn = psycopg.connect(
+            host=DATABASE_CONFIG['host'],
+            port=DATABASE_CONFIG['port'],
+            dbname=DATABASE_CONFIG['database'],
+            user=DATABASE_CONFIG['user'],
+            password=DATABASE_CONFIG['password']
+        )
+        return conn
+    except psycopg.Error as e:
+        print(f"PostgreSQL接続エラー: {e}")
+        raise
+
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:

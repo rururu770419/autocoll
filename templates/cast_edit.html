@@ -208,8 +208,40 @@
                                     <option value="プレミアムコース" {{ 'selected' if selected_course == 'プレミアムコース' else '' }}>プレミアムコース</option>
                                 </select>
                             </div>
-                            <div class="cast-edit-form-group cast-edit-form-group-empty">
-                                <!-- 空きスペース -->
+                            <div class="cast-edit-form-group">
+                                <label class="cast-edit-label">働き方区分</label>
+                                <select name="work_type" class="cast-edit-select">
+                                    <option value="">選択してください</option>
+                                    <option value="出稼ぎ" {{ 'selected' if cast.work_type == '出稼ぎ' else '' }}>出稼ぎ</option>
+                                    <option value="地元" {{ 'selected' if cast.work_type == '地元' else '' }}>地元</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- オートコール設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">オートコール設定</h3>
+                        
+                        <div class="cast-edit-form-row">
+                            <div class="cast-edit-form-group">
+                                <label class="cast-edit-label">通知タイミング</label>
+                                <select name="notification_minutes_before" class="cast-edit-select">
+                                    <option value="5" {% if cast.notification_minutes_before == 5 %}selected{% endif %}>5分前</option>
+                                    <option value="10" {% if cast.notification_minutes_before == 10 %}selected{% endif %}>10分前</option>
+                                    <option value="15" {% if not cast.notification_minutes_before or cast.notification_minutes_before == 15 %}selected{% endif %}>15分前</option>
+                                    <option value="20" {% if cast.notification_minutes_before == 20 %}selected{% endif %}>20分前</option>
+                                    <option value="30" {% if cast.notification_minutes_before == 30 %}selected{% endif %}>30分前</option>
+                                </select>
+                                <small class="cast-edit-help">退室時刻の何分前に電話するか</small>
+                            </div>
+                            <div class="cast-edit-form-group">
+                                <label class="cast-edit-label">オートコール</label>
+                                <select name="auto_call_enabled" class="cast-edit-select">
+                                    <option value="true" {% if not cast.auto_call_enabled is defined or cast.auto_call_enabled %}selected{% endif %}>有効</option>
+                                    <option value="false" {% if cast.auto_call_enabled is defined and not cast.auto_call_enabled %}selected{% endif %}>無効</option>
+                                </select>
+                                <small class="cast-edit-help">自動電話通知の有効/無効</small>
                             </div>
                         </div>
                     </div>
@@ -376,6 +408,10 @@
                     <div class="cast-edit-guide-item">
                         <h4>基本情報</h4>
                         <p>キャスト名は必須項目です。システム内で表示される名前になります。</p>
+                    </div>
+                    <div class="cast-edit-guide-item">
+                        <h4>オートコール設定</h4>
+                        <p>退室時刻の指定分数前に自動で電話通知が送信されます。キャストごとに個別設定できます。</p>
                     </div>
                     <div class="cast-edit-guide-item">
                         <h4>認証設定</h4>

@@ -10,7 +10,7 @@ from database.cast_db import (
     register_cast as db_register_cast,
     get_all_casts, find_cast_by_name, find_cast_by_phone_number, find_cast_by_id,
     get_all_casts_with_details, update_cast, delete_cast as db_delete_cast,
-    get_cast_with_age  # ← この行を追加
+    get_cast_with_age
 )
 
 
@@ -166,7 +166,7 @@ def register_cast(store):
     )
 
 def edit_cast(store, cast_id):
-    """キャスト編集ページ（詳細情報対応 + ファイルアップロード）"""
+    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
@@ -191,6 +191,16 @@ def edit_cast(store, cast_id):
         if not new_login_id:
             new_login_id = cast['login_id']  # 既存のIDを維持
         
+        # オートコール設定の取得
+        notification_minutes_before = request.form.get("notification_minutes_before", "15")
+        auto_call_enabled = request.form.get("auto_call_enabled", "true")
+        
+        # Boolean変換
+        auto_call_enabled_bool = (auto_call_enabled == "true")
+        
+        # 【追加】働き方区分の取得
+        work_type = request.form.get("work_type", "")
+        
         cast_data = {
             'name': request.form.get("name"),
             'phone_number': request.form.get("phone_number"),
@@ -201,8 +211,11 @@ def edit_cast(store, cast_id):
             'status': request.form.get("status", '在籍'),
             'recruitment_source': request.form.get("recruitment_source"),
             'transportation_fee': int(request.form.get("transportation_fee", 0)),
+            'work_type': work_type,  # 【追加】
             'comments': request.form.get("comments"),
             'login_id': new_login_id,
+            'notification_minutes_before': int(notification_minutes_before),
+            'auto_call_enabled': auto_call_enabled_bool,
         }
         
         # 対応コースの処理

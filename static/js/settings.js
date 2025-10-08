@@ -196,8 +196,22 @@ function toggleParkingFeature(enabled) {
 // 駐車場機能の有効/無効を保存
 async function saveParkingEnabled(enabled) {
     try {
-        const formData = new FormData();
-        formData.append('parking_enabled', enabled ? 'true' : 'false');
+        // 🔧 現在の全ての設定値を取得
+        const form = document.getElementById('settingsForm');
+        const formData = new FormData(form);
+        
+        // 🔧 全てのチェックボックスを処理
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                formData.set(checkbox.name, 'false');
+            } else {
+                formData.set(checkbox.name, 'true');
+            }
+        });
+        
+        // 🔧 駐車場設定を上書き（最優先）
+        formData.set('parking_enabled', enabled ? 'true' : 'false');
         
         const response = await fetch(`${window.settingsUrls.save}`, {
             method: 'POST',
@@ -206,7 +220,7 @@ async function saveParkingEnabled(enabled) {
         
         const data = await response.json();
         if (data.success) {
-            showMessage('設定を保存しました', 'success');
+            // メッセージは表示しない（自動保存だから）
         }
     } catch (error) {
         console.error('保存エラー:', error);

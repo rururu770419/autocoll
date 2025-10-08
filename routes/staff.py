@@ -6,6 +6,39 @@ from database.db_access import (
     get_display_name, get_db, register_user, get_all_users,
     find_user_by_name, find_user_by_login_id
 )
+from database.db_connection import get_db_connection
+
+
+def get_line_bot_id():
+    """
+    store_settingsテーブルからLINE Bot IDを取得（全店舗共通）
+    
+    Returns:
+        str: LINE Bot ID（例: @275gmabd）、取得できない場合はNone
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT setting_value 
+            FROM store_settings 
+            WHERE setting_key = 'line_bot_id'
+            LIMIT 1
+        """)
+        
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if result and result[0]:
+            return result[0]
+        return None
+        
+    except Exception as e:
+        print(f"❌ LINE Bot ID取得エラー: {e}")
+        return None
+
 
 def register_staff(store):
     """スタッフ一覧表示"""
@@ -51,17 +84,22 @@ def register_staff(store):
                              success=success_msg,
                              error=error_msg)
 
+
 def new_staff(store):
     """新規スタッフ登録ページ"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
     
+    line_bot_id = get_line_bot_id()
+    
     return render_template("staff_edit.html", 
                          store=store, 
                          display_name=display_name,
                          user=None,
-                         mode='new')
+                         mode='new',
+                         line_bot_id=line_bot_id)
+
 
 def edit_staff(store, user_id):
     """スタッフ編集ページ（IDベース）"""
@@ -92,11 +130,15 @@ def edit_staff(store, user_id):
     except Exception as e:
         return redirect(url_for('main_routes.register_staff', store=store, error=f"エラーが発生しました: {str(e)}"))
 
+    line_bot_id = get_line_bot_id()
+
     return render_template("staff_edit.html",
                          store=store,
                          user=user,
                          display_name=display_name,
-                         mode='edit')
+                         mode='edit',
+                         line_bot_id=line_bot_id)
+
 
 def save_staff(store):
     """スタッフ情報保存（新規・更新共通処理）"""
@@ -175,6 +217,7 @@ def save_staff(store):
     except Exception as e:
         return redirect(url_for('main_routes.register_staff', store=store, error=f"エラーが発生しました: {str(e)}"))
 
+
 def delete_staff(store, user_id):
     """スタッフ削除（IDベース）"""
     db = get_db(store)
@@ -198,6 +241,7 @@ def delete_staff(store, user_id):
         success_msg = "削除中にエラーが発生しました。"
 
     return redirect(url_for('main_routes.register_staff', store=store, success=success_msg))
+
 
 def get_line_bot_info(store):
     """LINE Bot情報をJSONで返す"""

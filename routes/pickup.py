@@ -2,8 +2,9 @@ from flask import render_template, request
 from datetime import datetime
 from database.db_access import (
     get_display_name, get_db, get_all_courses, get_all_casts,
-    get_all_hotels_with_details, register_pickup_record
+    get_all_hotels_with_details
 )
+from database.pickup_db import register_pickup_record
 
 def pickup_register(store):
     display_name = get_display_name(store)
