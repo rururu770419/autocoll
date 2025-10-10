@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_schedule.css') }}">
+{% endblock %}
+
+{% block title %}
+  出勤管理 | {{ display_name }}
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+  <div class="schedule-header">
+    <h1 class="schedule-title">キャスト出勤表</h1>
+    
+    <div class="schedule-nav">
+      <a href="{{ url_for('schedule.cast_schedule', store=store, date=prev_week) }}" class="schedule-nav-btn schedule-nav-prev">
+        ← 前週
+      </a>
+      <a href="{{ url_for('schedule.cast_schedule', store=store) }}" class="schedule-nav-btn schedule-nav-today">
+        今週
+      </a>
+      <a href="{{ url_for('schedule.cast_schedule', store=store, date=next_week) }}" class="schedule-nav-btn schedule-nav-next">
+        次週 →
+      </a>
+    </div>
+  </div>
+
+  <div class="schedule-table-wrapper">
+    <table class="schedule-table">
+      <thead>
+        <tr class="schedule-table-header">
+          <th class="schedule-table-header-cell schedule-table-header-cast">キャスト</th>
+          {% for date in dates %}
+          <th class="schedule-table-header-cell schedule-table-header-date 
+                     {% if date.date == current_date %}schedule-table-header-today{% endif %}">
+            {{ date.display }}<br>{{ date.weekday }}
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for cast_id, cast_data in schedules.items() %}
+        <tr class="schedule-table-row">
+          <td class="schedule-table-cell schedule-table-cell-cast">
+            {{ cast_data.cast_name }}
+          </td>
+          {% for date in dates %}
+          {% set schedule = cast_data.schedules.get(date.date) %}
+          <td class="schedule-table-cell schedule-table-cell-schedule 
+                     {% if date.date == current_date %}schedule-table-cell-today{% endif %}
+                     {% if schedule %}
+                       {% if schedule.status == 'confirmed' %}schedule-table-cell-confirmed{% endif %}
+                       {% if schedule.status == 'off' %}schedule-table-cell-off{% endif %}
+                     {% endif %}"
+              data-cast-id="{{ cast_id }}"
+              data-cast-name="{{ cast_data.cast_name }}"
+              data-work-date="{{ date.date }}"
+              onclick="openScheduleModal(this)">
+            
+            {% if schedule %}
+              {% if schedule.status == 'confirmed' %}
+                <div class="schedule-info">
+                  <span class="schedule-label">出勤</span>
+                  <span class="schedule-time">{{ schedule.start_time }}～{{ schedule.end_time }}</span>
+                </div>
+              {% elif schedule.status == 'off' %}
+                <div class="schedule-info">
+                  <span class="schedule-label-off">休み</span>
+                </div>
+              {% endif %}
+            {% else %}
+              <div class="schedule-info">
+                <span class="schedule-label-empty">───</span>
+              </div>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 出勤登録モーダル（超コンパクト版） -->
+<div id="scheduleModal" class="schedule-modal" style="display: none;">
+  <div class="schedule-modal-overlay" onclick="closeScheduleModal()"></div>
+  <div class="schedule-modal-content">
+    
+    <!-- ヘッダー：キャスト名と日付を横並び -->
+    <div class="schedule-modal-header">
+      <div class="schedule-modal-info">
+        <span id="modalCastName" class="schedule-modal-cast"></span>
+        <span id="modalWorkDate" class="schedule-modal-date"></span>
+      </div>
+      <button class="schedule-modal-close" onclick="closeScheduleModal()">×</button>
+    </div>
+    
+    <!-- ボディ：時間選択と休みチェックボックス -->
+    <div class="schedule-modal-body">
+      <!-- 時間選択（横並び） -->
+      <div class="schedule-time-row">
+        <select class="schedule-time-input" id="modalStartTime">
+          <option value="">--</option>
+          {% for time_value, time_label in time_slots %}
+          <option value="{{ time_value }}">{{ time_label }}</option>
+          {% endfor %}
+        </select>
+        <span class="schedule-time-separator">～</span>
+        <select class="schedule-time-input" id="modalEndTime">
+          <option value="">--</option>
+          {% for time_value, time_label in time_slots %}
+          <option value="{{ time_value }}">{{ time_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- 休みチェックボックス -->
+      <div class="schedule-off-row">
+        <label class="schedule-off-checkbox">
+          <input type="checkbox" id="modalIsOff" onchange="toggleOffMode()">
+          <span>休みで登録する</span>
+        </label>
+      </div>
+      
+      <!-- 隠しフィールド -->
+      <div style="display: none;">
+        <input type="hidden" id="modalCastId">
+        <input type="hidden" id="modalWorkDateRaw">
+      </div>
+    </div>
+    
+    <!-- フッター：削除ボタンと登録ボタン -->
+    <div class="schedule-modal-footer">
+      <button class="schedule-modal-btn schedule-modal-btn-delete" id="deleteBtn" onclick="deleteSchedule()">
+        出勤を解除する
+      </button>
+      <button class="schedule-modal-btn schedule-modal-btn-save" onclick="saveSchedule()">
+        登録する
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/cast_schedule.js') }}"></script>
+{% endblock %}

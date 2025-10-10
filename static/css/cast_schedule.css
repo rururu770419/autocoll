@@ -1,0 +1,360 @@
+/* ============================================
+   出勤管理ページ専用CSS
+   ※グローバルセレクタは使用せず、.schedule- プレフィックスを使用
+   ============================================ */
+
+/* コンテナ */
+.schedule-container {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* ヘッダー */
+  .schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .schedule-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+  }
+  
+  /* ナビゲーション */
+  .schedule-nav {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .schedule-nav-btn {
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .schedule-nav-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+  }
+  
+  .schedule-nav-today {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+  }
+  
+  .schedule-nav-today:hover {
+    background-color: #45a049;
+  }
+  
+  /* テーブルラッパー */
+  .schedule-table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+  }
+  
+  /* テーブル */
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  /* テーブルヘッダー */
+  .schedule-table-header-cell {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: bold;
+    color: #495057;
+  }
+  
+  .schedule-table-header-cast {
+    width: 120px;
+    background-color: #e9ecef;
+  }
+  
+  .schedule-table-header-date {
+    width: 130px;
+    min-width: 130px;
+  }
+  
+  .schedule-table-header-today {
+    background-color: #cfe2ff;
+    color: #0d6efd;
+  }
+  
+  /* テーブルボディ */
+  .schedule-table-row:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .schedule-table-cell {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  .schedule-table-cell-cast {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: left;
+    padding-left: 12px;
+  }
+  
+  .schedule-table-cell-schedule {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    height: 60px;
+  }
+  
+  .schedule-table-cell-schedule:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .schedule-table-cell-today {
+    background-color: #f0f8ff;
+  }
+  
+  .schedule-table-cell-confirmed {
+    background-color: #d4edda;
+  }
+  
+  .schedule-table-cell-off {
+    background-color: #f8d7da;
+  }
+  
+  /* スケジュール情報 */
+  .schedule-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
+  }
+  
+  .schedule-label {
+    font-weight: bold;
+    color: #28a745;
+    font-size: 12px;
+  }
+  
+  .schedule-label-off {
+    font-weight: bold;
+    color: #dc3545;
+    font-size: 14px;
+  }
+  
+  .schedule-label-empty {
+    color: #adb5bd;
+    font-size: 14px;
+  }
+  
+  .schedule-time {
+    font-size: 13px;
+    color: #495057;
+    margin-top: 4px;
+  }
+  
+  /* ============================================
+     モーダル（コンパクトデザイン対応）
+     ============================================ */
+  .schedule-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .schedule-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .schedule-modal-content {
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+  }
+  
+  /* モーダルヘッダー */
+  .schedule-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  /* キャスト名と日付を横並び */
+  .schedule-modal-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .schedule-modal-cast {
+    color: #333;
+  }
+  
+  .schedule-modal-date {
+    color: #666;
+    font-weight: normal;
+  }
+  
+  .schedule-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #adb5bd;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: color 0.2s ease;
+  }
+  
+  .schedule-modal-close:hover {
+    color: #495057;
+  }
+  
+  /* モーダルボディ */
+  .schedule-modal-body {
+    padding: 20px;
+  }
+  
+  /* 時間選択を横並び */
+  .schedule-time-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .schedule-time-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 15px;
+    color: #495057;
+    background-color: white;
+    transition: border-color 0.2s ease;
+  }
+  
+  .schedule-time-input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .schedule-time-input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+  }
+  
+  .schedule-time-separator {
+    font-size: 16px;
+    color: #495057;
+    font-weight: bold;
+  }
+  
+  /* 休みチェックボックス */
+  .schedule-off-row {
+    margin-bottom: 15px;
+  }
+  
+  .schedule-off-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .schedule-off-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  .schedule-off-checkbox span {
+    font-size: 15px;
+    color: #495057;
+  }
+  
+  /* モーダルフッター */
+  .schedule-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-top: 1px solid #dee2e6;
+    gap: 10px;
+  }
+  
+  .schedule-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .schedule-modal-btn-save {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .schedule-modal-btn-save:hover {
+    background-color: #218838;
+  }
+  
+  .schedule-modal-btn-delete {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .schedule-modal-btn-delete:hover {
+    background-color: #c82333;
+  }
+  
+  

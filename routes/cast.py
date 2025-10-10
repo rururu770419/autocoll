@@ -99,48 +99,77 @@ def cast_management(store):
                          casts=casts)
 
 def register_cast(store):
-    """キャスト登録ページ（基本情報のみ）"""
+    """キャスト新規登録ページ（フル機能版 + コースカテゴリ対応）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
     
     db = get_db()
+    
+    # 🆕 コースカテゴリ一覧を取得（GET/POST両方で必要）
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT category_id, category_name
+        FROM course_categories
+        WHERE store_id = 1
+        AND is_active = TRUE
+        ORDER BY category_id
+    """)
+    course_categories = cursor.fetchall()
 
     if request.method == "POST":
         name = request.form.get("name")
         phone_number = request.form.get("phone_number")
+        email = request.form.get("email")
+        birth_date = request.form.get("birth_date") or None
+        join_date = request.form.get("join_date") or None
+        status = request.form.get("status", '在籍')
+        recruitment_source = request.form.get("recruitment_source")
+        transportation_fee = int(request.form.get("transportation_fee", 0))
+        work_type = request.form.get("work_type", "")
+        comments = request.form.get("comments")
+        login_id = request.form.get("login_id", "").strip()
+        password = request.form.get("password", "")
+        notification_minutes_before = int(request.form.get("notification_minutes_before", 15))
+        auto_call_enabled = request.form.get("auto_call_enabled", "true") == "true"
+        
+        # 住所の結合
+        prefecture = request.form.get("prefecture", "")
+        city = request.form.get("city", "")
+        address_detail = request.form.get("address_detail", "")
+        full_address = " ".join(filter(None, [prefecture, city, address_detail]))
+        
+        # 🆕 対応コースカテゴリの取得
+        course_category_id = request.form.get("course_category_id")
         
         # バリデーションチェック（名前のみ必須）
         if not name:
-            casts = get_all_casts(db)
             return render_template(
                 "cast_registration.html",
                 store=store,
                 display_name=display_name,
-                casts=casts,
+                course_categories=course_categories,
                 error="キャスト名を入力してください。"
             )
 
         # 電話番号のバリデーション（入力がある場合のみチェック）
         if phone_number and not re.fullmatch(r'\d{11}', phone_number):
-            casts = get_all_casts(db)
             return render_template(
                 "cast_registration.html",
                 store=store,
                 display_name=display_name,
-                casts=casts,
+                course_categories=course_categories,
                 error="電話番号は半角数字11桁で入力してください。"
             )
 
         # 名前の重複チェック
         existing_cast_by_name = find_cast_by_name(db, name)
         if existing_cast_by_name:
-            casts = get_all_casts(db)
             return render_template(
                 "cast_registration.html",
                 store=store,
                 display_name=display_name,
-                casts=casts,
+                course_categories=course_categories,
                 error="既に登録されているキャスト名です。"
             )
 
@@ -148,17 +177,87 @@ def register_cast(store):
         if phone_number and phone_number.strip():
             existing_cast_by_phone = find_cast_by_phone_number(db, phone_number)
             if existing_cast_by_phone:
-                casts = get_all_casts(db)
                 return render_template(
                     "cast_registration.html",
                     store=store,
                     display_name=display_name,
-                    casts=casts,
+                    course_categories=course_categories,
                     error="既に登録されている電話番号です。"
                 )
+        
+        # ログインIDの重複チェック（入力されている場合）
+        if login_id:
+            from database.cast_db import find_cast_by_login_id
+            existing_cast_by_login = find_cast_by_login_id(db, login_id)
+            if existing_cast_by_login:
+                return render_template(
+                    "cast_registration.html",
+                    store=store,
+                    display_name=display_name,
+                    course_categories=course_categories,
+                    error=f"このログインID '{login_id}' は既に使用されています。"
+                )
 
-        # 全てのチェックを通過したら登録
-        db_register_cast(db, name, phone_number)
+        # 🆕 基本登録（名前と電話番号のみ）
+        cast_id = db_register_cast(db, name, phone_number)
+        
+        if not cast_id:
+            return render_template(
+                "cast_registration.html",
+                store=store,
+                display_name=display_name,
+                course_categories=course_categories,
+                error="登録に失敗しました。"
+            )
+        
+        # 🆕 追加情報を更新
+        cast_data = {
+            'email': email,
+            'birth_date': birth_date,
+            'address': full_address,
+            'join_date': join_date,
+            'status': status,
+            'recruitment_source': recruitment_source,
+            'transportation_fee': transportation_fee,
+            'work_type': work_type,
+            'comments': comments,
+            'login_id': login_id if login_id else None,
+            'notification_minutes_before': notification_minutes_before,
+            'auto_call_enabled': auto_call_enabled,
+            'available_course_categories': [int(course_category_id)] if course_category_id else [],
+            'id_document_paths': [],
+            'contract_document_paths': []
+        }
+        
+        # パスワードが入力されている場合のみ設定
+        if password:
+            cast_data['password'] = password
+        
+        # ファイルアップロード処理
+        id_docs = []
+        contract_docs = []
+        
+        # 身分証画像
+        id_document_files = request.files.getlist('id_documents')
+        for file in id_document_files:
+            if file and file.filename:
+                saved_path = save_cast_file(file, cast_id, 'id_document')
+                if saved_path:
+                    id_docs.append(saved_path)
+        
+        # 契約書等画像
+        contract_document_files = request.files.getlist('contract_documents')
+        for file in contract_document_files:
+            if file and file.filename:
+                saved_path = save_cast_file(file, cast_id, 'contract_document')
+                if saved_path:
+                    contract_docs.append(saved_path)
+        
+        cast_data['id_document_paths'] = id_docs
+        cast_data['contract_document_paths'] = contract_docs
+        
+        # 詳細情報を更新
+        update_cast(db, cast_id, cast_data)
         
         return redirect(url_for('main_routes.cast_management', store=store, success="キャストを登録しました。"))
         
@@ -170,12 +269,13 @@ def register_cast(store):
         "cast_registration.html",
         store=store,
         display_name=display_name,
+        course_categories=course_categories,  # 🆕 追加
         success=success_msg,
         error=error_msg
     )
 
 def edit_cast(store, cast_id):
-    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分 + NGエリア・年齢NG）"""
+    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分 + NGエリア・年齢NG + コースカテゴリ対応）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
@@ -227,10 +327,10 @@ def edit_cast(store, cast_id):
             'auto_call_enabled': auto_call_enabled_bool,
         }
         
-        # 対応コースの処理
-        course_category = request.form.get("course_category")
-        if course_category:
-            cast_data['available_course_categories'] = [course_category]
+        # 🆕 対応コースカテゴリの処理（category_idで保存）
+        course_category_id = request.form.get("course_category_id")
+        if course_category_id:
+            cast_data['available_course_categories'] = [int(course_category_id)]
         else:
             cast_data['available_course_categories'] = []
         
@@ -241,22 +341,46 @@ def edit_cast(store, cast_id):
         
         # バリデーション
         if not cast_data['name']:
+            # 🆕 course_categoriesを取得してエラー時にも渡す
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT category_id, category_name
+                FROM course_categories
+                WHERE store_id = 1
+                AND is_active = TRUE
+                ORDER BY category_id
+    """)
+            course_categories = cursor.fetchall()
+            
             return render_template(
                 "cast_edit.html",
                 store=store,
                 cast=cast,
                 display_name=display_name,
+                course_categories=course_categories,
                 error="キャスト名は必須です。"
             )
         
         # 名前の重複チェック（編集中のキャスト自身は除く）
         existing_cast_by_name = find_cast_by_name(db, cast_data['name'])
         if existing_cast_by_name and existing_cast_by_name['cast_id'] != cast_id:
+            # 🆕 course_categoriesを取得してエラー時にも渡す
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT category_id, category_name
+                FROM course_categories
+                WHERE store_id = 1
+                AND is_active = TRUE
+                ORDER BY category_id
+    """)
+            course_categories = cursor.fetchall()
+            
             return render_template(
                 "cast_edit.html",
                 store=store,
                 cast=cast,
                 display_name=display_name,
+                course_categories=course_categories,
                 error="このキャスト名は既に使用されています。"
             )
         
@@ -264,11 +388,23 @@ def edit_cast(store, cast_id):
         if cast_data['phone_number']:
             existing_cast_by_phone = find_cast_by_phone_number(db, cast_data['phone_number'])
             if existing_cast_by_phone and existing_cast_by_phone['cast_id'] != cast_id:
+                # 🆕 course_categoriesを取得してエラー時にも渡す
+                cursor = db.cursor()
+                cursor.execute("""
+                    SELECT category_id, category_name
+                    FROM course_categories
+                    WHERE store_id = 1
+                    AND is_active = TRUE
+                    ORDER BY category_id
+    """)
+                course_categories = cursor.fetchall()
+                
                 return render_template(
                     "cast_edit.html",
                     store=store,
                     cast=cast,
                     display_name=display_name,
+                    course_categories=course_categories,
                     error="この電話番号は既に使用されています。"
                 )
         
@@ -278,11 +414,23 @@ def edit_cast(store, cast_id):
             existing_cast_by_login = find_cast_by_login_id(db, cast_data['login_id'])
             # 編集中のキャスト自身のログインIDは除外
             if existing_cast_by_login and existing_cast_by_login['cast_id'] != cast_id:
+                # 🆕 course_categoriesを取得してエラー時にも渡す
+                cursor = db.cursor()
+                cursor.execute("""
+                    SELECT category_id, category_name
+                    FROM course_categories
+                    WHERE store_id = 1
+                    AND is_active = TRUE
+                    ORDER BY category_id
+    """)
+                course_categories = cursor.fetchall()
+                
                 return render_template(
                     "cast_edit.html",
                     store=store,
                     cast=cast,
                     display_name=display_name,
+                    course_categories=course_categories,
                     error=f"このログインID '{cast_data['login_id']}' は既に使用されています。"
                 )
 
@@ -317,21 +465,45 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
+                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    cursor = db.cursor()
+                    cursor.execute("""
+                        SELECT category_id, category_name
+                        FROM course_categories
+                        WHERE store_id = 1
+                        AND is_active = TRUE
+                        ORDER BY category_id
+    """)
+                    course_categories = cursor.fetchall()
+                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
                         cast=cast,
                         display_name=display_name,
+                        course_categories=course_categories,
                         error="ファイルサイズは5MB以下にしてください。"
                     )
                 
                 # 最大2枚まで
                 if len(existing_id_docs) >= 2:
+                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    cursor = db.cursor()
+                    cursor.execute("""
+                        SELECT category_id, category_name
+                        FROM course_categories
+                        WHERE store_id = 1
+                        AND is_active = TRUE
+                        ORDER BY category_id
+    """)
+                    course_categories = cursor.fetchall()
+                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
                         cast=cast,
                         display_name=display_name,
+                        course_categories=course_categories,
                         error="身分証画像は最大2枚までです。"
                     )
                 
@@ -349,21 +521,45 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
+                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    cursor = db.cursor()
+                    cursor.execute("""
+                        SELECT category_id, category_name
+                        FROM course_categories
+                        WHERE store_id = 1
+                        AND is_active = TRUE
+                        ORDER BY category_id
+    """)
+                    course_categories = cursor.fetchall()
+                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
                         cast=cast,
                         display_name=display_name,
+                        course_categories=course_categories,
                         error="ファイルサイズは5MB以下にしてください。"
                     )
                 
                 # 最大5枚まで
                 if len(existing_contract_docs) >= 5:
+                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    cursor = db.cursor()
+                    cursor.execute("""
+                        SELECT category_id, category_name
+                        FROM course_categories
+                        WHERE store_id = 1
+                        AND is_active = TRUE
+                        ORDER BY category_id
+    """)
+                    course_categories = cursor.fetchall()
+                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
                         cast=cast,
                         display_name=display_name,
+                        course_categories=course_categories,
                         error="契約書等画像は最大5枚までです。"
                     )
                 
@@ -381,14 +577,39 @@ def edit_cast(store, cast_id):
         if success:
             return redirect(url_for('main_routes.cast_management', store=store, success="キャスト情報を更新しました。"))
         else:
+            # 🆕 course_categoriesを取得してエラー時にも渡す
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT category_id, category_name
+                FROM course_categories
+                WHERE store_id = 1
+                AND is_active = TRUE
+                ORDER BY category_id
+    """)
+            course_categories = cursor.fetchall()
+            
             return render_template(
                 "cast_edit.html",
                 store=store,
                 cast=cast,
                 display_name=display_name,
+                course_categories=course_categories,
                 error="更新に失敗しました。"
             )
 
+    # GETリクエスト：編集画面を表示
+    
+    # 🆕 コースカテゴリ一覧を取得
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT category_id, category_name
+        FROM course_categories
+        WHERE store_id = 1
+        AND is_active = TRUE
+        ORDER BY category_id
+    """)
+    course_categories = cursor.fetchall()
+    
     # NG設定タブ用のデータを取得
     all_hotels = get_all_hotels(db)
     all_courses = get_all_courses(db)
@@ -415,16 +636,17 @@ def edit_cast(store, cast_id):
         store=store,
         cast=cast,
         display_name=display_name,
+        course_categories=course_categories,  # 🆕 追加
         all_hotels=all_hotels,
         all_courses=all_courses,
         all_options=all_options,
-        all_ng_areas=all_ng_areas,  # 変更
-        all_ng_age_patterns=all_ng_age_patterns,  # 追加
+        all_ng_areas=all_ng_areas,
+        all_ng_age_patterns=all_ng_age_patterns,
         ng_hotel_ids=ng_hotel_ids,
         ng_course_ids=ng_course_ids,
         ng_option_ids=ng_option_ids,
-        ng_custom_area_ids=ng_custom_area_ids,  # 変更
-        ng_age_pattern_ids=ng_age_pattern_ids  # 追加
+        ng_custom_area_ids=ng_custom_area_ids,
+        ng_age_pattern_ids=ng_age_pattern_ids
     )
 
 

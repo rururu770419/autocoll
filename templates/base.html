@@ -50,7 +50,8 @@
                 </li>
                 
             {% endif %}
-            <li><a href="/{{ session.get('store', 'nagano') }}/shift_management">シフト管理</a></li>
+            
+            <li><a href="{{ url_for('schedule.cast_schedule', store=session['store']) }}">出勤管理</a></li>
             <li><a href="{{ url_for('notice_admin.list_notices') }}">お知らせ管理</a></li>
             <li><a href="/{{ session['store'] }}/cast/login">キャストログイン</a></li>
             <li><a href="{{ url_for('main_routes.logout', store=session['store']) }}">ログアウト</a></li>

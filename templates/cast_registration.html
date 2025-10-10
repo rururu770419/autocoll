@@ -181,23 +181,27 @@
                     </div>
 
                     <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">対応コース</label>
-                            <select name="course_category" class="cast-edit-select">
-                                <option value="">選択してください</option>
-                                <option value="基本コース">基本コース</option>
-                                <option value="プレミアムコース">プレミアムコース</option>
-                            </select>
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">働き方区分</label>
-                            <select name="work_type" class="cast-edit-select">
-                                <option value="">選択してください</option>
-                                <option value="出稼ぎ">出稼ぎ</option>
-                                <option value="地元">地元</option>
-                            </select>
-                        </div>
-                    </div>
+                      <div class="cast-edit-form-group">
+                          <label class="cast-edit-label">対応コース</label>
+                          <select name="course_category_id" class="cast-edit-select">
+                              {% for category in course_categories %}
+                                  <option value="{{ category.category_id }}" 
+                                      {% if loop.first %}selected{% endif %}>
+                                      {{ category.category_name }}
+                                  </option>
+                              {% endfor %}
+                          </select>
+                          <small class="cast-edit-help">デフォルトで最初のカテゴリが選択されます</small>
+                      </div>
+                      <div class="cast-edit-form-group">
+                          <label class="cast-edit-label">働き方区分</label>
+                          <select name="work_type" class="cast-edit-select">
+                              <option value="">選択してください</option>
+                              <option value="出稼ぎ">出稼ぎ</option>
+                              <option value="地元">地元</option>
+                          </select>
+                      </div>
+                  </div>
                 </div>
 
                 <!-- オートコール設定セクション -->

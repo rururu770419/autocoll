@@ -37,7 +37,7 @@ def get_all_casts(db):
     return casts
 
 def register_cast(db, name, phone_number):
-    """新しいキャストをデータベースに登録する関数"""
+    """新しいキャストをデータベースに登録する関数（修正版：cast_idを返す）"""
     try:
         cursor = db.cursor()
         cursor.execute("SELECT COALESCE(MAX(cast_id), 0) + 1 as next_id FROM casts")
@@ -49,12 +49,13 @@ def register_cast(db, name, phone_number):
             (new_cast_id, name, phone_number)
         )
         db.commit()
-        return True
+        print(f"✅ キャスト登録成功: {name} (ID: {new_cast_id})")
+        return new_cast_id  # 🆕 cast_idを返す
     except psycopg.IntegrityError:
         raise
     except Exception as e:
-        print(f"キャスト登録エラー: {e}")
-        return False
+        print(f"❌ キャスト登録エラー: {e}")
+        return None  # 🆕 失敗時はNoneを返す
 
 def find_cast_by_id(db, cast_id):
     """IDでキャストを検索する関数。"""
@@ -250,13 +251,13 @@ def update_cast(db, cast_id, cast_data):
             query = f"UPDATE casts SET {', '.join(update_fields)} WHERE cast_id = %s"
             cursor.execute(query, params)
             db.commit()
-            print(f"キャスト更新成功: cast_id {cast_id}")
+            print(f"✅ キャスト更新成功: cast_id {cast_id}")
             return True
         
         return False
         
     except Exception as e:
-        print(f"キャスト更新エラー: {e}")
+        print(f"❌ キャスト更新エラー: {e}")
         import traceback
         traceback.print_exc()
         return False

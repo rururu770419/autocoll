@@ -31,6 +31,7 @@
                             <th>年齢</th>
                             <th>ステータス</th>
                             <th>ログインID</th>
+                            <th>オートコール</th>
                             <th>対応コース</th>
                             <th>交通費</th>
                             <th>コメント</th>
@@ -65,6 +66,17 @@
                             
                             <!-- ログインID -->
                             <td>{{ cast.login_id or '-' }}</td>
+                            
+                            <!-- オートコール -->
+                            <td>
+                                {% if cast.auto_call_enabled is defined and cast.auto_call_enabled %}
+                                    <span class="badge badge-success">有効</span>
+                                {% elif cast.auto_call_enabled is defined and not cast.auto_call_enabled %}
+                                    <span class="badge badge-secondary">無効</span>
+                                {% else %}
+                                    <span class="badge badge-success">有効</span>
+                                {% endif %}
+                            </td>
                             
                             <!-- 対応コース -->
                             <td>

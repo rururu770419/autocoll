@@ -199,14 +199,19 @@
 
                         <div class="cast-edit-form-row">
                             <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">対応コース</label>
-                                {% set course_categories = cast.available_course_categories | parse_json if cast.available_course_categories else [] %}
-                                {% set selected_course = course_categories[0] if course_categories else '' %}
-                                <select name="course_category" class="cast-edit-select">
+                                <label class="cast-edit-label">対応コースカテゴリ</label>
+                                {% set available_categories = cast.available_course_categories | parse_json if cast.available_course_categories else [] %}
+                                {% set selected_category = available_categories[0] if available_categories else '' %}
+                                <select name="course_category_id" class="cast-edit-select">
                                     <option value="">選択してください</option>
-                                    <option value="基本コース" {{ 'selected' if selected_course == '基本コース' else '' }}>基本コース</option>
-                                    <option value="プレミアムコース" {{ 'selected' if selected_course == 'プレミアムコース' else '' }}>プレミアムコース</option>
+                                    {% for category in course_categories %}
+                                        <option value="{{ category.category_id }}" 
+                                            {{ 'selected' if category.category_id == selected_category else '' }}>
+                                            {{ category.category_name }}
+                                        </option>
+                                    {% endfor %}
                                 </select>
+                                <small class="cast-edit-help">このキャストが対応可能なコースカテゴリ</small>
                             </div>
                             <div class="cast-edit-form-group">
                                 <label class="cast-edit-label">働き方区分</label>
@@ -217,7 +222,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
 
                     <!-- オートコール設定セクション -->
                     <div class="cast-edit-section">
