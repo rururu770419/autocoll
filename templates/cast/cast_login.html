@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>キャストログイン</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cast_mypage.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="cm-body">
+    <div class="cm-login-container">
+        <!-- ロゴエリア -->
+        <div class="cm-login-logo">
+            <i class="fas fa-user-circle cm-login-icon"></i>
+            <h1 class="cm-login-title">キャストログイン</h1>
+        </div>
+
+        <!-- エラーメッセージ -->
+        {% if error %}
+        <div class="cm-alert cm-alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <!-- ログインフォーム -->
+        <form method="POST" class="cm-login-form">
+            <div class="cm-form-group">
+                <label class="cm-label" for="login_id">
+                    <i class="fas fa-user"></i>
+                    ログインID
+                </label>
+                <input 
+                    type="text" 
+                    id="login_id" 
+                    name="login_id" 
+                    class="cm-input" 
+                    placeholder="ログインIDを入力"
+                    autocomplete="username"
+                    required
+                    autofocus>
+            </div>
+
+            <div class="cm-form-group">
+                <label class="cm-label" for="password">
+                    <i class="fas fa-lock"></i>
+                    パスワード
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="cm-input" 
+                    placeholder="パスワードを入力"
+                    autocomplete="current-password"
+                    required>
+            </div>
+
+            <button type="submit" class="cm-btn cm-btn-primary cm-btn-block">
+                <i class="fas fa-sign-in-alt"></i>
+                ログイン
+            </button>
+        </form>
+
+        <!-- フッター -->
+        <div class="cm-login-footer">
+            <p class="cm-text-small cm-text-muted">
+                ログインIDとパスワードは管理者から発行されます。<br>
+                不明な場合は店舗管理者にお問い合わせください。
+            </p>
+        </div>
+    </div>
+</body>
+</html>

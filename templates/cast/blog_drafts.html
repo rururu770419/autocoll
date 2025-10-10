@@ -1,0 +1,65 @@
+{% extends "cast/cast_base.html" %}
+
+{% block title %}ブログ下書き一覧 - キャストマイページ{% endblock %}
+
+{% block content %}
+<div class="cm-drafts-container">
+    <!-- ヘッダー -->
+    <div class="cm-drafts-header">
+        <h2>📝 ブログ下書き一覧</h2>
+        <a href="{{ url_for('cast_mypage.blog_draft_new', store=store) }}" class="cm-btn-new-draft">
+            ➕ 新規作成
+        </a>
+    </div>
+
+    {% if drafts and drafts|length > 0 %}
+        <!-- 下書きカードグリッド -->
+        <div class="cm-drafts-grid">
+            {% for draft in drafts %}
+            <div class="cm-draft-card">
+                <!-- タイトル -->
+                <h3 class="cm-draft-title">{{ draft.title }}</h3>
+                
+                <!-- コンテンツプレビュー -->
+                <div class="cm-draft-content-preview">
+                    {{ draft.content|striptags|truncate(100) }}
+                </div>
+                
+                <!-- メタ情報 -->
+                <div class="cm-draft-meta">
+                    <span class="cm-draft-date">
+                        🕒 {{ draft.updated_at.strftime('%Y年%m月%d日 %H:%M') if draft.updated_at else '日時不明' }}
+                    </span>
+                </div>
+                
+                <!-- アクション -->
+                <div class="cm-draft-actions">
+                    <a href="{{ url_for('cast_mypage.blog_draft_edit', store=store, draft_id=draft.draft_id) }}" 
+                       class="cm-btn cm-btn-edit">
+                        ✏️ 編集
+                    </a>
+                    <form method="POST" 
+                          action="{{ url_for('cast_mypage.blog_draft_delete', store=store, draft_id=draft.draft_id) }}" 
+                          style="flex: 1;"
+                          onsubmit="return confirm('本当に削除しますか？');">
+                        <button type="submit" class="cm-btn cm-btn-delete" style="width: 100%;">
+                            🗑️ 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- 下書きが0件の場合 -->
+        <div class="cm-no-drafts">
+            <div class="cm-no-drafts-icon">📝</div>
+            <h3>下書きがまだありません</h3>
+            <p>新しいブログ記事を作成してみましょう</p>
+            <a href="{{ url_for('cast_mypage.blog_draft_new', store=store) }}" class="cm-btn-new-draft">
+                ➕ 最初の下書きを作成
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

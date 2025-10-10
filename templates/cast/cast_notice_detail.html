@@ -1,0 +1,47 @@
+{% extends "cast/cast_base.html" %}
+
+{% block title %}{{ notice.title }} - キャストマイページ{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-bell"></i>
+お知らせ詳細
+{% endblock %}
+
+{% block content %}
+<!-- 戻るボタン -->
+<div class="cm-back-link">
+    <a href="{{ url_for('cast_mypage.dashboard', store=store) }}">
+        <i class="fas fa-arrow-left"></i>
+        お知らせ一覧に戻る
+    </a>
+</div>
+
+<!-- お知らせ詳細カード -->
+<div class="cm-notice-detail">
+    {% if notice.is_pinned %}
+    <div class="cm-notice-pin cm-notice-pin-large">
+        <i class="fas fa-thumbtack"></i>
+        <span>重要なお知らせ</span>
+    </div>
+    {% endif %}
+    
+    <h1 class="cm-notice-detail-title">{{ notice.title }}</h1>
+    
+    <div class="cm-notice-detail-meta">
+        <span class="cm-notice-date">
+            <i class="far fa-clock"></i>
+            {{ notice.published_at.strftime('%Y年%m月%d日 %H:%M') if notice.published_at else notice.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+        </span>
+        {% if notice.updated_at and notice.updated_at != notice.created_at %}
+        <span class="cm-notice-updated">
+            <i class="fas fa-sync-alt"></i>
+            更新: {{ notice.updated_at.strftime('%Y年%m月%d日 %H:%M') }}
+        </span>
+        {% endif %}
+    </div>
+    
+    <div class="cm-notice-detail-content">
+        {{ notice.content|safe }}
+    </div>
+</div>
+{% endblock %}

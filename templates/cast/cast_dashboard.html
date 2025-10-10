@@ -1,0 +1,38 @@
+{% extends "cast/cast_base.html" %}
+
+{% block title %}お知らせ - キャストマイページ{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-bell"></i>
+お知らせ
+{% endblock %}
+
+{% block content %}
+<!-- お知らせ一覧 -->
+{% if notices %}
+    {% for notice in notices %}
+    <a href="{{ url_for('cast_mypage.notice_detail', store=store, notice_id=notice.notice_id) }}" class="cm-notice-card {% if notice.is_pinned %}cm-notice-card-pinned{% endif %}">
+        {% if notice.is_pinned %}
+        <div class="cm-notice-pin">
+            <i class="fas fa-thumbtack"></i>
+            <span>重要</span>
+        </div>
+        {% endif %}
+        
+        <h2 class="cm-notice-title">{{ notice.title }}</h2>
+        
+        <div class="cm-notice-meta">
+            <span class="cm-notice-date">
+                <i class="far fa-clock"></i>
+                {{ notice.published_at.strftime('%Y年%m月%d日 %H:%M') if notice.published_at else notice.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+            </span>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="cm-empty">
+        <i class="far fa-bell-slash cm-empty-icon"></i>
+        <p class="cm-empty-text">お知らせはありません</p>
+    </div>
+{% endif %}
+{% endblock %}

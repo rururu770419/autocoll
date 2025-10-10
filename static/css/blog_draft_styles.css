@@ -1,0 +1,199 @@
+/* ========================================
+   ブログ下書き一覧ページ
+   ======================================== */
+
+   .cm-action-bar {
+    margin-bottom: 24px;
+    text-align: right;
+}
+
+.cm-drafts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.cm-draft-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+    display: block;
+}
+
+.cm-draft-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #7dd3fc;
+}
+
+.cm-draft-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.cm-draft-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cm-draft-date {
+    font-size: 12px;
+    color: #999;
+    white-space: nowrap;
+}
+
+.cm-draft-preview {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.cm-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.cm-empty-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+.cm-empty-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.cm-empty-subtext {
+    font-size: 14px;
+    color: #999;
+}
+
+/* ========================================
+   ブログ下書き編集フォーム
+   ======================================== */
+
+.cm-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.cm-textarea:focus {
+    outline: none;
+    border-color: #7dd3fc;
+}
+
+.cm-button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cm-button-group .cm-btn {
+    flex: 1;
+}
+
+.cm-danger-zone {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #fee;
+    text-align: center;
+}
+
+.cm-btn-danger {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.cm-btn-danger:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   コピーボタンのスタイル
+   ============================================ */
+   .cm-btn-copy {
+    display: inline-block;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
+    text-align: center;
+}
+
+.cm-btn-copy:hover {
+    background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 124, 0, 0.4);
+    color: white;
+}
+
+.cm-btn-copy:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(245, 124, 0, 0.3);
+}
+
+/* ブログフォームのボタングループ */
+.cm-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.cm-form-actions .cm-btn {
+    flex: 0 0 auto;
+    min-width: 150px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .cm-form-actions {
+        flex-direction: column;
+    }
+    
+    .cm-form-actions .cm-btn {
+        width: 100%;
+        min-width: auto;
+    }
+}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}お知らせ管理{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notice_admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="na-container">
+    <!-- ヘッダー -->
+    <div class="na-header">
+        <h1 class="na-title">📢 お知らせ管理</h1>
+        <a href="{{ url_for('notice_admin.new_notice') }}" class="na-btn na-btn-primary">
+            ➕ 新規作成
+        </a>
+    </div>
+
+    <!-- フラッシュメッセージ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="na-alert {% if category == 'success' %}na-alert-success{% else %}na-alert-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- お知らせ一覧 -->
+    {% if notices %}
+        <div class="na-list">
+            {% for notice in notices %}
+            <div class="na-list-item">
+                <div class="na-list-header">
+                    <h3 class="na-list-title">{{ notice.title }}</h3>
+                    <div class="na-list-badges">
+                        {% if notice.is_pinned %}
+                        <span class="na-badge na-badge-pinned">📌 ピン留め</span>
+                        {% endif %}
+                        {% if notice.is_published %}
+                        <span class="na-badge na-badge-published">✓ 公開中</span>
+                        {% else %}
+                        <span class="na-badge na-badge-unpublished">非公開</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="na-list-meta">
+                    📅 公開日時: {{ notice.published_at.strftime('%Y年%m月%d日 %H:%M') if notice.published_at else '未設定' }}
+                    ｜ 更新: {{ notice.updated_at.strftime('%Y年%m月%d日 %H:%M') if notice.updated_at else '-' }}
+                </div>
+                
+                <div class="na-list-content">
+                    {{ notice.content|striptags|truncate(100) }}
+                </div>
+                
+                <div class="na-list-actions">
+                    <a href="{{ url_for('notice_admin.edit_notice', notice_id=notice.notice_id) }}" 
+                       class="na-btn na-btn-edit">
+                        ✏️ 編集
+                    </a>
+                    <button type="button" 
+                            class="na-btn na-btn-delete" 
+                            onclick="confirmDelete({{ notice.notice_id }}, '{{ notice.title }}')">
+                        🗑️ 削除
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- 空の状態 -->
+        <div class="na-empty-state">
+            <div class="na-empty-icon">📭</div>
+            <p class="na-empty-text">お知らせがまだありません</p>
+            <a href="{{ url_for('notice_admin.new_notice') }}" class="na-btn na-btn-primary">
+                最初のお知らせを作成する
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- 削除確認モーダル -->
+<div id="deleteModal" class="na-modal-overlay">
+    <div class="na-modal-content">
+        <div class="na-modal-header">
+            <h3 class="na-modal-title">⚠️ 削除確認</h3>
+        </div>
+        <div class="na-modal-body">
+            <p>「<strong id="deleteNoticeName"></strong>」を削除してもよろしいですか？</p>
+            <p style="color: #dc3545; margin-top: 10px;">この操作は取り消せません。</p>
+        </div>
+        <div class="na-modal-footer">
+            <button type="button" class="na-btn na-btn-secondary" onclick="closeDeleteModal()">
+                キャンセル
+            </button>
+            <form id="deleteForm" method="POST" style="display: inline;">
+                <button type="submit" class="na-btn na-btn-delete">
+                    削除する
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 削除確認モーダル
+function confirmDelete(noticeId, noticeName) {
+    document.getElementById('deleteNoticeName').textContent = noticeName;
+    document.getElementById('deleteForm').action = "{{ url_for('notice_admin.delete_notice_route', notice_id=0) }}".replace('0', noticeId);
+    document.getElementById('deleteModal').classList.add('na-modal-show');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('na-modal-show');
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+</script>
+{% endblock %}

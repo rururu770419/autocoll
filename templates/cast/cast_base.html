@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}キャストマイページ{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cast_mypage.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="cm-body">
+    <!-- ハンバーガーメニュー -->
+    <div class="cm-hamburger" id="hamburger">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- サイドメニュー -->
+    <nav class="cm-sidebar" id="sidebar">
+        <div class="cm-sidebar-header">
+            <div class="cm-sidebar-close" id="sidebarClose">
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="cm-sidebar-user">
+                <i class="fas fa-user-circle cm-sidebar-user-icon"></i>
+                <span class="cm-sidebar-user-name">{{ cast_name }}</span>
+            </div>
+        </div>
+
+        <ul class="cm-sidebar-menu">
+            <li class="cm-sidebar-menu-item {% if active_page == 'dashboard' %}cm-sidebar-menu-item-active{% endif %}">
+                <a href="{{ url_for('cast_mypage.dashboard', store=store) }}" class="cm-sidebar-link">
+                    <i class="fas fa-home"></i>
+                    <span>トップ</span>
+                </a>
+            </li>
+            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
+                <a href="#" class="cm-sidebar-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>予約一覧</span>
+                    <span class="cm-badge-soon">準備中</span>
+                </a>
+            </li>
+            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
+                <a href="#" class="cm-sidebar-link">
+                    <i class="fas fa-users"></i>
+                    <span>顧客情報</span>
+                    <span class="cm-badge-soon">準備中</span>
+                </a>
+            </li>
+            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
+                <a href="#" class="cm-sidebar-link">
+                    <i class="fas fa-yen-sign"></i>
+                    <span>委託費用</span>
+                    <span class="cm-badge-soon">準備中</span>
+                </a>
+            </li>
+            <li class="cm-sidebar-menu-item {% if active_page == 'blog_drafts' %}cm-sidebar-menu-item-active{% endif %}">
+                <a href="{{ url_for('cast_mypage.blog_drafts', store=store) }}" class="cm-sidebar-link">
+                    <i class="fas fa-pen-fancy"></i>
+                    <span>ブログ下書き</span>
+                </a>
+            </li>
+            <li class="cm-sidebar-menu-item">
+                <a href="{{ url_for('cast_mypage.logout', store=store) }}" class="cm-sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>ログアウト</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- オーバーレイ -->
+    <div class="cm-overlay" id="overlay"></div>
+
+    <!-- メインコンテンツ -->
+    <main class="cm-main">
+        <!-- ヘッダー -->
+        <header class="cm-header">
+            {% block header %}
+            <h1 class="cm-header-title">
+                {% block header_title %}{% endblock %}
+            </h1>
+            {% endblock %}
+        </header>
+
+        <!-- コンテンツエリア -->
+        <div class="cm-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/cast_mypage.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

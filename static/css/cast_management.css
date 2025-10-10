@@ -642,3 +642,94 @@
     color: #fff;
     margin: 0 0 20PX 0;
 }
+
+
+/* =========================================
+   cast_management.css の最後に以下を追加してください
+   NG設定タブ専用レイアウト（レスポンシブなし）
+   ========================================= */
+
+/* NG設定タブ用のチェックボックスグリッド */
+.cast-edit-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4列固定 */
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.cast-edit-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: white;
+}
+
+.cast-edit-checkbox-label:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.cast-edit-checkbox {
+    flex-shrink: 0;
+    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.cast-edit-checkbox-text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #343a40;
+    line-height: 1.4;
+}
+
+/* チェック済みのスタイル */
+.cast-edit-checkbox:checked + .cast-edit-checkbox-text {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.cast-edit-checkbox-label:has(.cast-edit-checkbox:checked) {
+    background-color: #e7f3ff;
+    border-color: #007bff;
+}
+
+/* データなしメッセージ */
+.cast-edit-no-data {
+    padding: 30px;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.95rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.cast-edit-no-data a {
+    font-weight: 500;
+}
+
+/* NG設定タブのメインレイアウト調整 */
+.cast-edit-container:has(#cast-edit-tab-ng.cast-edit-tab-active) .cast-edit-main {
+    display: block; /* フレックスを解除 */
+}
+
+.cast-edit-container:has(#cast-edit-tab-ng.cast-edit-tab-active) .cast-edit-form-area {
+    width: 100%; /* 全幅使用 */
+    max-width: none;
+    margin-bottom: 30px;
+}
+
+.cast-edit-container:has(#cast-edit-tab-ng.cast-edit-tab-active) .cast-edit-guide-area {
+    width: 100%;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* ガイドカードを横2列に */
+    gap: 20px;
+}

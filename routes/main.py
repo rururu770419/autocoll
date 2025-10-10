@@ -4,7 +4,8 @@ from flask import Blueprint
 from .auth import index, login, logout
 # スタッフ関連に新しい関数を追加（get_line_bot_idを追加）
 from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id
-from .cast import register_cast, edit_cast, delete_cast, cast_management
+# キャスト関連にsave_cast_ng_settingsを追加
+from .cast import register_cast, edit_cast, delete_cast, cast_management, save_cast_ng_settings
 # コース関連（move_course_up, move_course_downを追加）
 from .course import register_course, edit_course, delete_course, move_course_up, move_course_down
 from .hotel import register_hotel, edit_hotel, delete_hotel, register_category, register_area, move_hotel_up_route, move_hotel_down_route
@@ -85,6 +86,8 @@ main_routes.add_url_rule('/<store>/cast_management', 'cast_management', cast_man
 main_routes.add_url_rule('/<store>/register_cast', 'register_cast', register_cast, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/edit_cast/<int:cast_id>', 'edit_cast', edit_cast, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', delete_cast, methods=['GET', 'POST'])
+# キャストNG設定保存（新規追加）
+main_routes.add_url_rule('/<store>/cast/<int:cast_id>/ng-settings', 'save_cast_ng_settings', save_cast_ng_settings, methods=['POST'])
 
 # コース管理（既存のルート + 並び順変更を追加）
 main_routes.add_url_rule('/<store>/register_course', 'register_course', register_course, methods=['GET', 'POST'])
@@ -157,7 +160,7 @@ main_routes.add_url_rule('/<store>/customer_management', 'customer_management', 
 main_routes.add_url_rule('/<store>/customer_registration', 'customer_registration', customer_registration_view, methods=['GET'])
 main_routes.add_url_rule('/<store>/customer_edit/<int:customer_id>', 'edit_customer', customer_edit_view, methods=['GET'])
 
-# 顧客管理（API）
+# 顧客管理（API）A
 main_routes.add_url_rule('/<store>/api/customers', 'api_get_customers', api_get_customers_endpoint, methods=['GET'])
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>', 'api_get_customer', api_get_customer_endpoint, methods=['GET'])
 main_routes.add_url_rule('/<store>/api/customers/add', 'api_add_customer', api_add_customer_endpoint, methods=['POST'])

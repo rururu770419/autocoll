@@ -12,6 +12,7 @@ from database.db_connection import get_db_connection
 from datetime import datetime
 import time
 import re
+import traceback
 
 schedule_import_bp = Blueprint('schedule_import', __name__)
 
@@ -104,8 +105,13 @@ def scrape_cityheaven_schedule():
     """
     シティヘブンから出勤情報をスクレイピング
     """
+    print("=" * 60)
+    print("🚀 スクレイピング関数開始")
+    print("=" * 60)
+    
     # Chrome オプション設定
     chrome_options = Options()
+    print("✅ Chromeオプション設定完了")
     chrome_options.add_argument('--headless')  # バックグラウンド実行
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
@@ -116,33 +122,80 @@ def scrape_cityheaven_schedule():
     
     try:
         # WebDriverの初期化
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        current_app.logger.info("🚀 WebDriver初期化開始")
+        try:
+            service = Service(ChromeDriverManager().install())
+            current_app.logger.info("✅ ChromeDriver取得完了")
+            
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            current_app.logger.info("✅ WebDriver初期化完了")
+        except Exception as e:
+            current_app.logger.error(f"❌ WebDriver初期化エラー: {e}")
+            raise
         
-        current_app.logger.info("シティヘブンログイン開始")
+        current_app.logger.info("🔐 シティヘブンログイン開始")
         
         # ログインページにアクセス
-        driver.get(CITYHEAVEN_LOGIN_URL)
-        time.sleep(2)
+        try:
+            driver.get(CITYHEAVEN_LOGIN_URL)
+            current_app.logger.info(f"✅ ページアクセス完了: {CITYHEAVEN_LOGIN_URL}")
+        except Exception as e:
+            current_app.logger.error(f"❌ ページアクセスエラー: {e}")
+            raise
         
-        # ログイン情報入力
-        id_input = driver.find_element(By.NAME, "loginid")
-        password_input = driver.find_element(By.NAME, "password")
+        # === デバッグ用：スクリーンショットとHTML保存 ===
+        screenshot_path = 'cityheaven_debug.png'
+        driver.save_screenshot(screenshot_path)
+        current_app.logger.info(f"📸 スクリーンショット保存: {screenshot_path}")
         
+        # ページのHTMLも保存
+        with open('cityheaven_debug.html', 'w', encoding='utf-8') as f:
+            f.write(driver.page_source)
+        current_app.logger.info("📄 HTML保存: cityheaven_debug.html")
+        
+        # 現在のURLも確認
+        current_app.logger.info(f"🔗 現在のURL: {driver.current_url}")
+        current_app.logger.info(f"📋 ページタイトル: {driver.title}")
+        # === ここまで ===
+        
+        # ログイン情報入力（表示されるまで待機）
+        current_app.logger.info("🔍 ログインIDフィールドを探索中...")
+        id_input = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "txt_account"))
+        )
+        current_app.logger.info("✅ ログインIDフィールド発見")
+        
+        password_input = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "txt_password"))
+        )
+        current_app.logger.info("✅ パスワードフィールド発見")
+        
+        current_app.logger.info("📝 フィールドに入力中...")
+        id_input.clear()
         id_input.send_keys(CITYHEAVEN_ID)
+        
+        password_input.clear()
         password_input.send_keys(CITYHEAVEN_PASSWORD)
+        current_app.logger.info("✅ 入力完了")
         
-        # ログインボタンをクリック
-        login_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        login_button.click()
+        # ログインボタンをクリック（JavaScript経由で確実に実行）
+        current_app.logger.info("🔍 ログインボタンを探索中...")
+        login_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit']"))
+        )
+        current_app.logger.info("✅ ログインボタン発見")
         
-        time.sleep(3)
+        current_app.logger.info("👆 クリック実行中...")
+        driver.execute_script("arguments[0].click();", login_button)
+        current_app.logger.info("✅ ログイン完了")
         
-        current_app.logger.info("出勤情報ページにアクセス")
+        time.sleep(10)
+        
+        current_app.logger.info("📅 出勤情報ページにアクセス")
         
         # 出勤情報ページにアクセス
         driver.get(CITYHEAVEN_SCHEDULE_URL)
-        time.sleep(3)
+        time.sleep(10)
         
         # ページのHTMLを取得
         html = driver.page_source
@@ -151,8 +204,10 @@ def scrape_cityheaven_schedule():
         # テーブルを取得
         table = soup.find('table')
         if not table:
-            current_app.logger.error("出勤情報テーブルが見つかりません")
+            current_app.logger.error("❌ 出勤情報テーブルが見つかりません")
             return {'success': False, 'error': 'テーブルが見つかりません'}
+        
+        current_app.logger.info("✅ 出勤情報テーブル発見")
         
         # ヘッダー行から日付を取得
         header_row = table.find('tr')
@@ -173,7 +228,7 @@ def scrape_cityheaven_schedule():
                     year += 1
                 dates.append(f"{year}-{month:02d}-{day:02d}")
         
-        current_app.logger.info(f"取得した日付: {dates}")
+        current_app.logger.info(f"📆 取得した日付: {dates}")
         
         # データ行を処理
         data_rows = table.find_all('tr')[1:]  # ヘッダー行をスキップ
@@ -186,7 +241,7 @@ def scrape_cityheaven_schedule():
         while i < len(data_rows):
             # キャスト名の行
             name_row = data_rows[i]
-            # 次の行がカウンタン週間設定の行
+            # 次の行がスケジュールの行
             if i + 1 < len(data_rows):
                 schedule_row = data_rows[i + 1]
             else:
@@ -204,13 +259,13 @@ def scrape_cityheaven_schedule():
             cast_id = get_cast_id_by_name(cast_name)
             
             if not cast_id:
-                current_app.logger.warning(f"キャストが見つかりません: {cast_name}")
+                current_app.logger.warning(f"⚠️ キャストが見つかりません: {cast_name}")
                 skipped_count += 1
                 i += 2
                 continue
             
             # 出勤情報セルを取得
-            schedule_cells = schedule_row.find_all('td')[1:]  # 最初のセル（カウンタン週間設定）をスキップ
+            schedule_cells = schedule_row.find_all('td')[1:]  # 最初のセルをスキップ
             
             # 各日付の出勤情報を処理
             for date_idx, cell in enumerate(schedule_cells):
@@ -228,11 +283,13 @@ def scrape_cityheaven_schedule():
                     success = save_schedule_to_db(cast_id, work_date, start_time, end_time)
                     if success:
                         imported_count += 1
-                        current_app.logger.info(f"保存成功: {cast_name} {work_date} {start_time}-{end_time}")
+                        current_app.logger.info(f"💾 保存成功: {cast_name} {work_date} {start_time}-{end_time}")
                     else:
                         error_count += 1
             
             i += 2  # 次のキャストへ（名前行とスケジュール行をスキップ）
+        
+        current_app.logger.info(f"🎉 取り込み完了: {imported_count}件登録、{skipped_count}件スキップ、{error_count}件エラー")
         
         return {
             'success': True,
@@ -242,12 +299,14 @@ def scrape_cityheaven_schedule():
         }
         
     except Exception as e:
-        current_app.logger.error(f"スクレイピングエラー: {str(e)}")
+        error_detail = traceback.format_exc()
+        current_app.logger.error(f"❌ スクレイピングエラー:\n{error_detail}")
         return {'success': False, 'error': str(e)}
     
     finally:
         if driver:
             driver.quit()
+            current_app.logger.info("🛑 WebDriver終了")
 
 
 @schedule_import_bp.route('/<store>/admin/import-schedule', methods=['POST'])
@@ -256,6 +315,10 @@ def import_schedule(store):
     シティヘブンから出勤情報を取り込むエンドポイント
     """
     try:
+        current_app.logger.info("=" * 60)
+        current_app.logger.info("📥 シティヘブン取り込み開始")
+        current_app.logger.info("=" * 60)
+        
         result = scrape_cityheaven_schedule()
         
         if result['success']:
@@ -270,7 +333,8 @@ def import_schedule(store):
             }), 500
             
     except Exception as e:
-        current_app.logger.error(f"取り込みエラー: {str(e)}")
+        error_detail = traceback.format_exc()
+        current_app.logger.error(f"❌ 取り込みエラー:\n{error_detail}")
         return jsonify({
             'success': False,
             'error': str(e)

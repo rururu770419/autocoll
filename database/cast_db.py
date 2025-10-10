@@ -66,12 +66,16 @@ def find_cast_by_id(db, cast_id):
 def find_cast_by_name(db, name):
     """名前でキャストを検索する関数。"""
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM casts WHERE name = %s", (name,))
+    cursor.execute("SELECT * FROM casts WHERE name = %s AND is_active = TRUE", (name,))
     cast = cursor.fetchone()
     return cast if cast else None
 
 def find_cast_by_phone_number(db, phone_number):
     """電話番号でキャストを検索する関数。"""
+    # 電話番号がNULLまたは空文字の場合は検索しない
+    if not phone_number or not phone_number.strip():
+        return None
+    
     cursor = db.cursor()
     cursor.execute("SELECT * FROM casts WHERE phone_number = %s", (phone_number,))
     cast = cursor.fetchone()
@@ -102,6 +106,7 @@ def get_all_casts_with_details(db):
             work_type,
             comments,
             login_id,
+            password_plain,
             last_login,
             profile_image_path,
             is_active,
@@ -124,9 +129,11 @@ def register_cast_extended(db, cast_data):
         result = cursor.fetchone()
         new_cast_id = result['next_id']
         
+        # 平文パスワードとハッシュの両方を保存
+        password_plain = cast_data.get('password', '')
         password_hash = None
-        if cast_data.get('password'):
-            password_hash = hashlib.sha256(cast_data['password'].encode()).hexdigest()
+        if password_plain:
+            password_hash = hashlib.sha256(password_plain.encode()).hexdigest()
         
         course_categories_json = json.dumps(cast_data.get('available_course_categories', []), ensure_ascii=False)
         id_documents_json = json.dumps(cast_data.get('id_document_paths', []), ensure_ascii=False)
@@ -136,11 +143,12 @@ def register_cast_extended(db, cast_data):
             INSERT INTO casts (
                 cast_id, name, phone_number, email, birth_date, address,
                 join_date, status, recruitment_source, transportation_fee,
-                available_course_categories, work_type, comments, login_id, password_hash,
+                available_course_categories, work_type, comments, login_id, 
+                password_hash, password_plain,
                 profile_image_path, id_document_paths, contract_document_paths,
                 store_id, is_active, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
         """, (
@@ -159,6 +167,7 @@ def register_cast_extended(db, cast_data):
             cast_data.get('comments'),
             cast_data.get('login_id'),
             password_hash,
+            password_plain,
             cast_data.get('profile_image_path'),
             id_documents_json,
             contract_documents_json,
@@ -180,13 +189,16 @@ def register_cast_extended(db, cast_data):
         return False
 
 def update_cast(db, cast_id, cast_data):
-    """キャスト情報を更新（オートコール設定 + work_type対応）"""
+    """キャスト情報を更新（平文パスワード対応）"""
     try:
         cursor = db.cursor()
         
+        # 平文パスワードとハッシュの両方を処理
+        password_plain = None
         password_hash = None
         if cast_data.get('password'):
-            password_hash = hashlib.sha256(cast_data['password'].encode()).hexdigest()
+            password_plain = cast_data['password']
+            password_hash = hashlib.sha256(password_plain.encode()).hexdigest()
         
         course_categories_json = None
         if 'available_course_categories' in cast_data:
@@ -224,7 +236,10 @@ def update_cast(db, cast_id, cast_data):
             update_fields.append("contract_document_paths = %s")
             params.append(contract_documents_json)
         
-        if password_hash:
+        # パスワードの更新（平文とハッシュ両方）
+        if password_plain:
+            update_fields.append("password_plain = %s")
+            params.append(password_plain)
             update_fields.append("password_hash = %s")
             params.append(password_hash)
         
@@ -251,7 +266,7 @@ def find_cast_by_login_id(db, login_id):
     cursor = db.cursor()
     cursor.execute("""
         SELECT 
-            cast_id, name, login_id, password_hash, status, last_login,
+            cast_id, name, login_id, password_hash, password_plain, status, last_login,
             is_active
         FROM casts 
         WHERE login_id = %s AND is_active = TRUE
@@ -274,20 +289,70 @@ def update_last_login(db, cast_id):
         return False
 
 def verify_cast_password(db, login_id, password):
-    """キャストのパスワード認証"""
-    cast = find_cast_by_login_id(db, login_id)
-    if not cast:
-        return False
+    """
+    キャストの認証（平文パスワード対応）
     
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    if cast['password_hash'] == password_hash:
-        update_last_login(db, cast['cast_id'])
-        return cast
+    Args:
+        db: データベース接続
+        login_id: ログインID
+        password: パスワード（平文）
     
-    return False
+    Returns:
+        int: 認証成功時はcast_id、失敗時はNone
+    """
+    try:
+        cast = find_cast_by_login_id(db, login_id)
+        
+        if not cast:
+            print(f"❌ 認証失敗: キャストが見つかりません (login_id: {login_id})")
+            return None
+        
+        # find_cast_by_login_idのSELECT順序:
+        # cast_id, name, login_id, password_hash, password_plain, status, last_login, is_active
+        # インデックス: 0, 1, 2, 3, 4, 5, 6, 7
+        
+        cast_id = cast[0]
+        password_hash = cast[3]
+        password_plain = cast[4]  # ★ここが重要！平文パスワード
+        is_active = cast[7]
+        
+        # アクティブチェック
+        if not is_active:
+            print(f"❌ 認証失敗: キャストが無効です (cast_id: {cast_id})")
+            return None
+        
+        # まず平文パスワードで認証
+        if password_plain:
+            if password_plain.strip() == password.strip():
+                print(f"✅ 認証成功: cast_id {cast_id} (login_id: {login_id})")
+                update_last_login(db, cast_id)
+                return cast_id
+            else:
+                print(f"❌ 認証失敗: 平文パスワードが一致しません (login_id: {login_id})")
+                return None
+        
+        # 平文がない場合はハッシュで認証
+        if password_hash:
+            hashed_input = hashlib.sha256(password.encode()).hexdigest()
+            if hashed_input == password_hash:
+                print(f"✅ 認証成功（ハッシュ）: cast_id {cast_id} (login_id: {login_id})")
+                update_last_login(db, cast_id)
+                return cast_id
+            else:
+                print(f"❌ 認証失敗: ハッシュパスワードが一致しません (login_id: {login_id})")
+                return None
+        
+        print(f"❌ 認証失敗: パスワードが設定されていません (login_id: {login_id})")
+        return None
+            
+    except Exception as e:
+        print(f"❌ 認証エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 def get_cast_with_age(db, cast_id):
-    """年齢計算込みの特定キャスト詳細情報（オートコール設定 + work_type含む）"""
+    """年齢計算込みの特定キャスト詳細情報（平文パスワード含む）"""
     cursor = db.cursor()
     cursor.execute("""
         SELECT 
@@ -310,6 +375,7 @@ def get_cast_with_age(db, cast_id):
             work_type,
             comments,
             login_id,
+            password_plain,
             last_login,
             profile_image_path,
             id_document_paths,
@@ -339,6 +405,69 @@ def delete_cast(db, cast_id):
     except Exception as e:
         print(f"キャスト削除エラー: {e}")
         return False
+
+# ==== マスターデータ取得関数 ====
+def get_all_hotels(db):
+    """全ホテル一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT hotel_id, name 
+        FROM hotels 
+        ORDER BY name
+    """)
+    return cursor.fetchall()
+
+def get_all_courses(db):
+    """全コース一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT course_id, name 
+        FROM courses 
+        ORDER BY name
+    """)
+    return cursor.fetchall()
+
+def get_all_options(db):
+    """全オプション一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT option_id, name 
+        FROM options 
+        ORDER BY name
+    """)
+    return cursor.fetchall()
+
+def get_all_areas(db):
+    """全エリア一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT area_id, name 
+        FROM areas 
+        ORDER BY name
+    """)
+    return cursor.fetchall()
+
+def get_all_ng_areas(db):
+    """全NGエリア一覧を取得（settingsで登録したもの）"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT ng_area_id, area_name 
+        FROM ng_areas 
+        WHERE is_active = TRUE
+        ORDER BY display_order, area_name
+    """)
+    return cursor.fetchall()
+
+def get_all_ng_age_patterns(db):
+    """全年齢NGパターン一覧を取得（settingsで登録したもの）"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT ng_age_id, pattern_name, description 
+        FROM ng_age_patterns 
+        WHERE is_active = TRUE
+        ORDER BY display_order, pattern_name
+    """)
+    return cursor.fetchall()
 
 # ==== NG項目管理関数 ====
 def get_cast_ng_hotels(db, cast_id):
@@ -389,6 +518,30 @@ def get_cast_ng_areas(db, cast_id):
     """, (cast_id,))
     return cursor.fetchall()
 
+def get_cast_ng_custom_areas(db, cast_id):
+    """キャストのNGエリア（カスタム）一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT na.ng_area_id, na.area_name 
+        FROM cast_ng_custom_areas cna
+        JOIN ng_areas na ON cna.ng_area_id = na.ng_area_id
+        WHERE cna.cast_id = %s AND na.is_active = TRUE
+        ORDER BY na.area_name
+    """, (cast_id,))
+    return cursor.fetchall()
+
+def get_cast_ng_age_patterns(db, cast_id):
+    """キャストの年齢NGパターン一覧を取得"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT nap.ng_age_id, nap.pattern_name, nap.description 
+        FROM cast_ng_age_patterns cnap
+        JOIN ng_age_patterns nap ON cnap.ng_age_id = nap.ng_age_id
+        WHERE cnap.cast_id = %s AND nap.is_active = TRUE
+        ORDER BY nap.pattern_name
+    """, (cast_id,))
+    return cursor.fetchall()
+
 def update_cast_ng_items(db, cast_id, ng_type, item_ids):
     """キャストのNG項目を一括更新"""
     try:
@@ -424,6 +577,64 @@ def update_cast_ng_items(db, cast_id, ng_type, item_ids):
         
     except Exception as e:
         print(f"キャストNG項目更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def update_cast_ng_custom_areas(db, cast_id, ng_area_ids):
+    """キャストのNGエリア（カスタム）を一括更新"""
+    try:
+        cursor = db.cursor()
+        
+        # 既存のNG設定を削除
+        cursor.execute("DELETE FROM cast_ng_custom_areas WHERE cast_id = %s", (cast_id,))
+        
+        # 新しいNG設定を登録
+        if ng_area_ids:
+            values = [(cast_id, area_id) for area_id in ng_area_ids]
+            placeholders = ','.join(['(%s, %s)'] * len(values))
+            flat_values = [val for pair in values for val in pair]
+            
+            cursor.execute(f"""
+                INSERT INTO cast_ng_custom_areas (cast_id, ng_area_id) 
+                VALUES {placeholders}
+            """, flat_values)
+        
+        db.commit()
+        print(f"キャストNGエリア更新成功: cast_id {cast_id}")
+        return True
+        
+    except Exception as e:
+        print(f"キャストNGエリア更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def update_cast_ng_age_patterns(db, cast_id, ng_age_ids):
+    """キャストの年齢NGパターンを一括更新"""
+    try:
+        cursor = db.cursor()
+        
+        # 既存のNG設定を削除
+        cursor.execute("DELETE FROM cast_ng_age_patterns WHERE cast_id = %s", (cast_id,))
+        
+        # 新しいNG設定を登録
+        if ng_age_ids:
+            values = [(cast_id, age_id) for age_id in ng_age_ids]
+            placeholders = ','.join(['(%s, %s)'] * len(values))
+            flat_values = [val for pair in values for val in pair]
+            
+            cursor.execute(f"""
+                INSERT INTO cast_ng_age_patterns (cast_id, ng_age_id) 
+                VALUES {placeholders}
+            """, flat_values)
+        
+        db.commit()
+        print(f"キャスト年齢NG更新成功: cast_id {cast_id}")
+        return True
+        
+    except Exception as e:
+        print(f"キャスト年齢NG更新エラー: {e}")
         import traceback
         traceback.print_exc()
         return False

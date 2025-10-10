@@ -1,0 +1,487 @@
+/* ==========================
+   お知らせ管理専用CSS
+   プレフィックス: .na- (notice-admin)
+   ========================== */
+
+/* ==========================
+   コンテナ
+   ========================== */
+   .na-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.na-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e0f2fe;
+}
+
+.na-title {
+    font-size: 1.75rem;
+    color: #333;
+    margin: 0;
+}
+
+/* ==========================
+   カード
+   ========================== */
+.na-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.na-card-body {
+    padding: 20px;
+}
+
+/* ==========================
+   ボタン
+   ========================== */
+.na-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+/* 新規作成ボタン - 淡い水色 */
+.na-btn-primary {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.na-btn-primary:hover {
+    background-color: #bae6fd;
+    color: #0369a1;
+    text-decoration: none;
+}
+
+/* 保存ボタン - 緑 */
+.na-btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border-color: #28a745;
+}
+
+.na-btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* キャンセルボタン - グレー */
+.na-btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+    border-color: #6c757d;
+}
+
+.na-btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 編集ボタン - 小さめ緑 */
+.na-btn-edit {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #28a745;
+    color: #fff;
+    border-color: #28a745;
+}
+
+.na-btn-edit:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 削除ボタン - 小さめ赤 */
+.na-btn-delete {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #dc3545;
+    color: #fff;
+    border-color: #dc3545;
+}
+
+.na-btn-delete:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 戻るボタン */
+.na-btn-back {
+    padding: 8px 16px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.na-btn-back:hover {
+    background-color: #bae6fd;
+    color: #0369a1;
+    text-decoration: none;
+}
+
+/* ==========================
+   お知らせ一覧
+   ========================== */
+.na-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.na-list-item {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s ease;
+}
+
+.na-list-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.na-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.na-list-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 10px 0 0;
+    flex: 1;
+}
+
+.na-list-badges {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.na-list-meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.na-list-content {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.na-list-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* ==========================
+   バッジ
+   ========================== */
+.na-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+/* ピン留めバッジ - オレンジ */
+.na-badge-pinned {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* 公開中バッジ - 緑 */
+.na-badge-published {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* 非公開バッジ - グレー */
+.na-badge-unpublished {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+/* ==========================
+   フォーム
+   ========================== */
+.na-form-group {
+    margin-bottom: 20px;
+}
+
+.na-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.na-form-required {
+    color: #dc3545;
+    margin-left: 4px;
+}
+
+.na-form-input {
+    display: block;
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.na-form-input:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.na-form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* ==========================
+   チェックボックス
+   ========================== */
+.na-form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.na-form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.na-form-check-label {
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ==========================
+   TinyMCEエディタ用
+   ========================== */
+.na-editor-container {
+    margin-bottom: 20px;
+}
+
+.na-editor-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+/* ==========================
+   フォームアクション
+   ========================== */
+.na-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+/* ==========================
+   空の状態
+   ========================== */
+.na-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.na-empty-icon {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.na-empty-text {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* ==========================
+   アラート
+   ========================== */
+.na-alert {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+}
+
+.na-alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.na-alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* ==========================
+   削除確認モーダル用
+   ========================== */
+.na-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+}
+
+.na-modal-overlay.na-modal-show {
+    display: flex;
+}
+
+.na-modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.na-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.na-modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.na-modal-body {
+    padding: 20px;
+    color: #333;
+}
+
+.na-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ==========================
+   レスポンシブ対応（スマホ）
+   ========================== */
+@media (max-width: 768px) {
+    .na-container {
+        padding: 15px 10px;
+    }
+    
+    .na-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .na-title {
+        font-size: 1.5rem;
+    }
+    
+    .na-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .na-list-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .na-list-badges {
+        width: 100%;
+    }
+    
+    .na-list-actions {
+        flex-direction: column;
+    }
+    
+    .na-list-actions .na-btn {
+        width: 100%;
+    }
+    
+    .na-form-actions {
+        flex-direction: column;
+    }
+    
+    .na-form-actions .na-btn {
+        width: 100%;
+    }
+    
+    .na-card-body {
+        padding: 15px;
+    }
+}

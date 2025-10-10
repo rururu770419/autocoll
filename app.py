@@ -67,6 +67,16 @@ from routes.schedule_import import schedule_import_bp
 app.register_blueprint(schedule_import_bp)
 print("✅ スケジュール取り込みAPIを登録しました")
 
+# キャストマイページルートの登録
+from routes.cast_mypage import cast_mypage_bp
+app.register_blueprint(cast_mypage_bp)
+print("✅ キャストマイページを登録しました")
+
+# お知らせ管理ルートの登録（★ 新規追加）
+from routes.notice_admin import notice_admin_bp
+app.register_blueprint(notice_admin_bp)
+print("✅ お知らせ管理を登録しました")
+
 # ===== Twilio音声通話エンドポイント =====
 @app.route('/twilio/voice', methods=['GET', 'POST'])
 def twilio_voice():

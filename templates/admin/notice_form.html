@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{% if notice %}お知らせ編集{% else %}お知らせ新規作成{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notice_admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="na-container">
+    <!-- ヘッダー -->
+    <div class="na-header">
+        <h1 class="na-title">
+            {% if notice %}
+            ✏️ お知らせ編集
+            {% else %}
+            ➕ お知らせ新規作成
+            {% endif %}
+        </h1>
+        <a href="{{ url_for('notice_admin.list_notices') }}" class="na-btn na-btn-back">
+            ← 一覧に戻る
+        </a>
+    </div>
+
+    <!-- フラッシュメッセージ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="na-alert {% if category == 'success' %}na-alert-success{% else %}na-alert-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- フォーム -->
+    <div class="na-card">
+        <div class="na-card-body">
+            <form method="POST" id="noticeForm">
+                
+                <!-- タイトル -->
+                <div class="na-form-group">
+                    <label for="title" class="na-form-label">
+                        タイトル<span class="na-form-required">*</span>
+                    </label>
+                    <input type="text" 
+                           id="title" 
+                           name="title" 
+                           class="na-form-input" 
+                           placeholder="お知らせのタイトルを入力してください"
+                           value="{{ form_data.title if form_data else (notice.title if notice else '') }}"
+                           required>
+                </div>
+
+                <!-- 本文（TinyMCE） -->
+                <div class="na-editor-container">
+                    <label for="content" class="na-editor-label">
+                        本文<span class="na-form-required">*</span>
+                    </label>
+                    <textarea id="content" 
+                              name="content" 
+                              class="na-form-textarea">{{ form_data.content if form_data else (notice.content if notice else '') }}</textarea>
+                </div>
+
+                <!-- オプション設定 -->
+                <div class="na-form-group">
+                    <label class="na-form-label">オプション設定</label>
+                    
+                    <!-- ピン留め -->
+                    <div class="na-form-check">
+                        <input type="checkbox" 
+                               id="is_pinned" 
+                               name="is_pinned" 
+                               class="na-form-check-input"
+                               {% if form_data %}
+                                   {% if form_data.get('is_pinned') %}checked{% endif %}
+                               {% elif notice and notice.is_pinned %}
+                                   checked
+                               {% endif %}>
+                        <label for="is_pinned" class="na-form-check-label">
+                            📌 ピン留め（一覧の上部に固定表示）
+                        </label>
+                    </div>
+
+                    <!-- 公開/非公開 -->
+                    <div class="na-form-check">
+                        <input type="checkbox" 
+                               id="is_published" 
+                               name="is_published" 
+                               class="na-form-check-input"
+                               {% if form_data %}
+                                   {% if form_data.get('is_published') %}checked{% endif %}
+                               {% elif notice %}
+                                   {% if notice.is_published %}checked{% endif %}
+                               {% else %}
+                                   checked
+                               {% endif %}>
+                        <label for="is_published" class="na-form-check-label">
+                            ✓ 公開する（チェックを外すと非公開）
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 公開日時 -->
+                <div class="na-form-group">
+                    <label for="published_at" class="na-form-label">
+                        公開日時
+                    </label>
+                    <input type="datetime-local" 
+                           id="published_at" 
+                           name="published_at" 
+                           class="na-form-input"
+                           value="{% if form_data and form_data.published_at %}{{ form_data.published_at }}{% elif notice and notice.published_at %}{{ notice.published_at.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                    <small style="color: #666; font-size: 14px; display: block; margin-top: 5px;">
+                        ※ 未設定の場合は現在の日時が使用されます
+                    </small>
+                </div>
+
+                <!-- アクションボタン -->
+                <div class="na-form-actions">
+                    <button type="submit" class="na-btn na-btn-success">
+                        💾 保存する
+                    </button>
+                    <a href="{{ url_for('notice_admin.list_notices') }}" class="na-btn na-btn-secondary">
+                        キャンセル
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TinyMCE CDN -->
+<script src="https://cdn.tiny.cloud/1/pl2krs2u7sayrkqfjyfv4309snfbr02ai2dhe7cfp117r0k5/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script>
+// TinyMCEの初期化
+tinymce.init({
+    selector: '#content',
+    height: 500,
+    menubar: false,
+    language: 'ja',
+    plugins: [
+        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+    ],
+    toolbar: 'undo redo | formatselect | bold italic underline strikethrough | ' +
+             'forecolor backcolor | alignleft aligncenter alignright alignjustify | ' +
+             'bullist numlist outdent indent | link image | removeformat | help',
+    
+    // 画像アップロード設定（シンプル版）
+    images_upload_url: "{{ url_for('notice_admin.upload_image') }}",
+    automatic_uploads: true,
+    images_reuse_filename: false,
+    file_picker_types: 'image',
+    
+    // コンテンツスタイル
+    content_style: 'body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6; }',
+    
+    // 日本語翻訳（インライン）
+    language_url: 'https://cdn.jsdelivr.net/npm/tinymce-i18n/langs6/ja.js'
+});
+
+// フォーム送信時のバリデーション
+document.getElementById('noticeForm').addEventListener('submit', function(e) {
+    var title = document.getElementById('title').value.trim();
+    var content = tinymce.get('content').getContent();
+    
+    if (!title) {
+        e.preventDefault();
+        alert('タイトルを入力してください');
+        return false;
+    }
+    
+    if (!content || content === '<p></p>' || content === '') {
+        e.preventDefault();
+        alert('本文を入力してください');
+        return false;
+    }
+});
+</script>
+{% endblock %}

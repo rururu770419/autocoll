@@ -10,7 +10,14 @@ from database.cast_db import (
     register_cast as db_register_cast,
     get_all_casts, find_cast_by_name, find_cast_by_phone_number, find_cast_by_id,
     get_all_casts_with_details, update_cast, delete_cast as db_delete_cast,
-    get_cast_with_age
+    get_cast_with_age,
+    # NG設定用の関数を追加
+    get_all_hotels, get_all_courses, get_all_options, get_all_areas,
+    get_all_ng_areas, get_all_ng_age_patterns,  # ← 追加
+    get_cast_ng_hotels, get_cast_ng_courses, get_cast_ng_options, get_cast_ng_areas,
+    get_cast_ng_custom_areas, get_cast_ng_age_patterns,  # ← 追加
+    update_cast_ng_items,
+    update_cast_ng_custom_areas, update_cast_ng_age_patterns  # ← 追加
 )
 
 
@@ -103,19 +110,19 @@ def register_cast(store):
         name = request.form.get("name")
         phone_number = request.form.get("phone_number")
         
-        # バリデーションチェック
-        if not name or not phone_number:
+        # バリデーションチェック（名前のみ必須）
+        if not name:
             casts = get_all_casts(db)
             return render_template(
                 "cast_registration.html",
                 store=store,
                 display_name=display_name,
                 casts=casts,
-                error="全ての項目を入力してください。"
+                error="キャスト名を入力してください。"
             )
 
-        # 電話番号のバリデーション（半角数字11桁）
-        if not re.fullmatch(r'\d{11}', phone_number):
+        # 電話番号のバリデーション（入力がある場合のみチェック）
+        if phone_number and not re.fullmatch(r'\d{11}', phone_number):
             casts = get_all_casts(db)
             return render_template(
                 "cast_registration.html",
@@ -125,7 +132,7 @@ def register_cast(store):
                 error="電話番号は半角数字11桁で入力してください。"
             )
 
-        # 重複チェック
+        # 名前の重複チェック
         existing_cast_by_name = find_cast_by_name(db, name)
         if existing_cast_by_name:
             casts = get_all_casts(db)
@@ -136,17 +143,19 @@ def register_cast(store):
                 casts=casts,
                 error="既に登録されているキャスト名です。"
             )
-            
-        existing_cast_by_phone = find_cast_by_phone_number(db, phone_number)
-        if existing_cast_by_phone:
-            casts = get_all_casts(db)
-            return render_template(
-                "cast_registration.html",
-                store=store,
-                display_name=display_name,
-                casts=casts,
-                error="既に登録されている電話番号です。"
-            )
+
+        # 電話番号が入力されている場合のみ重複チェック
+        if phone_number and phone_number.strip():
+            existing_cast_by_phone = find_cast_by_phone_number(db, phone_number)
+            if existing_cast_by_phone:
+                casts = get_all_casts(db)
+                return render_template(
+                    "cast_registration.html",
+                    store=store,
+                    display_name=display_name,
+                    casts=casts,
+                    error="既に登録されている電話番号です。"
+                )
 
         # 全てのチェックを通過したら登録
         db_register_cast(db, name, phone_number)
@@ -166,7 +175,7 @@ def register_cast(store):
     )
 
 def edit_cast(store, cast_id):
-    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分）"""
+    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分 + NGエリア・年齢NG）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
@@ -380,12 +389,96 @@ def edit_cast(store, cast_id):
                 error="更新に失敗しました。"
             )
 
+    # NG設定タブ用のデータを取得
+    all_hotels = get_all_hotels(db)
+    all_courses = get_all_courses(db)
+    all_options = get_all_options(db)
+    all_ng_areas = get_all_ng_areas(db)  # settingsで登録したNGエリア
+    all_ng_age_patterns = get_all_ng_age_patterns(db)  # settingsで登録した年齢NG
+    
+    # キャストのNG設定を取得
+    ng_hotels = get_cast_ng_hotels(db, cast_id)
+    ng_courses = get_cast_ng_courses(db, cast_id)
+    ng_options = get_cast_ng_options(db, cast_id)
+    ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)  # NGエリア（カスタム）
+    ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)  # 年齢NG
+    
+    # NGのIDリストを作成
+    ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
+    ng_course_ids = [c['course_id'] for c in ng_courses]
+    ng_option_ids = [o['option_id'] for o in ng_options]
+    ng_custom_area_ids = [a['ng_area_id'] for a in ng_custom_areas]
+    ng_age_pattern_ids = [p['ng_age_id'] for p in ng_age_patterns]
+
     return render_template(
         "cast_edit.html",
         store=store,
         cast=cast,
-        display_name=display_name
+        display_name=display_name,
+        all_hotels=all_hotels,
+        all_courses=all_courses,
+        all_options=all_options,
+        all_ng_areas=all_ng_areas,  # 変更
+        all_ng_age_patterns=all_ng_age_patterns,  # 追加
+        ng_hotel_ids=ng_hotel_ids,
+        ng_course_ids=ng_course_ids,
+        ng_option_ids=ng_option_ids,
+        ng_custom_area_ids=ng_custom_area_ids,  # 変更
+        ng_age_pattern_ids=ng_age_pattern_ids  # 追加
     )
+
+
+def save_cast_ng_settings(store, cast_id):
+    """キャストNG設定の保存処理（NGエリア・年齢NG対応）"""
+    display_name = get_display_name(store)
+    if display_name is None:
+        return "店舗が見つかりません。", 404
+
+    db = get_db()
+    cast = get_cast_with_age(db, cast_id)
+    
+    if cast is None:
+        return redirect(url_for('main_routes.cast_management', store=store, error="キャストが見つかりません。"))
+
+    if request.method == "POST":
+        try:
+            # NGホテルの保存
+            ng_hotels = request.form.getlist('ng_hotels')
+            ng_hotels = [int(h) for h in ng_hotels if h]
+            
+            # NGコースの保存
+            ng_courses = request.form.getlist('ng_courses')
+            ng_courses = [int(c) for c in ng_courses if c]
+            
+            # NGオプションの保存
+            ng_options = request.form.getlist('ng_options')
+            ng_options = [int(o) for o in ng_options if o]
+            
+            # NGエリア（カスタム）の保存
+            ng_custom_areas = request.form.getlist('ng_custom_areas')
+            ng_custom_areas = [int(a) for a in ng_custom_areas if a]
+            
+            # 年齢NGの保存
+            ng_age_patterns = request.form.getlist('ng_age_patterns')
+            ng_age_patterns = [int(p) for p in ng_age_patterns if p]
+            
+            # データベース更新
+            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels)
+            update_cast_ng_items(db, cast_id, 'courses', ng_courses)
+            update_cast_ng_items(db, cast_id, 'options', ng_options)
+            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)  # NGエリア（カスタム）
+            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)  # 年齢NG
+            
+            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id, success="NG設定を保存しました。"))
+            
+        except Exception as e:
+            print(f"NG設定保存エラー: {e}")
+            import traceback
+            traceback.print_exc()
+            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id, error="NG設定の保存に失敗しました。"))
+    
+    return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id))
+
 
 def delete_cast(store, cast_id):
     """キャスト削除（論理削除）"""

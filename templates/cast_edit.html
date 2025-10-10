@@ -246,7 +246,7 @@
                         </div>
                     </div>
 
-                    <!-- 認証設定セクション -->
+                    <!-- 認証設定セクション（修正版） -->
                     <div class="cast-edit-section">
                         <h3 class="cast-edit-section-title">マイページ認証</h3>
                         
@@ -254,18 +254,22 @@
                             <div class="cast-edit-form-group">
                                 <label class="cast-edit-label">ログインID</label>
                                 <input type="text" name="login_id" class="cast-edit-input" 
-                                       value="" placeholder="変更する場合のみ入力" 
+                                       value="{{ cast.login_id or '' }}" 
+                                       placeholder="ログインIDを入力" 
                                        autocomplete="off">
                                 <small class="cast-edit-help">
-                                    {% if cast.login_id %}現在: {{ cast.login_id }}{% else %}未設定{% endif %}
+                                    {% if not cast.login_id %}未設定{% endif %}
                                 </small>
                             </div>
                             <div class="cast-edit-form-group">
                                 <label class="cast-edit-label">パスワード</label>
-                                <input type="password" name="password" class="cast-edit-input" 
-                                       placeholder="変更する場合のみ入力"
+                                <input type="text" name="password" class="cast-edit-input" 
+                                       value="{{ cast.password_plain or '' }}" 
+                                       placeholder="パスワードを入力"
                                        autocomplete="new-password">
-                                <small class="cast-edit-help">空欄の場合は変更されません</small>
+                                <small class="cast-edit-help">
+                                    {% if not cast.password_plain %}未設定{% endif %}
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -350,15 +354,144 @@
 
             <!-- NG設定タブ -->
             <div class="cast-edit-tab-content" id="cast-edit-tab-ng">
-                <div class="cast-edit-ng-content">
-                    <p class="cast-edit-ng-message">NG設定機能は次回実装予定です。</p>
-                    <ul class="cast-edit-ng-preview">
-                        <li>NGホテル設定</li>
-                        <li>NGコース設定</li>
-                        <li>NGオプション設定</li>
-                        <li>NGエリア設定</li>
-                    </ul>
-                </div>
+                <form method="POST" action="{{ url_for('main_routes.save_cast_ng_settings', store=store, cast_id=cast.cast_id) }}" class="cast-edit-form">
+                    
+                    <!-- NGホテル設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">NGホテル設定</h3>
+                        
+                        {% if all_hotels %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for hotel in all_hotels %}
+                                    <label class="cast-edit-checkbox-label">
+                                        <input type="checkbox" 
+                                               name="ng_hotels" 
+                                               value="{{ hotel.hotel_id }}"
+                                               {% if hotel.hotel_id in ng_hotel_ids %}checked{% endif %}
+                                               class="cast-edit-checkbox">
+                                        <span class="cast-edit-checkbox-text">{{ hotel.name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="cast-edit-no-data">登録されているホテルがありません。</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- NGコース設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">NGコース設定</h3>
+                        
+                        {% if all_courses %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for course in all_courses %}
+                                    <label class="cast-edit-checkbox-label">
+                                        <input type="checkbox" 
+                                               name="ng_courses" 
+                                               value="{{ course.course_id }}"
+                                               {% if course.course_id in ng_course_ids %}checked{% endif %}
+                                               class="cast-edit-checkbox">
+                                        <span class="cast-edit-checkbox-text">{{ course.name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="cast-edit-no-data">登録されているコースがありません。</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- NGオプション設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">NGオプション設定</h3>
+                        
+                        {% if all_options %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for option in all_options %}
+                                    <label class="cast-edit-checkbox-label">
+                                        <input type="checkbox" 
+                                               name="ng_options" 
+                                               value="{{ option.option_id }}"
+                                               {% if option.option_id in ng_option_ids %}checked{% endif %}
+                                               class="cast-edit-checkbox">
+                                        <span class="cast-edit-checkbox-text">{{ option.name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="cast-edit-no-data">登録されているオプションがありません。</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- NGエリア設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">NGエリア設定</h3>
+                        
+                        {% if all_ng_areas %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for ng_area in all_ng_areas %}
+                                    <label class="cast-edit-checkbox-label">
+                                        <input type="checkbox" 
+                                               name="ng_custom_areas" 
+                                               value="{{ ng_area.ng_area_id }}"
+                                               {% if ng_area.ng_area_id in ng_custom_area_ids %}checked{% endif %}
+                                               class="cast-edit-checkbox">
+                                        <span class="cast-edit-checkbox-text">{{ ng_area.area_name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="cast-edit-no-data">
+                                登録されているNGエリアがありません。<br>
+                                <a href="{{ url_for('settings', store=store) }}" style="color: #007bff; text-decoration: underline;">
+                                    設定ページ
+                                </a>
+                                からNGエリアを追加してください。
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 年齢NG設定セクション -->
+                    <div class="cast-edit-section">
+                        <h3 class="cast-edit-section-title">年齢NG設定</h3>
+                        
+                        {% if all_ng_age_patterns %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for ng_age in all_ng_age_patterns %}
+                                    <label class="cast-edit-checkbox-label">
+                                        <input type="checkbox" 
+                                               name="ng_age_patterns" 
+                                               value="{{ ng_age.ng_age_id }}"
+                                               {% if ng_age.ng_age_id in ng_age_pattern_ids %}checked{% endif %}
+                                               class="cast-edit-checkbox">
+                                        <span class="cast-edit-checkbox-text">
+                                            {{ ng_age.pattern_name }}
+                                            {% if ng_age.description %}
+                                                <small style="color: #6c757d; display: block; margin-top: 2px;">
+                                                    ({{ ng_age.description }})
+                                                </small>
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="cast-edit-no-data">
+                                登録されている年齢NGパターンがありません。<br>
+                                <a href="{{ url_for('settings', store=store) }}" style="color: #007bff; text-decoration: underline;">
+                                    設定ページ
+                                </a>
+                                から年齢NGパターンを追加してください。
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 保存ボタン -->
+                    <div class="cast-edit-form-actions">
+                        <button type="submit" class="cast-edit-submit-btn">
+                            NG設定を保存
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 

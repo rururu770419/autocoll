@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 オートコール・LINE通知スケジューラー
-1分ごとにpickup_recordsをチェックし、通知タイミングが来たら自動実行
+5分ごとにpickup_recordsをチェックし、通知タイミングが来たら自動実行
 """
 import os
 import sys
@@ -39,7 +39,7 @@ def get_db_connection():
 def check_and_send_notifications():
     """
     ピックアップレコードをチェックして通知を送信
-    1分ごとに実行される
+    5分ごとに実行される
     """
     try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 通知チェック開始...")
@@ -74,7 +74,7 @@ def check_and_send_notifications():
                 AND pr.exit_time IS NOT NULL
                 AND (pr.exit_time - INTERVAL '1 minute' * c.notification_minutes_before) <= %s
                 AND (pr.exit_time - INTERVAL '1 minute' * c.notification_minutes_before) > %s
-        """, (now, now - timedelta(minutes=1)))
+        """, (now, now - timedelta(minutes=5)))
         
         cast_records = cursor.fetchall()
         
@@ -129,7 +129,7 @@ def check_and_send_notifications():
                 AND pr.exit_time IS NOT NULL
                 AND (pr.exit_time - INTERVAL '1 minute' * u.notification_minutes_before) <= %s
                 AND (pr.exit_time - INTERVAL '1 minute' * u.notification_minutes_before) > %s
-        """, (now, now - timedelta(minutes=1)))
+        """, (now, now - timedelta(minutes=5)))
         
         staff_records = cursor.fetchall()
         
@@ -177,7 +177,7 @@ def check_and_send_notifications():
 def start_scheduler():
     """
     スケジューラーを開始
-    1分ごとにcheck_and_send_notifications()を実行
+    5分ごとにcheck_and_send_notifications()を実行
     """
     global scheduler
     
@@ -187,18 +187,18 @@ def start_scheduler():
     
     scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
     
-    # 1分ごとに実行
+    # 5分ごとに実行
     scheduler.add_job(
         func=check_and_send_notifications,
-        trigger=IntervalTrigger(minutes=1),
+        trigger=IntervalTrigger(minutes=5),
         id='notification_check',
-        name='通知チェック（1分ごと）',
+        name='通知チェック（5分ごと）',
         replace_existing=True
     )
     
     scheduler.start()
     print("✅ オートコール・LINE通知スケジューラー起動")
-    print("   実行間隔: 1分ごと")
+    print("   実行間隔: 5分ごと")
     print("   次回実行: " + scheduler.get_jobs()[0].next_run_time.strftime('%Y-%m-%d %H:%M:%S'))
 
 

@@ -1,0 +1,311 @@
+{% extends "cast/cast_base.html" %}
+
+{% block title %}{% if draft %}下書き編集{% else %}新規下書き作成{% endif %} - キャストマイページ{% endblock %}
+
+{% block header_title %}{% if draft %}下書き編集{% else %}新規下書き作成{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* TinyMCEのカスタマイズ */
+.tox-tinymce {
+    border-radius: 8px !important;
+    border-color: #ddd !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="draftForm" class="cm-form">
+    <!-- タイトル入力 -->
+    <div class="cm-form-group">
+        <label for="title" class="cm-label">
+            <i class="fas fa-heading"></i>
+            タイトル
+        </label>
+        <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            class="cm-input" 
+            placeholder="タイトルを入力"
+            value="{{ draft.title if draft else '' }}"
+            required>
+    </div>
+
+    <!-- 本文入力（TinyMCE） -->
+    <div class="cm-form-group">
+        <label for="content" class="cm-label">
+            <i class="fas fa-file-alt"></i>
+            本文
+        </label>
+        <textarea 
+            id="content" 
+            name="content" 
+            class="cm-textarea">{{ draft.content if draft else '' }}</textarea>
+    </div>
+
+    <!-- ボタングループ -->
+    <div class="cm-button-group" style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <button type="submit" class="cm-btn cm-btn-primary">
+            <i class="fas fa-save"></i>
+            保存
+        </button>
+        
+        <!-- ★★★ 全文コピーボタン（修正版） ★★★ -->
+        <button type="button" class="cm-btn cm-btn-copy" id="copyBtn" style="display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-copy"></i>
+            全文コピー
+        </button>
+        
+        <a href="{{ url_for('cast_mypage.blog_drafts', store=store) }}" class="cm-btn cm-btn-secondary">
+            <i class="fas fa-times"></i>
+            キャンセル
+        </a>
+    </div>
+
+    {% if draft %}
+    <!-- 削除ボタン（編集時のみ） -->
+    <div class="cm-danger-zone" style="margin-top: 30px;">
+        <button type="button" class="cm-btn cm-btn-danger" onclick="confirmDelete()">
+            <i class="fas fa-trash"></i>
+            この下書きを削除
+        </button>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<!-- TinyMCE with API Key -->
+<script src="https://cdn.tiny.cloud/1/pl2krs2u7sayrkqfjyfv4309snfbr02ai2dhe7cfp117r0k5/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+tinymce.init({
+    selector: '#content',
+    height: 500,
+    menubar: false,
+    language: 'ja',
+    plugins: [
+        'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+        'searchreplace', 'visualblocks', 'code', 'fullscreen',
+        'insertdatetime', 'table', 'help', 'wordcount'
+    ],
+    toolbar: 'undo redo | formatselect | ' +
+        'bold italic underline strikethrough | forecolor backcolor | ' +
+        'alignleft aligncenter alignright alignjustify | ' +
+        'bullist numlist outdent indent | link | ' +
+        'removeformat | code | fullscreen',
+    content_style: `
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            padding: 16px;
+        }
+    `,
+    promotion: false,
+    branding: false,
+    resize: true,
+    statusbar: true,
+    elementpath: false,
+    setup: function(editor) {
+        // 自動保存用のタイマー
+        let autoSaveTimer;
+        
+        editor.on('input', function() {
+            clearTimeout(autoSaveTimer);
+            {% if draft %}
+            autoSaveTimer = setTimeout(function() {
+                autoSave();
+            }, 5000);
+            {% endif %}
+        });
+    }
+});
+
+// ★★★ 全文コピー機能（修正版） ★★★
+document.addEventListener('DOMContentLoaded', function() {
+    const copyBtn = document.getElementById('copyBtn');
+    
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            try {
+                // タイトルを取得
+                const title = document.getElementById('title').value;
+                
+                // TinyMCEから本文を取得（HTMLタグ付き）
+                const contentHTML = tinymce.get('content').getContent();
+                
+                // HTMLタグ付きで結合
+                const fullContent = `【タイトル】\n${title}\n\n【本文（HTML）】\n${contentHTML}`;
+                
+                // クリップボードにコピー
+                navigator.clipboard.writeText(fullContent).then(function() {
+                    console.log('✅ コピー成功');
+                    
+                    // 成功通知を表示
+                    showCopySuccessNotification();
+                    
+                    // ボタンの見た目を変更
+                    const originalHTML = copyBtn.innerHTML;
+                    const originalBg = copyBtn.style.background;
+                    
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> コピーしました！';
+                    copyBtn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                    copyBtn.style.transform = 'scale(1.05)';
+                    
+                    // 2秒後に元に戻す
+                    setTimeout(function() {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.style.background = originalBg;
+                        copyBtn.style.transform = '';
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('❌ コピー失敗:', err);
+                    alert('コピーに失敗しました: ' + err);
+                });
+            } catch (error) {
+                console.error('❌ エラー:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        });
+    }
+});
+
+// コピー成功の通知を表示
+function showCopySuccessNotification() {
+    const notification = document.createElement('div');
+    notification.innerHTML = '<i class="fas fa-check-circle"></i> クリップボードにコピーしました';
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+        z-index: 99999;
+        animation: slideInUp 0.3s ease-out, fadeOut 0.3s ease-in 2.7s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+{% if draft %}
+function confirmDelete() {
+    if (confirm('この下書きを削除してもよろしいですか？')) {
+        fetch('{{ url_for("cast_mypage.blog_draft_delete", store=store, draft_id=draft.draft_id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{{ url_for("cast_mypage.blog_drafts", store=store) }}';
+            } else {
+                alert('削除に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('削除中にエラーが発生しました');
+        });
+    }
+}
+
+function autoSave() {
+    // TinyMCEのコンテンツを取得
+    const content = tinymce.get('content').getContent();
+    const title = document.getElementById('title').value;
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    
+    fetch('{{ url_for("cast_mypage.blog_draft_edit", store=store, draft_id=draft.draft_id) }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ 自動保存完了');
+            showSaveNotification();
+        }
+    })
+    .catch(error => {
+        console.error('自動保存エラー:', error);
+    });
+}
+
+function showSaveNotification() {
+    const notification = document.createElement('div');
+    notification.textContent = '自動保存しました';
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: #10b981;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        z-index: 9999;
+        animation: fadeInOut 2s ease-in-out;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2000);
+}
+{% endif %}
+
+// フォーム送信前にTinyMCEのコンテンツを同期
+document.getElementById('draftForm').addEventListener('submit', function(e) {
+    tinymce.triggerSave();
+});
+</script>
+
+<style>
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(10px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* コピーボタンが確実に表示されるように */
+.cm-btn-copy {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+}
+</style>
+{% endblock %}
