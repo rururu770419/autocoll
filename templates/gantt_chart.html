@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}ガントチャート - {{ date_display }}{% endblock %}
+
+{% block content %}
+<!-- ★ここでCSSを読み込む（ブロックの外）★ -->
+<link rel="stylesheet" href="/static/css/gantt_chart.css">
+
+<div class="gantt-container">
+  <!-- ヘッダー -->
+  <div class="gantt-header">
+    <h1 class="gantt-title">📅 タイムスケジュール</h1>
+    
+    <!-- 日付ナビゲーション -->
+    <div class="gantt-controls">
+      <a href="{{ url_for('gantt.gantt_chart', store=store, date=prev_date) }}" class="gantt-nav-btn">
+        ← 前日
+      </a>
+      <div class="gantt-date-display">
+        {{ date_display }}
+      </div>
+      <a href="{{ url_for('gantt.gantt_chart', store=store, date=next_date) }}" class="gantt-nav-btn">
+        翌日 →
+      </a>
+    </div>
+  </div>
+
+  <!-- ガントチャート本体 -->
+  <div class="gantt-body">
+    <div class="gantt-wrapper">
+      <!-- 左側：キャスト名一覧（固定） -->
+      <div class="gantt-cast-column">
+        <div class="gantt-cast-header">キャスト</div>
+        {% for cast in gantt_data.casts %}
+        <div class="gantt-cast-cell">
+          <span class="gantt-cast-name">{{ cast.cast_name }}</span>
+          <span class="gantt-cast-time">{{ cast.start_time }}～{{ cast.end_time }}</span>
+        </div>
+        {% endfor %}
+        
+        {% if gantt_data.casts|length == 0 %}
+        <div class="gantt-no-data">
+          本日の出勤キャストはいません
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- 右側：タイムライン（スクロール可能） -->
+      <div class="gantt-timeline-wrapper">
+        <!-- 時間軸ヘッダー（1時間ごとに表示） -->
+        <div class="gantt-timeline-header">
+          {% for slot in time_slots %}
+          {% if slot.value.endswith(':00') %}
+          <div class="gantt-time-cell" style="width: 180px;">{{ slot.label }}</div>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- タイムライン本体 -->
+        <div class="gantt-timeline-body">
+          {% for cast in gantt_data.casts %}
+          <div class="gantt-timeline-row" data-cast-id="{{ cast.cast_id }}">
+            <!-- 出勤時間の背景 -->
+            <div class="gantt-work-bg" 
+                 data-start="{{ cast.start_time }}"
+                 data-end="{{ cast.end_time }}">
+            </div>
+            
+            <!-- 予約バー -->
+            {% for reservation in cast.reservations %}
+            <div class="gantt-reservation-bar" 
+                 data-start="{{ reservation.start_time }}"
+                 data-end="{{ reservation.end_time }}"
+                 data-reservation-id="{{ reservation.reservation_id }}"
+                 onclick="showReservationDetail({{ reservation.reservation_id }})">
+              <div class="gantt-reservation-content">
+                <div class="gantt-reservation-time">{{ reservation.start_time }}～{{ reservation.end_time }}</div>
+                <div class="gantt-reservation-customer">{{ reservation.customer_name }}様</div>
+                {% if reservation.hotel_name %}
+                <div class="gantt-reservation-hotel">
+                  {{ reservation.hotel_name }}
+                  {% if reservation.room_number %}[{{ reservation.room_number }}号室]{% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+            
+            <!-- 時間グリッド -->
+            {% for slot in time_slots %}
+            <div class="gantt-time-grid"></div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 予約詳細モーダル（将来実装） -->
+<div id="reservationModal" class="gantt-modal" style="display: none;">
+  <div class="gantt-modal-overlay" onclick="closeReservationModal()"></div>
+  <div class="gantt-modal-content">
+    <h2>予約詳細</h2>
+    <div id="reservationDetail"></div>
+    <button onclick="closeReservationModal()">閉じる</button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/gantt_chart.js') }}"></script>
+<script>
+// 時間から位置（%）を計算
+function calculatePosition(time, timeSlots) {
+  if (!time) return 0;
+  
+  // time は "10:00" 形式
+  const targetMinutes = timeToMinutes(time);
+  const startMinutes = timeToMinutes('{{ time_slots[0].value }}');
+  const endMinutes = timeToMinutes('{{ time_slots[-1].value }}');
+  const totalMinutes = endMinutes - startMinutes;
+  
+  return ((targetMinutes - startMinutes) / totalMinutes) * 100;
+}
+
+// 時間から幅（%）を計算
+function calculateDuration(startTime, endTime, timeSlots) {
+  if (!startTime || !endTime) return 0;
+  
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+  const duration = endMinutes - startMinutes;
+  
+  const totalStartMinutes = timeToMinutes('{{ time_slots[0].value }}');
+  const totalEndMinutes = timeToMinutes('{{ time_slots[-1].value }}');
+  const totalMinutes = totalEndMinutes - totalStartMinutes;
+  
+  return (duration / totalMinutes) * 100;
+}
+
+// 時刻を分に変換
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+// 予約詳細表示
+function showReservationDetail(reservationId) {
+  alert(`予約ID: ${reservationId} の詳細表示（未実装）`);
+}
+
+// モーダルを閉じる
+function closeReservationModal() {
+  document.getElementById('reservationModal').style.display = 'none';
+}
+</script>
+{% endblock %}

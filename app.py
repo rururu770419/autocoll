@@ -76,6 +76,11 @@ from routes.schedule import register_schedule_routes
 register_schedule_routes(app)
 print("✅ 出勤管理を登録しました")
 
+# ★★★ ガントチャートルートの登録（新規追加）★★★
+from routes.gantt import gantt_bp
+app.register_blueprint(gantt_bp)
+print("✅ ガントチャートを登録しました")
+
 # ===== Twilio音声通話エンドポイント =====
 @app.route('/twilio/voice', methods=['GET', 'POST'])
 def twilio_voice():
