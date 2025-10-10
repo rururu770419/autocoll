@@ -17,7 +17,7 @@
             ➕ お知らせ新規作成
             {% endif %}
         </h1>
-        <a href="{{ url_for('notice_admin.list_notices') }}" class="na-btn na-btn-back">
+        <a href="{{ url_for('notice_admin.list_notices', store=store) }}" class="na-btn na-btn-back">
             ← 一覧に戻る
         </a>
     </div>
@@ -121,7 +121,7 @@
                     <button type="submit" class="na-btn na-btn-success">
                         💾 保存する
                     </button>
-                    <a href="{{ url_for('notice_admin.list_notices') }}" class="na-btn na-btn-secondary">
+                    <a href="{{ url_for('notice_admin.list_notices', store=store) }}" class="na-btn na-btn-secondary">
                         キャンセル
                     </a>
                 </div>
@@ -150,7 +150,7 @@ tinymce.init({
              'bullist numlist outdent indent | link image | removeformat | help',
     
     // 画像アップロード設定（シンプル版）
-    images_upload_url: "{{ url_for('notice_admin.upload_image') }}",
+    images_upload_url: "{{ url_for('notice_admin.upload_image', store=store) }}",
     automatic_uploads: true,
     images_reuse_filename: false,
     file_picker_types: 'image',

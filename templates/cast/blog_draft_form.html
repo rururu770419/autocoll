@@ -5,6 +5,8 @@
 {% block header_title %}{% if draft %}下書き編集{% else %}新規下書き作成{% endif %}{% endblock %}
 
 {% block extra_css %}
+<!-- ★★★ blog_draft_styles.css を読み込み ★★★ -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog_draft_styles.css') }}">
 <style>
 /* TinyMCEのカスタマイズ */
 .tox-tinymce {
@@ -51,8 +53,8 @@
             保存
         </button>
         
-        <!-- ★★★ 全文コピーボタン（修正版） ★★★ -->
-        <button type="button" class="cm-btn cm-btn-copy" id="copyBtn" style="display: inline-flex; align-items: center; gap: 8px;">
+        <!-- ★★★ 全文コピーボタン（cm-btn-copy クラス） ★★★ -->
+        <button type="button" class="cm-btn-copy" onclick="copyAllContent(event)" style="display: inline-flex; align-items: center; gap: 8px;">
             <i class="fas fa-copy"></i>
             全文コピー
         </button>
@@ -64,9 +66,9 @@
     </div>
 
     {% if draft %}
-    <!-- 削除ボタン（編集時のみ） -->
+    <!-- 削除ボタン（編集時のみ、cm-btn-danger クラス） -->
     <div class="cm-danger-zone" style="margin-top: 30px;">
-        <button type="button" class="cm-btn cm-btn-danger" onclick="confirmDelete()">
+        <button type="button" class="cm-btn-danger" onclick="confirmDelete()">
             <i class="fas fa-trash"></i>
             この下書きを削除
         </button>
@@ -122,54 +124,46 @@ tinymce.init({
     }
 });
 
-// ★★★ 全文コピー機能（修正版） ★★★
-document.addEventListener('DOMContentLoaded', function() {
-    const copyBtn = document.getElementById('copyBtn');
+// ★★★ 全文コピー機能（HTMLタグ付き） ★★★
+function copyAllContent(event) {  // ← event を追加
+    // タイトルを取得
+    const title = document.getElementById('title').value;
     
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function() {
-            try {
-                // タイトルを取得
-                const title = document.getElementById('title').value;
-                
-                // TinyMCEから本文を取得（HTMLタグ付き）
-                const contentHTML = tinymce.get('content').getContent();
-                
-                // HTMLタグ付きで結合
-                const fullContent = `【タイトル】\n${title}\n\n【本文（HTML）】\n${contentHTML}`;
-                
-                // クリップボードにコピー
-                navigator.clipboard.writeText(fullContent).then(function() {
-                    console.log('✅ コピー成功');
-                    
-                    // 成功通知を表示
-                    showCopySuccessNotification();
-                    
-                    // ボタンの見た目を変更
-                    const originalHTML = copyBtn.innerHTML;
-                    const originalBg = copyBtn.style.background;
-                    
-                    copyBtn.innerHTML = '<i class="fas fa-check"></i> コピーしました！';
-                    copyBtn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-                    copyBtn.style.transform = 'scale(1.05)';
-                    
-                    // 2秒後に元に戻す
-                    setTimeout(function() {
-                        copyBtn.innerHTML = originalHTML;
-                        copyBtn.style.background = originalBg;
-                        copyBtn.style.transform = '';
-                    }, 2000);
-                }).catch(function(err) {
-                    console.error('❌ コピー失敗:', err);
-                    alert('コピーに失敗しました: ' + err);
-                });
-            } catch (error) {
-                console.error('❌ エラー:', error);
-                alert('エラーが発生しました: ' + error.message);
-            }
-        });
-    }
-});
+    // TinyMCEから本文を取得（HTMLタグ付き）
+    const contentHTML = tinymce.get('content').getContent();
+    
+    // HTMLタグ付きで結合
+    const fullContent = `【タイトル】\n${title}\n\n【本文（HTML）】\n${contentHTML}`;
+    
+    // クリップボードにコピー
+    navigator.clipboard.writeText(fullContent).then(function() {
+        console.log('✅ コピー成功');
+        
+        // 成功通知を表示
+        showCopySuccessNotification();
+        
+        // ボタンの見た目を変更
+        const btn = event.target.closest('.cm-btn-copy');
+        if (btn) {
+            const originalHTML = btn.innerHTML;
+            const originalBg = btn.style.background;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> コピーしました！';
+            btn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+            btn.style.transform = 'scale(1.05)';
+            
+            // 2秒後に元に戻す
+            setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.style.background = originalBg;
+                btn.style.transform = '';
+            }, 2000);
+        }
+    }).catch(function(err) {
+        console.error('❌ コピー失敗:', err);
+        alert('コピーに失敗しました: ' + err);
+    });
+}
 
 // コピー成功の通知を表示
 function showCopySuccessNotification() {
@@ -251,7 +245,7 @@ function showSaveNotification() {
     notification.style.cssText = `
         position: fixed;
         bottom: 20px;
-        left: 20px;
+        right: 20px;
         background: #10b981;
         color: white;
         padding: 12px 20px;

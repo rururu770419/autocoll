@@ -7,7 +7,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from database import schedule_db
 from database.db_access import get_display_name
-from database.connection import get_db
+from database.connection import get_db, get_store_id  # ← get_store_id を追加
 
 schedule_bp = Blueprint('schedule', __name__)
 
@@ -24,8 +24,8 @@ def cast_schedule(store):
     if display_name is None:
         return "店舗が見つかりません。", 404
     
-    # 🆕 store_id = 1 固定
-    store_id = 1
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
     
     # クエリパラメータから開始日を取得（デフォルトは今週の月曜日）
     date_param = request.args.get('date')
@@ -38,25 +38,25 @@ def cast_schedule(store):
     
     start_date_str = start_date.strftime('%Y-%m-%d')
     
-    # 🆕 フィルタパラメータを取得
+    # フィルタパラメータを取得
     active_only = request.args.get('active_only', 'true') == 'true'
     course_category_id = request.args.get('course_category', type=int)
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    # 🆕 コースカテゴリ一覧を取得
+    # ✅ コースカテゴリ一覧を取得（動的 store_id 使用）
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
         SELECT category_id, category_name
         FROM course_categories
-        WHERE store_id = 1
+        WHERE store_id = %s
         AND is_active = TRUE
         ORDER BY category_id
-    """)
+    """, (store_id,))
     course_categories = cursor.fetchall()
     
-    # 🆕 フィルタ対応の週間スケジュールを取得
+    # フィルタ対応の週間スケジュールを取得
     schedule_data = schedule_db.get_weekly_schedules_filtered(
         store_id=store_id,
         start_date=start_date_str,
@@ -98,7 +98,7 @@ def cast_schedule(store):
         next_week=next_week,
         time_slots=time_slots,
         current_date=datetime.now().strftime('%Y-%m-%d'),
-        # 🆕 フィルタ用の追加データ
+        # フィルタ用の追加データ
         course_categories=course_categories,
         active_only=active_only,
         selected_course_category=course_category_id,
@@ -128,8 +128,8 @@ def get_schedule(store):
 def save_schedule(store):
     """出勤情報を保存（Ajax用）"""
     
-    # 🆕 store_id = 1 固定
-    store_id = 1
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
     
     data = request.get_json()
     cast_id = data.get('cast_id')

@@ -89,6 +89,57 @@
 }
 
 /* ========================================
+   ブログ下書き編集ページ
+   ======================================== */
+
+/* 🆕 ページヘッダー */
+.cm-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.cm-page-title-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cm-back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.cm-back-btn:hover {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.cm-page-title {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+    font-weight: 600;
+}
+
+.cm-page-title i {
+    color: #ff69b4;
+    margin-right: 10px;
+}
+
+/* ========================================
    ブログ下書き編集フォーム
    ======================================== */
 
@@ -145,7 +196,7 @@
 /* ============================================
    コピーボタンのスタイル
    ============================================ */
-   .cm-btn-copy {
+.cm-btn-copy {
     display: inline-block;
     padding: 12px 30px;
     background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
@@ -173,6 +224,44 @@
     box-shadow: 0 2px 8px rgba(245, 124, 0, 0.3);
 }
 
+/* 🆕 コピー成功時のアニメーション */
+.cm-btn-copy.copied {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+}
+
+/* ============================================
+   🆕 キャンセルボタンのスタイル
+   ============================================ */
+.cm-btn-secondary {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.cm-btn-secondary:hover {
+    background-color: #e0e0e0;
+    color: #333;
+    border-color: #bbb;
+    transform: translateY(-1px);
+}
+
+.cm-btn-secondary:active {
+    transform: translateY(0);
+}
+
+.cm-btn-secondary i {
+    margin-right: 8px;
+}
+
 /* ブログフォームのボタングループ */
 .cm-form-actions {
     display: flex;
@@ -186,14 +275,63 @@
     min-width: 150px;
 }
 
+/* 🆕 最終保存日時 */
+.cm-last-saved {
+    text-align: center;
+    padding: 15px;
+    color: #999;
+    font-size: 13px;
+    margin: 20px;
+}
+
+.cm-last-saved i {
+    margin-right: 5px;
+    color: #ff69b4;
+}
+
+/* 🆕 TinyMCEエディタのカスタマイズ */
+.tox-tinymce {
+    border-radius: 8px !important;
+    border-color: #ddd !important;
+}
+
+.tox-toolbar {
+    background-color: #f9f9f9 !important;
+}
+
+.tox:not(.tox-tinymce-inline) .tox-editor-header {
+    box-shadow: none !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
+    .cm-page-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .cm-btn-copy {
+        width: 100%;
+        justify-content: center;
+    }
+    
     .cm-form-actions {
         flex-direction: column;
     }
     
-    .cm-form-actions .cm-btn {
+    .cm-form-actions .cm-btn,
+    .cm-form-actions .cm-btn-secondary {
         width: 100%;
         min-width: auto;
+    }
+    
+    .cm-page-title {
+        font-size: 20px;
+    }
+    
+    .cm-drafts-grid {
+        grid-template-columns: 1fr;
     }
 }

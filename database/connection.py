@@ -101,3 +101,29 @@ def close_connection(exception):
 
 def get_display_name(store):
     return DB_PATHS.get(store, {}).get("display_name", store)
+
+# ============================================
+# 🆕 店舗ID取得関数
+# ============================================
+
+def get_store_id(store_code):
+    """
+    店舗コード（URL）から store_id を取得
+    
+    Args:
+        store_code (str): 店舗コード ('nagano', 'isesaki', 'globalwork')
+    
+    Returns:
+        int: store_id
+    
+    新店舗追加時は store_map に追加してください
+    例：'ikebukuro': 4,
+    """
+    store_map = {
+        'nagano': 1,
+        'isesaki': 2,
+        'globalwork': 3,
+        # 新店舗追加時はここに追加
+        # 例: 'ikebukuro': 4,
+    }
+    return store_map.get(store_code, 1)  # デフォルトは1（長野店）

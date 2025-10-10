@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
-from database.connection import get_db
+from database.connection import get_db, get_store_id  # ← get_store_id を追加
 from database.cast_mypage_db import (
     get_cast_notices, 
     get_cast_notice_by_id,
@@ -15,7 +15,8 @@ from database.cast_mypage_db import (
     delete_cast_notice
 )
 
-notice_admin_bp = Blueprint('notice_admin', __name__, url_prefix='/nagano/admin/notices')
+# ✅ URLプレフィックスを動的に（/<store>/admin/notices）
+notice_admin_bp = Blueprint('notice_admin', __name__, url_prefix='/<store>/admin/notices')
 
 # 画像アップロード設定
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -36,19 +37,23 @@ def ensure_upload_folder():
     return upload_path
 
 @notice_admin_bp.route('/')
-def list_notices():
+def list_notices(store):  # ← store パラメータ追加
     """お知らせ一覧（管理者用）"""
+    
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
+    
     db = get_db()
     try:
-        # すべてのお知らせを取得（公開・非公開問わず）
+        # ✅ すべてのお知らせを取得（動的 store_id 使用）
         cursor = db.cursor()
         cursor.execute("""
             SELECT notice_id, title, content, is_pinned, is_published, 
                    published_at, created_at, updated_at
             FROM cast_notices
-            WHERE store_id = 1
+            WHERE store_id = %s
             ORDER BY is_pinned DESC, published_at DESC, notice_id DESC
-        """)
+        """, (store_id,))
         
         notices = []
         for row in cursor.fetchall():
@@ -63,13 +68,17 @@ def list_notices():
                 'updated_at': row['updated_at']
             })
         
-        return render_template('admin/notice_list.html', notices=notices)
+        return render_template('admin/notice_list.html', notices=notices, store=store)
     finally:
         db.close()
 
 @notice_admin_bp.route('/new', methods=['GET', 'POST'])
-def new_notice():
+def new_notice(store):  # ← store パラメータ追加
     """お知らせ新規作成"""
+    
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
+    
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
@@ -82,13 +91,15 @@ def new_notice():
             flash('タイトルは必須です', 'error')
             return render_template('admin/notice_form.html', 
                                  notice=None, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         
         if not content:
             flash('本文は必須です', 'error')
             return render_template('admin/notice_form.html', 
                                  notice=None, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         
         # 公開日時の処理
         if published_at:
@@ -99,36 +110,37 @@ def new_notice():
         else:
             published_at = datetime.now()
         
-        # データベースに保存
+        # ✅ データベースに保存（動的 store_id 使用）
         db = get_db()
         try:
             cursor = db.cursor()
             cursor.execute("""
                 INSERT INTO cast_notices 
                 (store_id, title, content, is_pinned, is_published, published_at, created_at, updated_at)
-                VALUES (1, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING notice_id
-            """, (title, content, is_pinned, is_published, published_at))
+            """, (store_id, title, content, is_pinned, is_published, published_at))
             
             notice_id = cursor.fetchone()['notice_id']
             db.commit()
             
             flash('お知らせを作成しました', 'success')
-            return redirect(url_for('notice_admin.list_notices'))
+            return redirect(url_for('notice_admin.list_notices', store=store))
         except Exception as e:
             db.rollback()
             flash(f'エラーが発生しました: {str(e)}', 'error')
             return render_template('admin/notice_form.html', 
                                  notice=None, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         finally:
             db.close()
     
     # GET: 新規作成フォーム表示
-    return render_template('admin/notice_form.html', notice=None)
+    return render_template('admin/notice_form.html', notice=None, store=store)
 
 @notice_admin_bp.route('/edit/<int:notice_id>', methods=['GET', 'POST'])
-def edit_notice(notice_id):
+def edit_notice(store, notice_id):  # ← store パラメータ追加
     """お知らせ編集"""
     db = get_db()
     
@@ -145,14 +157,16 @@ def edit_notice(notice_id):
             notice = get_cast_notice_by_id(db, notice_id)
             return render_template('admin/notice_form.html', 
                                  notice=notice, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         
         if not content:
             flash('本文は必須です', 'error')
             notice = get_cast_notice_by_id(db, notice_id)
             return render_template('admin/notice_form.html', 
                                  notice=notice, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         
         # 公開日時の処理
         if published_at:
@@ -185,14 +199,15 @@ def edit_notice(notice_id):
             db.commit()
             
             flash('お知らせを更新しました', 'success')
-            return redirect(url_for('notice_admin.list_notices'))
+            return redirect(url_for('notice_admin.list_notices', store=store))
         except Exception as e:
             db.rollback()
             flash(f'エラーが発生しました: {str(e)}', 'error')
             notice = get_cast_notice_by_id(db, notice_id)
             return render_template('admin/notice_form.html', 
                                  notice=notice, 
-                                 form_data=request.form)
+                                 form_data=request.form,
+                                 store=store)
         finally:
             db.close()
     
@@ -201,14 +216,14 @@ def edit_notice(notice_id):
         notice = get_cast_notice_by_id(db, notice_id)
         if not notice:
             flash('お知らせが見つかりません', 'error')
-            return redirect(url_for('notice_admin.list_notices'))
+            return redirect(url_for('notice_admin.list_notices', store=store))
         
-        return render_template('admin/notice_form.html', notice=notice)
+        return render_template('admin/notice_form.html', notice=notice, store=store)
     finally:
         db.close()
 
 @notice_admin_bp.route('/delete/<int:notice_id>', methods=['POST'])
-def delete_notice_route(notice_id):
+def delete_notice_route(store, notice_id):  # ← store パラメータ追加
     """お知らせ削除"""
     db = get_db()
     try:
@@ -222,10 +237,10 @@ def delete_notice_route(notice_id):
     finally:
         db.close()
     
-    return redirect(url_for('notice_admin.list_notices'))
+    return redirect(url_for('notice_admin.list_notices', store=store))
 
 @notice_admin_bp.route('/upload-image', methods=['POST'])
-def upload_image():
+def upload_image(store):  # ← store パラメータ追加
     """TinyMCE用の画像アップロード"""
     try:
         if 'file' not in request.files:

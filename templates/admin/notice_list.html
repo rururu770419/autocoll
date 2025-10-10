@@ -11,7 +11,7 @@
     <!-- ヘッダー -->
     <div class="na-header">
         <h1 class="na-title">📢 お知らせ管理</h1>
-        <a href="{{ url_for('notice_admin.new_notice') }}" class="na-btn na-btn-primary">
+        <a href="{{ url_for('notice_admin.new_notice', store=store) }}" class="na-btn na-btn-primary">
             ➕ 新規作成
         </a>
     </div>
@@ -56,7 +56,7 @@
                 </div>
                 
                 <div class="na-list-actions">
-                    <a href="{{ url_for('notice_admin.edit_notice', notice_id=notice.notice_id) }}" 
+                    <a href="{{ url_for('notice_admin.edit_notice', store=store, notice_id=notice.notice_id) }}" 
                        class="na-btn na-btn-edit">
                         ✏️ 編集
                     </a>
@@ -74,7 +74,7 @@
         <div class="na-empty-state">
             <div class="na-empty-icon">📭</div>
             <p class="na-empty-text">お知らせがまだありません</p>
-            <a href="{{ url_for('notice_admin.new_notice') }}" class="na-btn na-btn-primary">
+            <a href="{{ url_for('notice_admin.new_notice', store=store) }}" class="na-btn na-btn-primary">
                 最初のお知らせを作成する
             </a>
         </div>
@@ -108,7 +108,7 @@
 // 削除確認モーダル
 function confirmDelete(noticeId, noticeName) {
     document.getElementById('deleteNoticeName').textContent = noticeName;
-    document.getElementById('deleteForm').action = "{{ url_for('notice_admin.delete_notice_route', notice_id=0) }}".replace('0', noticeId);
+    document.getElementById('deleteForm').action = "{{ url_for('notice_admin.delete_notice_route', store=store, notice_id=0) }}".replace('0', noticeId);
     document.getElementById('deleteModal').classList.add('na-modal-show');
 }
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint
 from werkzeug.utils import secure_filename
 from flask import render_template, request, redirect, url_for
-from database.connection import get_db, get_display_name
+from database.connection import get_db, get_display_name, get_store_id  # ← get_store_id を追加
 from database.cast_db import (
     register_cast as db_register_cast,
     get_all_casts, find_cast_by_name, find_cast_by_phone_number, find_cast_by_id,
@@ -104,17 +104,20 @@ def register_cast(store):
     if display_name is None:
         return "店舗が見つかりません。", 404
     
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
+    
     db = get_db()
     
-    # 🆕 コースカテゴリ一覧を取得（GET/POST両方で必要）
+    # ✅ コースカテゴリ一覧を取得（動的 store_id 使用）
     cursor = db.cursor()
     cursor.execute("""
         SELECT category_id, category_name
         FROM course_categories
-        WHERE store_id = 1
+        WHERE store_id = %s
         AND is_active = TRUE
         ORDER BY category_id
-    """)
+    """, (store_id,))
     course_categories = cursor.fetchall()
 
     if request.method == "POST":
@@ -139,7 +142,7 @@ def register_cast(store):
         address_detail = request.form.get("address_detail", "")
         full_address = " ".join(filter(None, [prefecture, city, address_detail]))
         
-        # 🆕 対応コースカテゴリの取得
+        # 対応コースカテゴリの取得
         course_category_id = request.form.get("course_category_id")
         
         # バリデーションチェック（名前のみ必須）
@@ -198,7 +201,7 @@ def register_cast(store):
                     error=f"このログインID '{login_id}' は既に使用されています。"
                 )
 
-        # 🆕 基本登録（名前と電話番号のみ）
+        # 基本登録（名前と電話番号のみ）
         cast_id = db_register_cast(db, name, phone_number)
         
         if not cast_id:
@@ -210,7 +213,7 @@ def register_cast(store):
                 error="登録に失敗しました。"
             )
         
-        # 🆕 追加情報を更新
+        # 追加情報を更新
         cast_data = {
             'email': email,
             'birth_date': birth_date,
@@ -269,7 +272,7 @@ def register_cast(store):
         "cast_registration.html",
         store=store,
         display_name=display_name,
-        course_categories=course_categories,  # 🆕 追加
+        course_categories=course_categories,
         success=success_msg,
         error=error_msg
     )
@@ -279,6 +282,9 @@ def edit_cast(store, cast_id):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
+
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
 
     db = get_db()
     # 年齢計算込みのキャスト情報を取得
@@ -327,7 +333,7 @@ def edit_cast(store, cast_id):
             'auto_call_enabled': auto_call_enabled_bool,
         }
         
-        # 🆕 対応コースカテゴリの処理（category_idで保存）
+        # 対応コースカテゴリの処理（category_idで保存）
         course_category_id = request.form.get("course_category_id")
         if course_category_id:
             cast_data['available_course_categories'] = [int(course_category_id)]
@@ -341,15 +347,15 @@ def edit_cast(store, cast_id):
         
         # バリデーション
         if not cast_data['name']:
-            # 🆕 course_categoriesを取得してエラー時にも渡す
+            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
             cursor = db.cursor()
             cursor.execute("""
                 SELECT category_id, category_name
                 FROM course_categories
-                WHERE store_id = 1
+                WHERE store_id = %s
                 AND is_active = TRUE
                 ORDER BY category_id
-    """)
+            """, (store_id,))
             course_categories = cursor.fetchall()
             
             return render_template(
@@ -364,15 +370,15 @@ def edit_cast(store, cast_id):
         # 名前の重複チェック（編集中のキャスト自身は除く）
         existing_cast_by_name = find_cast_by_name(db, cast_data['name'])
         if existing_cast_by_name and existing_cast_by_name['cast_id'] != cast_id:
-            # 🆕 course_categoriesを取得してエラー時にも渡す
+            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
             cursor = db.cursor()
             cursor.execute("""
                 SELECT category_id, category_name
                 FROM course_categories
-                WHERE store_id = 1
+                WHERE store_id = %s
                 AND is_active = TRUE
                 ORDER BY category_id
-    """)
+            """, (store_id,))
             course_categories = cursor.fetchall()
             
             return render_template(
@@ -388,15 +394,15 @@ def edit_cast(store, cast_id):
         if cast_data['phone_number']:
             existing_cast_by_phone = find_cast_by_phone_number(db, cast_data['phone_number'])
             if existing_cast_by_phone and existing_cast_by_phone['cast_id'] != cast_id:
-                # 🆕 course_categoriesを取得してエラー時にも渡す
+                # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                 cursor = db.cursor()
                 cursor.execute("""
                     SELECT category_id, category_name
                     FROM course_categories
-                    WHERE store_id = 1
+                    WHERE store_id = %s
                     AND is_active = TRUE
                     ORDER BY category_id
-    """)
+                """, (store_id,))
                 course_categories = cursor.fetchall()
                 
                 return render_template(
@@ -414,15 +420,15 @@ def edit_cast(store, cast_id):
             existing_cast_by_login = find_cast_by_login_id(db, cast_data['login_id'])
             # 編集中のキャスト自身のログインIDは除外
             if existing_cast_by_login and existing_cast_by_login['cast_id'] != cast_id:
-                # 🆕 course_categoriesを取得してエラー時にも渡す
+                # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                 cursor = db.cursor()
                 cursor.execute("""
                     SELECT category_id, category_name
                     FROM course_categories
-                    WHERE store_id = 1
+                    WHERE store_id = %s
                     AND is_active = TRUE
                     ORDER BY category_id
-    """)
+                """, (store_id,))
                 course_categories = cursor.fetchall()
                 
                 return render_template(
@@ -465,15 +471,15 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
-                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                     cursor = db.cursor()
                     cursor.execute("""
                         SELECT category_id, category_name
                         FROM course_categories
-                        WHERE store_id = 1
+                        WHERE store_id = %s
                         AND is_active = TRUE
                         ORDER BY category_id
-    """)
+                    """, (store_id,))
                     course_categories = cursor.fetchall()
                     
                     return render_template(
@@ -487,15 +493,15 @@ def edit_cast(store, cast_id):
                 
                 # 最大2枚まで
                 if len(existing_id_docs) >= 2:
-                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                     cursor = db.cursor()
                     cursor.execute("""
                         SELECT category_id, category_name
                         FROM course_categories
-                        WHERE store_id = 1
+                        WHERE store_id = %s
                         AND is_active = TRUE
                         ORDER BY category_id
-    """)
+                    """, (store_id,))
                     course_categories = cursor.fetchall()
                     
                     return render_template(
@@ -521,15 +527,15 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
-                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                     cursor = db.cursor()
                     cursor.execute("""
                         SELECT category_id, category_name
                         FROM course_categories
-                        WHERE store_id = 1
+                        WHERE store_id = %s
                         AND is_active = TRUE
                         ORDER BY category_id
-    """)
+                    """, (store_id,))
                     course_categories = cursor.fetchall()
                     
                     return render_template(
@@ -543,15 +549,15 @@ def edit_cast(store, cast_id):
                 
                 # 最大5枚まで
                 if len(existing_contract_docs) >= 5:
-                    # 🆕 course_categoriesを取得してエラー時にも渡す
+                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
                     cursor = db.cursor()
                     cursor.execute("""
                         SELECT category_id, category_name
                         FROM course_categories
-                        WHERE store_id = 1
+                        WHERE store_id = %s
                         AND is_active = TRUE
                         ORDER BY category_id
-    """)
+                    """, (store_id,))
                     course_categories = cursor.fetchall()
                     
                     return render_template(
@@ -577,15 +583,15 @@ def edit_cast(store, cast_id):
         if success:
             return redirect(url_for('main_routes.cast_management', store=store, success="キャスト情報を更新しました。"))
         else:
-            # 🆕 course_categoriesを取得してエラー時にも渡す
+            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
             cursor = db.cursor()
             cursor.execute("""
                 SELECT category_id, category_name
                 FROM course_categories
-                WHERE store_id = 1
+                WHERE store_id = %s
                 AND is_active = TRUE
                 ORDER BY category_id
-    """)
+            """, (store_id,))
             course_categories = cursor.fetchall()
             
             return render_template(
@@ -599,15 +605,15 @@ def edit_cast(store, cast_id):
 
     # GETリクエスト：編集画面を表示
     
-    # 🆕 コースカテゴリ一覧を取得
+    # ✅ コースカテゴリ一覧を取得（動的 store_id）
     cursor = db.cursor()
     cursor.execute("""
         SELECT category_id, category_name
         FROM course_categories
-        WHERE store_id = 1
+        WHERE store_id = %s
         AND is_active = TRUE
         ORDER BY category_id
-    """)
+    """, (store_id,))
     course_categories = cursor.fetchall()
     
     # NG設定タブ用のデータを取得
@@ -636,7 +642,7 @@ def edit_cast(store, cast_id):
         store=store,
         cast=cast,
         display_name=display_name,
-        course_categories=course_categories,  # 🆕 追加
+        course_categories=course_categories,
         all_hotels=all_hotels,
         all_courses=all_courses,
         all_options=all_options,

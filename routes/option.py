@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for
+from database.connection import get_store_id  # ← 追加
 from database.db_access import (
     get_all_options, get_option_by_id, add_option, update_option, 
     delete_option, move_option_up, move_option_down, get_display_name
@@ -60,8 +61,8 @@ def register_option(store):
         if cast_back_amount_int > price_int:
             return redirect(url_for('main_routes.options', store=store, error="バック金額は金額以下で入力してください"))
         
-        # 店舗IDを取得（今回は1固定）
-        store_id = 1
+        # ✅ 店舗IDを動的取得
+        store_id = get_store_id(store)
         
         # オプション登録
         if add_option(name, price_int, cast_back_amount_int, store_id):

@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
 from database.db_connection import get_db_connection
+from database.connection import get_store_id  # ← 追加
 from database.cast_db import (
     verify_cast_password,
     find_cast_by_login_id,
@@ -151,11 +152,14 @@ def logout(store):
 def dashboard(store):
     """キャストマイページ - トップページ（お知らせ一覧）"""
     
+    # ✅ store_id を動的取得
+    store_id = get_store_id(store)
+    
     db = get_db_connection()
     cast_name = session.get('cast_name', 'ゲスト')
     
-    # お知らせ一覧取得（store_id = 1固定）
-    notices = get_cast_notices(db, store_id=1, limit=20)
+    # ✅ お知らせ一覧取得（動的 store_id 使用）
+    notices = get_cast_notices(db, store_id=store_id, limit=20)
     
     return render_template(
         'cast/cast_dashboard.html',
