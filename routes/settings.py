@@ -752,3 +752,212 @@ def register_settings_routes(app):
                 'success': False,
                 'message': '選択肢の削除に失敗しました'
             }), 500
+
+
+    
+    
+    @app.route('/<store>/settings/cancellation_reasons/create', methods=['POST'])
+    @admin_required
+    def create_cancellation_reason_route(store):
+        """キャンセル理由を新規作成"""
+        try:
+            from database.reservation_db import create_cancellation_reason
+            
+            data = request.get_json()
+            reason_name = data.get('reason_name')
+            
+            if not reason_name:
+                return jsonify({
+                    'success': False,
+                    'message': 'キャンセル理由名を入力してください'
+                }), 400
+            
+            reason_id = create_cancellation_reason(reason_name)
+            
+            if reason_id:
+                return jsonify({
+                    'success': True,
+                    'message': 'キャンセル理由を追加しました',
+                    'reason_id': reason_id
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'キャンセル理由の追加に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in create_cancellation_reason: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'キャンセル理由の追加に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/cancellation_reasons/<int:reason_id>', methods=['PUT'])
+    @admin_required
+    def update_cancellation_reason_route(store, reason_id):
+        """キャンセル理由を更新"""
+        try:
+            from database.reservation_db import update_cancellation_reason
+            
+            data = request.get_json()
+            reason_name = data.get('reason_name')
+            
+            if not reason_name:
+                return jsonify({
+                    'success': False,
+                    'message': 'キャンセル理由名を入力してください'
+                }), 400
+            
+            success = update_cancellation_reason(reason_id, reason_name=reason_name)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': 'キャンセル理由を更新しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'キャンセル理由の更新に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in update_cancellation_reason: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'キャンセル理由の更新に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/cancellation_reasons/<int:reason_id>', methods=['DELETE'])
+    @admin_required
+    def delete_cancellation_reason_route(store, reason_id):
+        """キャンセル理由を削除"""
+        try:
+            from database.reservation_db import delete_cancellation_reason
+            
+            success = delete_cancellation_reason(reason_id)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': 'キャンセル理由を削除しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'キャンセル理由の削除に失敗しました（使用中の可能性があります）'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in delete_cancellation_reason: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'キャンセル理由の削除に失敗しました'
+            }), 500
+    
+    
+    
+    @app.route('/<store>/settings/reservation_methods/create', methods=['POST'])
+    @admin_required
+    def create_reservation_method_route(store):
+        """予約方法を新規作成"""
+        try:
+            from database.reservation_db import create_reservation_method
+            
+            data = request.get_json()
+            method_name = data.get('method_name')
+            
+            if not method_name:
+                return jsonify({
+                    'success': False,
+                    'message': '予約方法名を入力してください'
+                }), 400
+            
+            method_id = create_reservation_method(method_name)
+            
+            if method_id:
+                return jsonify({
+                    'success': True,
+                    'message': '予約方法を追加しました',
+                    'method_id': method_id
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '予約方法の追加に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in create_reservation_method: {e}")
+            return jsonify({
+                'success': False,
+                'message': '予約方法の追加に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/reservation_methods/<int:method_id>', methods=['PUT'])
+    @admin_required
+    def update_reservation_method_route(store, method_id):
+        """予約方法を更新"""
+        try:
+            from database.reservation_db import update_reservation_method
+            
+            data = request.get_json()
+            method_name = data.get('method_name')
+            
+            if not method_name:
+                return jsonify({
+                    'success': False,
+                    'message': '予約方法名を入力してください'
+                }), 400
+            
+            success = update_reservation_method(method_id, method_name=method_name)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '予約方法を更新しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '予約方法の更新に失敗しました'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in update_reservation_method: {e}")
+            return jsonify({
+                'success': False,
+                'message': '予約方法の更新に失敗しました'
+            }), 500
+    
+    
+    @app.route('/<store>/settings/reservation_methods/<int:method_id>', methods=['DELETE'])
+    @admin_required
+    def delete_reservation_method_route(store, method_id):
+        """予約方法を削除"""
+        try:
+            from database.reservation_db import delete_reservation_method
+            
+            success = delete_reservation_method(method_id)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '予約方法を削除しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '予約方法の削除に失敗しました（使用中の可能性があります）'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error in delete_reservation_method: {e}")
+            return jsonify({
+                'success': False,
+                'message': '予約方法の削除に失敗しました'
+            }), 500

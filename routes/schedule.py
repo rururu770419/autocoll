@@ -27,14 +27,13 @@ def cast_schedule(store):
     # ✅ store_id を動的取得
     store_id = get_store_id(store)
     
-    # クエリパラメータから開始日を取得（デフォルトは今週の月曜日）
+    # クエリパラメータから開始日を取得（デフォルトは今日）
     date_param = request.args.get('date')
     if date_param:
         start_date = datetime.strptime(date_param, '%Y-%m-%d')
     else:
-        # 今週の月曜日を取得
-        today = datetime.now()
-        start_date = today - timedelta(days=today.weekday())
+        # 今日を開始日とする
+        start_date = datetime.now()
     
     start_date_str = start_date.strftime('%Y-%m-%d')
     
@@ -81,7 +80,7 @@ def cast_schedule(store):
             'weekday': ['(月)', '(火)', '(水)', '(木)', '(金)', '(土)', '(日)'][date.weekday()]
         })
     
-    # 前週・次週のリンク用
+    # 前の7日・次の7日のリンク用
     prev_week = (start_date - timedelta(days=7)).strftime('%Y-%m-%d')
     next_week = (start_date + timedelta(days=7)).strftime('%Y-%m-%d')
     

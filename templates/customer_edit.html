@@ -17,6 +17,12 @@
                 ← 一覧に戻る
             </a>
         </div>
+        
+        <!-- 新規予約登録ボタン -->
+        <a href="{{ url_for('reservation.new_reservation', store=store, customer_id=customer_id) }}" 
+           class="customer-new-reservation-btn">
+            ➕ 新規予約登録
+        </a>
     </div>
 
     <!-- メッセージエリア -->

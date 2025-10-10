@@ -492,3 +492,29 @@
     padding: 40px;
     color: #6c757d;
 }
+
+/* 新規予約登録ボタン - サーモンピンク */
+.customer-new-reservation-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #FF9B9B; /* サーモンピンク */
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 155, 155, 0.4);
+}
+
+.customer-new-reservation-btn:hover {
+    background-color: #FF7B7B; /* 少し濃いサーモンピンク */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 155, 155, 0.5);
+    color: white;
+}
+
+.customer-new-reservation-btn:active {
+    transform: translateY(0);
+    background-color: #FF6B6B; /* さらに濃い */
+}

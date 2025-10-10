@@ -81,6 +81,12 @@ from routes.gantt import gantt_bp
 app.register_blueprint(gantt_bp)
 print("✅ ガントチャートを登録しました")
 
+# ★★★ ここに追加 ★★★
+# 予約管理Blueprint
+from routes.reservation import reservation_bp
+app.register_blueprint(reservation_bp)
+print("✅ 予約管理を登録しました")
+
 # ===== Twilio音声通話エンドポイント =====
 @app.route('/twilio/voice', methods=['GET', 'POST'])
 def twilio_voice():
