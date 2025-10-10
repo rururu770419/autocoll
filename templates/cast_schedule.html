@@ -2,6 +2,83 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cast_schedule.css') }}">
+<style>
+/* フィルタエリアのスタイル */
+.schedule-filters {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.schedule-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.schedule-filter-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.schedule-filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+/* ページネーションのスタイル */
+.schedule-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 20px 0;
+  margin-top: 20px;
+}
+
+.schedule-pagination-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.schedule-pagination-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.schedule-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.schedule-pagination-info {
+  font-size: 14px;
+  color: #666;
+}
+</style>
 {% endblock %}
 
 {% block title %}
@@ -14,15 +91,42 @@
     <h1 class="schedule-title">キャスト出勤表</h1>
     
     <div class="schedule-nav">
-      <a href="{{ url_for('schedule.cast_schedule', store=store, date=prev_week) }}" class="schedule-nav-btn schedule-nav-prev">
+      <a href="{{ url_for('schedule.cast_schedule', store=store, date=prev_week, active_only=active_only, course_category=selected_course_category, page=current_page) }}" class="schedule-nav-btn schedule-nav-prev">
         ← 前週
       </a>
-      <a href="{{ url_for('schedule.cast_schedule', store=store) }}" class="schedule-nav-btn schedule-nav-today">
+      <a href="{{ url_for('schedule.cast_schedule', store=store, active_only=active_only, course_category=selected_course_category, page=current_page) }}" class="schedule-nav-btn schedule-nav-today">
         今週
       </a>
-      <a href="{{ url_for('schedule.cast_schedule', store=store, date=next_week) }}" class="schedule-nav-btn schedule-nav-next">
+      <a href="{{ url_for('schedule.cast_schedule', store=store, date=next_week, active_only=active_only, course_category=selected_course_category, page=current_page) }}" class="schedule-nav-btn schedule-nav-next">
         次週 →
       </a>
+    </div>
+  </div>
+
+  <!-- 🆕 フィルタエリア -->
+  <div class="schedule-filters">
+    <div class="schedule-filter-group">
+      <label class="schedule-filter-checkbox">
+        <input type="checkbox" id="activeOnlyFilter" {% if active_only %}checked{% endif %} onchange="applyFilters()">
+        <span>在籍中のみ表示</span>
+      </label>
+    </div>
+    
+    <div class="schedule-filter-group">
+      <label for="courseCategoryFilter">コース:</label>
+      <select id="courseCategoryFilter" class="schedule-filter-select" onchange="applyFilters()">
+        <option value="">すべて</option>
+        {% for category in course_categories %}
+          <option value="{{ category.category_id }}" 
+            {% if selected_course_category == category.category_id %}selected{% endif %}>
+            {{ category.category_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="schedule-pagination-info">
+      全{{ total_casts }}人のキャストを表示中
     </div>
   </div>
 
@@ -81,6 +185,27 @@
       </tbody>
     </table>
   </div>
+
+  <!-- 🆕 ページネーション -->
+  {% if total_pages > 1 %}
+  <div class="schedule-pagination">
+    <button class="schedule-pagination-btn" 
+            onclick="changePage({{ current_page - 1 }})" 
+            {% if current_page <= 1 %}disabled{% endif %}>
+      ← 前へ
+    </button>
+    
+    <span class="schedule-pagination-info">
+      {{ current_page }} / {{ total_pages }} ページ
+    </span>
+    
+    <button class="schedule-pagination-btn" 
+            onclick="changePage({{ current_page + 1 }})" 
+            {% if current_page >= total_pages %}disabled{% endif %}>
+      次へ →
+    </button>
+  </div>
+  {% endif %}
 </div>
 
 <!-- 出勤登録モーダル（超コンパクト版） -->
@@ -88,7 +213,7 @@
   <div class="schedule-modal-overlay" onclick="closeScheduleModal()"></div>
   <div class="schedule-modal-content">
     
-    <!-- ヘッダー：キャスト名と日付を横並び -->
+    <!-- ヘッダー:キャスト名と日付を横並び -->
     <div class="schedule-modal-header">
       <div class="schedule-modal-info">
         <span id="modalCastName" class="schedule-modal-cast"></span>
@@ -144,4 +269,31 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/cast_schedule.js') }}"></script>
+<script>
+// 🆕 フィルタ適用関数
+function applyFilters() {
+  const activeOnly = document.getElementById('activeOnlyFilter').checked;
+  const courseCategory = document.getElementById('courseCategoryFilter').value;
+  
+  const url = new URL(window.location.href);
+  url.searchParams.set('active_only', activeOnly ? 'true' : 'false');
+  
+  if (courseCategory) {
+    url.searchParams.set('course_category', courseCategory);
+  } else {
+    url.searchParams.delete('course_category');
+  }
+  
+  url.searchParams.set('page', '1'); // フィルタ変更時はページ1に戻る
+  
+  window.location.href = url.toString();
+}
+
+// 🆕 ページ変更関数
+function changePage(page) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', page);
+  window.location.href = url.toString();
+}
+</script>
 {% endblock %}

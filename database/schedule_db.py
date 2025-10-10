@@ -122,6 +122,132 @@ def get_weekly_schedules(store_id, start_date):
         cur.close()
         conn.close()
 
+def get_weekly_schedules_filtered(store_id, start_date, active_only=True, course_category_id=None, page=1, per_page=20):
+    """
+    週間出勤スケジュールを取得（フィルタ＋ページネーション対応）
+    
+    Args:
+        store_id: 店舗ID
+        start_date: 週の開始日（YYYY-MM-DD形式）
+        active_only: 在籍中のみ表示（デフォルトTrue）
+        course_category_id: コースカテゴリID（Noneの場合は全て）
+        page: ページ番号（1から開始）
+        per_page: 1ページあたりの表示件数
+    
+    Returns:
+        dict: {
+            'schedules': キャストごとの出勤情報,
+            'total_casts': 総キャスト数,
+            'total_pages': 総ページ数,
+            'current_page': 現在のページ
+        }
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # 週間日付リストを生成
+        dates = []
+        current_date = datetime.strptime(start_date, '%Y-%m-%d')
+        for i in range(7):
+            dates.append((current_date + timedelta(days=i)).strftime('%Y-%m-%d'))
+        
+        # フィルタ条件を構築
+        where_conditions = ["c.store_id = %s", "c.is_active = TRUE"]
+        params = [store_id]
+        
+        # 在籍中のみフィルタ
+        if active_only:
+            where_conditions.append("c.status = '在籍'")
+        
+        # コースカテゴリフィルタ
+        if course_category_id:
+            where_conditions.append("c.available_course_categories::jsonb @> %s::jsonb")
+            params.append(f'[{course_category_id}]')
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # 総キャスト数を取得
+        count_query = f"""
+            SELECT COUNT(DISTINCT c.cast_id)
+            FROM casts c
+            WHERE {where_clause}
+        """
+        cur.execute(count_query, params)
+        total_casts = cur.fetchone()['count']
+        total_pages = (total_casts + per_page - 1) // per_page if total_casts > 0 else 1
+        
+        # キャスト一覧を取得（ページネーション付き）
+        offset = (page - 1) * per_page
+        query = f"""
+            SELECT DISTINCT
+                c.cast_id,
+                c.name as cast_name,
+                c.furigana,
+                cs_today.start_time as today_start_time,
+                CASE WHEN cs_today.start_time IS NOT NULL THEN 0 ELSE 1 END as sort_priority
+            FROM casts c
+            LEFT JOIN cast_schedules cs_today ON c.cast_id = cs_today.cast_id
+                AND cs_today.work_date = CURRENT_DATE
+                AND cs_today.status = 'confirmed'
+                AND cs_today.start_time <= CURRENT_TIME
+                AND cs_today.end_time >= CURRENT_TIME
+            WHERE {where_clause}
+            ORDER BY
+                sort_priority,
+                cs_today.start_time,
+                c.furigana
+            LIMIT %s OFFSET %s
+        """
+        params.extend([per_page, offset])
+        cur.execute(query, params)
+        casts = cur.fetchall()
+        
+        # 各キャストの週間スケジュールを取得
+        result = {}
+        for cast in casts:
+            cast_id = cast['cast_id']
+            result[cast_id] = {
+                'cast_name': cast['cast_name'],
+                'furigana': cast['furigana'],
+                'schedules': {}
+            }
+            
+            # 週間のスケジュールを取得
+            cur.execute("""
+                SELECT
+                    work_date,
+                    start_time,
+                    end_time,
+                    status,
+                    note
+                FROM cast_schedules
+                WHERE cast_id = %s
+                AND work_date >= %s
+                AND work_date < %s
+            """, (cast_id, start_date, (current_date + timedelta(days=7)).strftime('%Y-%m-%d')))
+            
+            schedules = cur.fetchall()
+            for schedule in schedules:
+                date_str = schedule['work_date'].strftime('%Y-%m-%d')
+                result[cast_id]['schedules'][date_str] = {
+                    'start_time': schedule['start_time'].strftime('%H:%M') if schedule['start_time'] else None,
+                    'end_time': schedule['end_time'].strftime('%H:%M') if schedule['end_time'] else None,
+                    'status': schedule['status'],
+                    'note': schedule['note']
+                }
+        
+        return {
+            'schedules': result,
+            'total_casts': total_casts,
+            'total_pages': total_pages,
+            'current_page': page
+        }
+        
+    finally:
+        cur.close()
+        conn.close()
+
 def get_schedule_by_cast_date(cast_id, work_date):
     """
     特定のキャストと日付の出勤情報を取得

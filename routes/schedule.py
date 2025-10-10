@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from database import schedule_db
 from database.db_access import get_display_name
+from database.connection import get_db
 
 schedule_bp = Blueprint('schedule', __name__)
 
@@ -16,15 +17,15 @@ def register_schedule_routes(app):
 
 @schedule_bp.route('/<store>/schedule', methods=['GET'])
 def cast_schedule(store):
-    """出勤表ページを表示"""
+    """出勤表ページを表示（フィルタ＋ページネーション対応）"""
     
     # 店舗情報を取得
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
     
-    # 店舗IDをストアコードから推定（既存パターンに合わせる）
-    store_id = 1  # nagano=1, tokyo=2 など、必要に応じて調整
+    # 🆕 store_id = 1 固定
+    store_id = 1
     
     # クエリパラメータから開始日を取得（デフォルトは今週の月曜日）
     date_param = request.args.get('date')
@@ -37,8 +38,38 @@ def cast_schedule(store):
     
     start_date_str = start_date.strftime('%Y-%m-%d')
     
-    # 週間スケジュールを取得
-    schedules = schedule_db.get_weekly_schedules(store_id, start_date_str)
+    # 🆕 フィルタパラメータを取得
+    active_only = request.args.get('active_only', 'true') == 'true'
+    course_category_id = request.args.get('course_category', type=int)
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # 🆕 コースカテゴリ一覧を取得
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT category_id, category_name
+        FROM course_categories
+        WHERE store_id = 1
+        AND is_active = TRUE
+        ORDER BY category_id
+    """)
+    course_categories = cursor.fetchall()
+    
+    # 🆕 フィルタ対応の週間スケジュールを取得
+    schedule_data = schedule_db.get_weekly_schedules_filtered(
+        store_id=store_id,
+        start_date=start_date_str,
+        active_only=active_only,
+        course_category_id=course_category_id,
+        page=page,
+        per_page=per_page
+    )
+    
+    schedules = schedule_data['schedules']
+    total_pages = schedule_data['total_pages']
+    current_page = schedule_data['current_page']
+    total_casts = schedule_data['total_casts']
     
     # 日付リストを生成
     dates = []
@@ -66,7 +97,14 @@ def cast_schedule(store):
         prev_week=prev_week,
         next_week=next_week,
         time_slots=time_slots,
-        current_date=datetime.now().strftime('%Y-%m-%d')
+        current_date=datetime.now().strftime('%Y-%m-%d'),
+        # 🆕 フィルタ用の追加データ
+        course_categories=course_categories,
+        active_only=active_only,
+        selected_course_category=course_category_id,
+        current_page=current_page,
+        total_pages=total_pages,
+        total_casts=total_casts
     )
 
 @schedule_bp.route('/<store>/schedule/get', methods=['GET'])
@@ -90,8 +128,8 @@ def get_schedule(store):
 def save_schedule(store):
     """出勤情報を保存（Ajax用）"""
     
-    # 店舗IDを取得
-    store_id = 1  # nagano=1, tokyo=2 など、必要に応じて調整
+    # 🆕 store_id = 1 固定
+    store_id = 1
     
     data = request.get_json()
     cast_id = data.get('cast_id')
