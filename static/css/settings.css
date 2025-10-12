@@ -99,6 +99,13 @@
     margin-bottom: 30px;
 }
 
+.settings-subsection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
 .settings-subsection-title {
     font-size: 18px;
     font-weight: bold;
@@ -172,10 +179,26 @@
     width: 100px;
 }
 
+.settings-input-small {
+    width: 120px;
+}
+
 .settings-input-with-unit {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.settings-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-input-suffix {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
 }
 
 .settings-unit {
@@ -197,6 +220,25 @@
 
 .settings-help-text a:hover {
     text-decoration: underline;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   カード手数料設定
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.settings-card-fee-wrapper {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.settings-card-fee-wrapper .settings-form-group {
+    margin-bottom: 15px;
+}
+
+.settings-card-fee-wrapper .settings-btn {
+    margin-top: 10px;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -283,6 +325,33 @@
     background: #545b62;
 }
 
+.settings-btn-small {
+    padding: 6px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.settings-btn-edit {
+    background: #4CAF50;
+    color: white;
+}
+
+.settings-btn-edit:hover {
+    background: #45a049;
+}
+
+.settings-btn-delete {
+    background: #f44336;
+    color: white;
+}
+
+.settings-btn-delete:hover {
+    background: #da190b;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    メッセージ表示
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -294,6 +363,11 @@
     border-radius: 4px;
     font-size: 14px;
     text-align: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .settings-message-success {
@@ -348,7 +422,7 @@
    駐車場設定
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-   .parking-list {
+.parking-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -374,33 +448,6 @@
 .parking-actions {
     display: flex;
     gap: 8px;
-}
-
-.settings-btn-small {
-    padding: 6px 12px;
-    font-size: 14px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.settings-btn-edit {
-    background: #4CAF50;
-    color: white;
-}
-
-.settings-btn-edit:hover {
-    background: #45a049;
-}
-
-.settings-btn-delete {
-    background: #f44336;
-    color: white;
-}
-
-.settings-btn-delete:hover {
-    background: #da190b;
 }
 
 .no-parking-message {
@@ -475,11 +522,19 @@
     border-top: 1px solid #e0e0e0;
 }
 
+.settings-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    シフト種別管理用スタイル
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-   .shift-type-list {
+.shift-type-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -573,7 +628,7 @@
    顧客情報設定タブ用スタイル
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-   .customer-fields-container {
+.customer-fields-container {
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -629,7 +684,6 @@
     border: 1px solid #d0d0d0;
 }
 
-/* チェックボックススタイル */
 .option-visibility-checkbox {
     display: flex;
     align-items: center;
@@ -661,7 +715,6 @@
     color: #2e7d32;
 }
 
-/* チェックOFF時のスタイル */
 .option-visibility-checkbox:has(input[type="checkbox"]:not(:checked)) {
     background: #f5f5f5;
     border: 1px solid #bdbdbd;
@@ -722,19 +775,6 @@
     gap: 8px;
 }
 
-.color-input {
-    width: 50px;
-    height: 35px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.color-input:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
 .color-preview {
     padding: 6px 12px;
     border: 1px solid #ddd;
@@ -787,73 +827,6 @@
     background: #d32f2f;
 }
 
-/* モーダルスタイル */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 0;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    padding: 20px;
-    background: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-    border-radius: 8px 8px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-}
-
-.modal-close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.modal-close:hover,
-.modal-close:focus {
-    color: #000;
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-.modal-footer {
-    padding: 15px 20px;
-    background: #f5f5f5;
-    border-top: 1px solid #ddd;
-    border-radius: 0 0 8px 8px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
 .settings-loading {
     text-align: center;
     padding: 40px;
@@ -861,108 +834,156 @@
     font-size: 16px;
 }
 
-.settings-message {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-size: 14px;
-    z-index: 1001;
-    display: none;
-}
-
-.settings-message-success {
-    background: #4CAF50;
-    color: white;
-}
-
-.settings-message-error {
-    background: #f44336;
-    color: white;
-}
-
-
-/* NG項目設定用の追加スタイル */
-.settings-subsection-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
+/* テーブル用スタイル */
 .settings-table-wrapper {
-  overflow-x: auto;
-  margin-top: 1rem;
+    overflow-x: auto;
+    margin-top: 1rem;
 }
 
 .settings-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .settings-table thead {
-  background-color: #f3f4f6;
+    background-color: #f3f4f6;
 }
 
 .settings-table th {
-  padding: 12px;
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
 }
 
 .settings-table td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #1f2937;
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #1f2937;
 }
 
 .settings-table tbody tr:hover {
-  background-color: #f9fafb;
+    background-color: #f9fafb;
 }
 
 .settings-table-loading,
 .settings-table-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: #9ca3af;
-}
-
-.settings-table-action-btn {
-  padding: 6px 12px;
-  font-size: 13px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-right: 5px;
-}
-
-.settings-table-action-btn-edit {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.settings-table-action-btn-edit:hover {
-  background-color: #2563eb;
-}
-
-.settings-table-action-btn-delete {
-  background-color: #ef4444;
-  color: white;
-}
-
-.settings-table-action-btn-delete:hover {
-  background-color: #dc2626;
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
 }
 
 .settings-required {
-  color: #ef4444;
-  font-weight: bold;
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.settings-empty-message {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   カード手数料設定
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+   .settings-card-fee-wrapper {
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+.settings-input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 200px;
+}
+
+.settings-form-input-number {
+    flex: 1;
+    text-align: right;
+}
+
+.settings-input-unit {
+    font-size: 16px;
+    font-weight: 600;
+    color: #6b7280;
+    min-width: 24px;
+}
+
+.settings-form-help {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.settings-form-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* 数値入力欄のスピンボタンを小さく */
+.settings-form-input-number::-webkit-inner-spin-button,
+.settings-form-input-number::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 24px;
+}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   メッセージ表示アニメーション
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.settings-message-show {
+    display: block !important;
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   シフト種別の色ボックス（renderShiftTypes用）
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.shift-type-color {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   出勤/休日バッジ
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.badge-work {
+    background-color: #e3f2fd !important;
+    color: #1976d2 !important;
+}
+
+.badge-off {
+    background-color: #fce4ec !important;
+    color: #c2185b !important;
 }

@@ -308,14 +308,11 @@ def verify_cast_password(db, login_id, password):
             print(f"❌ 認証失敗: キャストが見つかりません (login_id: {login_id})")
             return None
         
-        # find_cast_by_login_idのSELECT順序:
-        # cast_id, name, login_id, password_hash, password_plain, status, last_login, is_active
-        # インデックス: 0, 1, 2, 3, 4, 5, 6, 7
-        
-        cast_id = cast[0]
-        password_hash = cast[3]
-        password_plain = cast[4]  # ★ここが重要！平文パスワード
-        is_active = cast[7]
+        # 辞書形式でアクセス
+        cast_id = cast['cast_id']
+        password_hash = cast['password_hash']
+        password_plain = cast['password_plain']
+        is_active = cast['is_active']
         
         # アクティブチェック
         if not is_active:
@@ -667,3 +664,324 @@ def get_status_options():
         '休職',
         '退職'
     ]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📍 cast_db.py の最後に以下のコードを追加してください
+# 📍 場所: get_status_options() 関数の後
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ==== NGエリア管理関数（予約設定用） ====
+def create_ng_area(db, store_id, area_name):
+    """
+    NGエリアを新規作成
+    
+    Args:
+        db: データベース接続
+        store_id (int): 店舗ID
+        area_name (str): エリア名
+    
+    Returns:
+        int: 作成されたng_area_id、失敗時はNone
+    """
+    try:
+        cursor = db.cursor()
+        
+        # 表示順序を取得（店舗ごとに最後に追加）
+        cursor.execute("""
+            SELECT COALESCE(MAX(display_order), 0) + 1 
+            FROM ng_areas 
+            WHERE store_id = %s
+        """, (store_id,))
+        display_order = cursor.fetchone()[0]
+        
+        # NGエリアを追加
+        cursor.execute("""
+            INSERT INTO ng_areas (store_id, area_name, display_order, is_active, created_at, updated_at)
+            VALUES (%s, %s, %s, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING ng_area_id
+        """, (store_id, area_name, display_order))
+        
+        area_id = cursor.fetchone()[0]
+        db.commit()
+        print(f"✅ NGエリア作成成功: {area_name} (ID: {area_id}, Store: {store_id})")
+        return area_id
+        
+    except Exception as e:
+        print(f"❌ NGエリア作成エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return None
+
+
+def update_ng_area(db, area_id, area_name):
+    """
+    NGエリアを更新
+    
+    Args:
+        db: データベース接続
+        area_id (int): NGエリアID
+        area_name (str): 新しいエリア名
+    
+    Returns:
+        bool: 成功時True、失敗時False
+    """
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute("""
+            UPDATE ng_areas 
+            SET area_name = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE ng_area_id = %s AND is_active = TRUE
+        """, (area_name, area_id))
+        
+        success = cursor.rowcount > 0
+        db.commit()
+        
+        if success:
+            print(f"✅ NGエリア更新成功: ID {area_id} → {area_name}")
+        else:
+            print(f"⚠️ NGエリア更新失敗: ID {area_id} が見つかりません")
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ NGエリア更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return False
+
+
+def delete_ng_area(db, area_id):
+    """
+    NGエリアを論理削除
+    
+    Args:
+        db: データベース接続
+        area_id (int): NGエリアID
+    
+    Returns:
+        bool: 成功時True、失敗時False
+    """
+    try:
+        cursor = db.cursor()
+        
+        # 論理削除（is_active を FALSE に設定）
+        cursor.execute("""
+            UPDATE ng_areas 
+            SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
+            WHERE ng_area_id = %s
+        """, (area_id,))
+        
+        success = cursor.rowcount > 0
+        db.commit()
+        
+        if success:
+            print(f"✅ NGエリア削除成功: ID {area_id}")
+        else:
+            print(f"⚠️ NGエリア削除失敗: ID {area_id} が見つかりません")
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ NGエリア削除エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return False
+
+
+def get_all_ng_areas_by_store(db, store_id):
+    """
+    店舗ごとのNGエリア一覧を取得
+    
+    Args:
+        db: データベース接続
+        store_id (int): 店舗ID
+    
+    Returns:
+        list: NGエリアのリスト（辞書形式）
+    """
+    try:
+        from psycopg.rows import dict_row
+        cursor = db.cursor(row_factory=dict_row)
+        
+        cursor.execute("""
+            SELECT ng_area_id, store_id, area_name, display_order, is_active, created_at, updated_at
+            FROM ng_areas 
+            WHERE store_id = %s AND is_active = TRUE
+            ORDER BY display_order, area_name
+        """, (store_id,))
+        
+        areas = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        return areas
+        
+    except Exception as e:
+        print(f"❌ NGエリア取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+# ==== 年齢NGパターン管理関数（予約設定用） ====
+def create_ng_age_pattern(db, store_id, pattern_name, description=''):
+    """
+    年齢NGパターンを新規作成
+    
+    Args:
+        db: データベース接続
+        store_id (int): 店舗ID
+        pattern_name (str): パターン名
+        description (str): 説明（オプション）
+    
+    Returns:
+        int: 作成されたng_age_id、失敗時はNone
+    """
+    try:
+        cursor = db.cursor()
+        
+        # 表示順序を取得（店舗ごとに最後に追加）
+        cursor.execute("""
+            SELECT COALESCE(MAX(display_order), 0) + 1 
+            FROM ng_age_patterns 
+            WHERE store_id = %s
+        """, (store_id,))
+        display_order = cursor.fetchone()[0]
+        
+        # 年齢NGパターンを追加
+        cursor.execute("""
+            INSERT INTO ng_age_patterns (store_id, pattern_name, description, display_order, is_active, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING ng_age_id
+        """, (store_id, pattern_name, description, display_order))
+        
+        age_id = cursor.fetchone()[0]
+        db.commit()
+        print(f"✅ 年齢NGパターン作成成功: {pattern_name} (ID: {age_id}, Store: {store_id})")
+        return age_id
+        
+    except Exception as e:
+        print(f"❌ 年齢NGパターン作成エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return None
+
+
+def update_ng_age_pattern(db, age_id, pattern_name, description=''):
+    """
+    年齢NGパターンを更新
+    
+    Args:
+        db: データベース接続
+        age_id (int): 年齢NG ID
+        pattern_name (str): 新しいパターン名
+        description (str): 新しい説明（オプション）
+    
+    Returns:
+        bool: 成功時True、失敗時False
+    """
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute("""
+            UPDATE ng_age_patterns 
+            SET pattern_name = %s, description = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE ng_age_id = %s AND is_active = TRUE
+        """, (pattern_name, description, age_id))
+        
+        success = cursor.rowcount > 0
+        db.commit()
+        
+        if success:
+            print(f"✅ 年齢NGパターン更新成功: ID {age_id} → {pattern_name}")
+        else:
+            print(f"⚠️ 年齢NGパターン更新失敗: ID {age_id} が見つかりません")
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ 年齢NGパターン更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return False
+
+
+def delete_ng_age_pattern(db, age_id):
+    """
+    年齢NGパターンを論理削除
+    
+    Args:
+        db: データベース接続
+        age_id (int): 年齢NG ID
+    
+    Returns:
+        bool: 成功時True、失敗時False
+    """
+    try:
+        cursor = db.cursor()
+        
+        # 論理削除（is_active を FALSE に設定）
+        cursor.execute("""
+            UPDATE ng_age_patterns 
+            SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
+            WHERE ng_age_id = %s
+        """, (age_id,))
+        
+        success = cursor.rowcount > 0
+        db.commit()
+        
+        if success:
+            print(f"✅ 年齢NGパターン削除成功: ID {age_id}")
+        else:
+            print(f"⚠️ 年齢NGパターン削除失敗: ID {age_id} が見つかりません")
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ 年齢NGパターン削除エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return False
+
+
+def get_all_ng_age_patterns_by_store(db, store_id):
+    """
+    店舗ごとの年齢NGパターン一覧を取得
+    
+    Args:
+        db: データベース接続
+        store_id (int): 店舗ID
+    
+    Returns:
+        list: 年齢NGパターンのリスト（辞書形式）
+    """
+    try:
+        from psycopg.rows import dict_row
+        cursor = db.cursor(row_factory=dict_row)
+        
+        cursor.execute("""
+            SELECT ng_age_id, store_id, pattern_name, description, display_order, is_active, created_at, updated_at
+            FROM ng_age_patterns 
+            WHERE store_id = %s AND is_active = TRUE
+            ORDER BY display_order, pattern_name
+        """, (store_id,))
+        
+        patterns = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        return patterns
+        
+    except Exception as e:
+        print(f"❌ 年齢NGパターン取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📍 ここまでを cast_db.py の最後に追加
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

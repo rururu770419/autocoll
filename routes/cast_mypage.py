@@ -1,8 +1,7 @@
 # routes/cast_mypage.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
-from database.db_connection import get_db_connection
-from database.connection import get_store_id  # ← 追加
+from database.connection import get_db, get_store_id
 from database.cast_db import (
     verify_cast_password,
     find_cast_by_login_id,
@@ -56,7 +55,7 @@ def login_required(f):
             return redirect(url_for('cast_mypage.login', store=store))
         
         # セッション検証
-        db = get_db_connection()
+        db = get_db(store)
         cast_session = get_cast_session(db, cast_session_id)
         
         # 辞書形式でアクセス
@@ -95,7 +94,7 @@ def login(store):
             flash('ログインIDとパスワードを入力してください。', 'error')
             return render_template('cast/cast_login.html', store=store)
         
-        db = get_db_connection()
+        db = get_db(store)
         
         # 認証
         cast_id = verify_cast_password(db, login_id, password)
@@ -118,12 +117,12 @@ def login(store):
         
         # キャスト情報を取得して名前をセッションに保存
         cast = find_cast_by_login_id(db, login_id)
-        # タプル形式: (cast_id, name, login_id, password_hash, password_plain, status, last_login, is_active)
+        # 辞書形式でアクセス
         if cast:
-            session['cast_name'] = cast[1]  # name (index 1)
+            session['cast_name'] = cast['name']
             session['cast_id'] = cast_id
         
-        flash(f'ようこそ、{cast[1]}さん！', 'success')
+        flash(f'ようこそ、{cast["name"]}さん！', 'success')
         return redirect(url_for('cast_mypage.dashboard', store=store))
     
     return render_template('cast/cast_login.html', store=store)
@@ -137,7 +136,7 @@ def logout(store):
     cast_session_id = session.get('cast_session_id')
     
     if cast_session_id:
-        db = get_db_connection()
+        db = get_db(store)
         delete_cast_session(db, cast_session_id)
     
     session.clear()
@@ -155,7 +154,7 @@ def dashboard(store):
     # ✅ store_id を動的取得
     store_id = get_store_id(store)
     
-    db = get_db_connection()
+    db = get_db(store)
     cast_name = session.get('cast_name', 'ゲスト')
     
     # ✅ お知らせ一覧取得（動的 store_id 使用）
@@ -177,7 +176,7 @@ def dashboard(store):
 def notice_detail(store, notice_id):
     """お知らせ詳細ページ"""
     
-    db = get_db_connection()
+    db = get_db(store)
     cast_name = session.get('cast_name', 'ゲスト')
     
     # お知らせ詳細取得
@@ -202,7 +201,7 @@ def notice_detail(store, notice_id):
 def blog_drafts(store):
     """ブログ下書き一覧"""
     
-    db = get_db_connection()
+    db = get_db(store)
     cast_id = session.get('cast_id')
     cast_name = session.get('cast_name', 'ゲスト')
     
@@ -229,7 +228,7 @@ def blog_draft_new(store):
     
     if request.method == 'POST':
         try:
-            db = get_db_connection()
+            db = get_db(store)
             cast_id = session.get('cast_id')
             
             title = request.form.get('title', '').strip()
@@ -278,7 +277,7 @@ def blog_draft_edit(store, draft_id):
     """ブログ下書き編集"""
     
     try:
-        db = get_db_connection()
+        db = get_db(store)
         cast_id = session.get('cast_id')
         
         print(f"[DEBUG] 下書き編集ページアクセス: draft_id={draft_id}, cast_id={cast_id}, method={request.method}")
@@ -369,7 +368,7 @@ def blog_draft_delete(store, draft_id):
     """ブログ下書き削除"""
     
     try:
-        db = get_db_connection()
+        db = get_db(store)
         cast_id = session.get('cast_id')
         
         print(f"[DEBUG] 下書き削除リクエスト: draft_id={draft_id}, cast_id={cast_id}")
@@ -416,7 +415,7 @@ def blog_draft_autosave(store):
     """ブログ下書き自動保存（5秒ごと）"""
     
     try:
-        db = get_db_connection()
+        db = get_db(store)
         cast_id = session.get('cast_id')
         
         data = request.get_json()

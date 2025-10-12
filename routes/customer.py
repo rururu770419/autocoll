@@ -47,8 +47,10 @@ def api_get_customers_endpoint(store):
         customers_list = []
         for customer in customers:
             # dict_row を dict に安全に変換
+            customer_id = customer['customer_id']
             customer_dict = {
-                'customer_id': customer['customer_id'],
+                'customer_id': customer_id,
+                'customer_number': customer_id,  # 顧客番号 = 顧客ID
                 'name': customer['name'],
                 'furigana': customer.get('furigana'),
                 'phone': customer.get('phone'),
@@ -96,6 +98,9 @@ def api_get_customer_endpoint(store, customer_id):
 
         # パスワードを追加（mypage_password_hashカラムをmypage_passwordとして返す）
         customer_dict['mypage_password'] = customer_dict.get('mypage_password_hash')
+        
+        # 顧客番号 = 顧客ID（数字そのまま）
+        customer_dict['customer_number'] = customer_id
         
         # date型をJSON対応形式に変換
         if customer_dict.get('birthday'):

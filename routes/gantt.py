@@ -3,8 +3,8 @@
 ガントチャート表示用Blueprint
 """
 from flask import Blueprint, render_template, request, jsonify
-from database.db_connection import get_db_connection
-from database.gantt_db import get_gantt_data, get_time_slots, get_store_schedule_settings
+from database.connection import get_connection, get_store_id
+from database.gantt_db import get_gantt_data, get_time_slots, get_store_schedule_settings, update_reservation_room_number
 from datetime import datetime, timedelta
 
 gantt_bp = Blueprint('gantt', __name__)
@@ -16,25 +16,18 @@ def gantt_chart(store):
     タイムスケジュール表示ページ
     """
     try:
-        # クエリパラメータから日付を取得（デフォルトは今日）
         target_date_str = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
         target_date = datetime.strptime(target_date_str, '%Y-%m-%d')
         
-        # データベース接続
-        db = get_db_connection()
+        db = get_connection()
         
         try:
-            # 店舗IDは固定（1）※本来は店舗名から取得
-            store_id = 1
+            store_id = get_store_id(store)
             
-            # 店舗のスケジュール設定を取得
             schedule_settings = get_store_schedule_settings(db, store_id)
             
-            # ガントチャート用データを取得
             gantt_data = get_gantt_data(db, store_id, target_date_str)
             
-            # 時間スロットを生成
-            # 開始時刻と終了時刻をパース
             start_time_parts = schedule_settings['start_time'].split(':')
             start_hour = int(start_time_parts[0])
             
@@ -42,7 +35,6 @@ def gantt_chart(store):
             end_hour = int(end_time_parts[0])
             end_minute = int(end_time_parts[1])
             
-            # 終了時刻が翌日の場合は24を加算
             if end_hour < start_hour:
                 end_hour += 24
             
@@ -52,12 +44,9 @@ def gantt_chart(store):
                 interval_minutes=schedule_settings['time_unit']
             )
             
-            # 前日・翌日の日付を計算
             prev_date = (target_date - timedelta(days=1)).strftime('%Y-%m-%d')
             next_date = (target_date + timedelta(days=1)).strftime('%Y-%m-%d')
             
-            # 日付の表示形式
-            date_display = target_date.strftime('%Y年%m月%d日（%a）')
             weekday_ja = ['月', '火', '水', '木', '金', '土', '日']
             weekday_index = target_date.weekday()
             date_display = target_date.strftime(f'%Y年%m月%d日（{weekday_ja[weekday_index]}）')
@@ -78,7 +67,6 @@ def gantt_chart(store):
             db.close()
     
     except Exception as e:
-        print(f"[ERROR] タイムスケジュール表示エラー: {str(e)}")
         import traceback
         traceback.print_exc()
         return f"エラーが発生しました: {str(e)}", 500
@@ -92,10 +80,10 @@ def gantt_api_data(store):
     try:
         target_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
         
-        db = get_db_connection()
+        db = get_connection()
         
         try:
-            store_id = 1
+            store_id = get_store_id(store)
             gantt_data = get_gantt_data(db, store_id, target_date)
             
             return jsonify({
@@ -107,7 +95,56 @@ def gantt_api_data(store):
             db.close()
     
     except Exception as e:
-        print(f"[ERROR] タイムスケジュールAPI エラー: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@gantt_bp.route('/<store>/gantt/api/update_room_number', methods=['POST'])
+def update_room_number(store):
+    """
+    予約の部屋番号を更新するAPI
+    """
+    try:
+        data = request.get_json()
+        reservation_id = data.get('reservation_id')
+        room_number = data.get('room_number', '').strip()
+        
+        if not reservation_id:
+            return jsonify({
+                'success': False,
+                'error': '予約IDが指定されていません'
+            }), 400
+        
+        db = get_connection()
+        
+        try:
+            store_id = get_store_id(store)
+            
+            success = update_reservation_room_number(
+                db=db,
+                reservation_id=reservation_id,
+                room_number=room_number if room_number else None
+            )
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '部屋番号を更新しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': '更新に失敗しました'
+                }), 500
+        
+        finally:
+            db.close()
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)

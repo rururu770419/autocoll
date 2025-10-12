@@ -14,10 +14,29 @@ let editingCategoryKey = null;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 顧客情報タブがクリックされたら読み込み
-    const customerInfoTab = document.querySelector('[onclick*="customer_info"]');
+    // 顧客情報タブのイベントリスナー設定
+    const customerInfoTab = document.getElementById('customer-info-tab');
     if (customerInfoTab) {
-        customerInfoTab.addEventListener('click', loadCustomerFieldSettings);
+        customerInfoTab.addEventListener('click', function() {
+            setTimeout(loadCustomerFieldSettings, 100);
+        });
+    }
+    
+    // switchTab関数に顧客情報の読み込みを追加
+    const originalSwitchTab = window.switchTab;
+    if (originalSwitchTab) {
+        window.switchTab = function(tabName) {
+            originalSwitchTab(tabName);
+            if (tabName === 'customer_info') {
+                setTimeout(loadCustomerFieldSettings, 100);
+            }
+        };
+    }
+    
+    // 初期表示が顧客情報タブの場合は読み込み
+    const customerInfoContent = document.getElementById('customer_info');
+    if (customerInfoContent && customerInfoContent.classList.contains('active')) {
+        setTimeout(loadCustomerFieldSettings, 300);
     }
 });
 
@@ -26,19 +45,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async function loadCustomerFieldSettings() {
-    console.log('loadCustomerFieldSettings called'); // デバッグ
     try {
         const store = getStoreCode();
-        console.log('Store code:', store); // デバッグ
         
         const url = `/${store}/api/customer_fields`;
-        console.log('Fetching URL:', url); // デバッグ
         
         const response = await fetch(url);
-        console.log('Response status:', response.status); // デバッグ
         
         const result = await response.json();
-        console.log('Result:', result); // デバッグ
         
         if (result.success) {
             customerFieldData = result.data;

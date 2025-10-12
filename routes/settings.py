@@ -27,7 +27,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # ログインチェック（user_name または user_id の存在確認）
-        if 'user_name' not in session:  # ← これに変更
+        if 'user_name' not in session:
             store = kwargs.get('store')
             return redirect(f'/{store}/login')
         
@@ -46,12 +46,16 @@ def register_settings_routes(app):
             # 全設定を取得
             settings_data = get_all_settings()
             
+            # 駐車場設定を取得
+            parking_enabled = get_parking_enabled()
+            
             return render_template(
                 'settings.html',
                 store=store,
                 store_info=settings_data['store_info'],
                 notification=settings_data['notification'],
-                auto_call=settings_data['auto_call']
+                auto_call=settings_data['auto_call'],
+                parking_enabled=parking_enabled
             )
             
         except Exception as e:
@@ -71,12 +75,6 @@ def register_settings_routes(app):
             # フォームから送られてきた全データを取得
             for key in request.form:
                 settings_dict[key] = request.form[key]
-            
-            # チェックボックスの処理（チェックOFFの場合はPOSTデータに含まれない）
-            checkbox_keys = ['auto_call_enabled', 'line_notify_enabled', 'parking_enabled']
-            for checkbox_key in checkbox_keys:
-                if checkbox_key not in settings_dict:
-                    settings_dict[checkbox_key] = 'false'
             
             # 更新者を記録
             updated_by = session.get('user', {}).get('login_id', 'unknown')
@@ -196,9 +194,9 @@ def register_settings_routes(app):
     # 駐車場管理エンドポイント
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    @app.route('/<store>/settings/parking')
+    @app.route('/<store>/settings/parking_lots', methods=['GET'])
     @admin_required
-    def parking_settings(store):
+    def get_parking_lots_api(store):
         """駐車場設定ページ"""
         try:
             parking_lots = get_all_parking_lots()
@@ -218,7 +216,7 @@ def register_settings_routes(app):
             }), 500
     
     
-    @app.route('/<store>/settings/parking/create', methods=['POST'])
+    @app.route('/<store>/settings/parking_lots', methods=['POST'])
     @admin_required
     def create_parking(store):
         """駐車場を新規作成"""
@@ -258,7 +256,7 @@ def register_settings_routes(app):
             }), 500
     
     
-    @app.route('/<store>/settings/parking/<int:parking_id>', methods=['PUT'])
+    @app.route('/<store>/settings/parking_lots/<int:parking_id>', methods=['PUT'])
     @admin_required
     def update_parking(store, parking_id):
         """駐車場を更新"""
@@ -293,7 +291,7 @@ def register_settings_routes(app):
             }), 500
     
     
-    @app.route('/<store>/settings/parking/<int:parking_id>', methods=['DELETE'])
+    @app.route('/<store>/settings/parking_lots/<int:parking_id>', methods=['DELETE'])
     @admin_required
     def delete_parking(store, parking_id):
         """駐車場を削除"""
@@ -344,7 +342,7 @@ def register_settings_routes(app):
             }), 500
     
     
-    @app.route('/<store>/settings/shift_types/create', methods=['POST'])
+    @app.route('/<store>/settings/shift_types', methods=['POST'])
     @admin_required
     def create_shift_type(store):
         """シフト種別を新規作成"""
@@ -495,469 +493,4 @@ def register_settings_routes(app):
             return jsonify({
                 'success': False,
                 'message': '表示順の変更に失敗しました'
-            }), 500
-
-
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 顧客項目設定のエンドポイント
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    @app.route('/<store>/api/customer_fields')
-    @admin_required
-    def get_customer_fields(store):
-        """顧客項目設定を取得"""
-        try:
-            from database.customer_db import get_customer_field_categories, get_customer_field_options_all
-            
-            categories = get_customer_field_categories()
-            options = get_customer_field_options_all()
-            
-            return jsonify({
-                'success': True,
-                'data': {
-                    'categories': categories,
-                    'options': options
-                }
-            })
-            
-        except Exception as e:
-            print(f"Error in get_customer_fields: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '顧客項目の取得に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/category', methods=['PUT'])
-    @admin_required
-    def update_customer_field_category(store):
-        """カテゴリ名を更新"""
-        try:
-            from database.customer_db import update_customer_field_label
-            
-            data = request.get_json()
-            field_key = data.get('field_key')
-            field_label = data.get('field_label')
-            
-            if not field_key or not field_label:
-                return jsonify({
-                    'success': False,
-                    'message': 'パラメータが不足しています'
-                }), 400
-            
-            success = update_customer_field_label(field_key, field_label)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': 'カテゴリ名を更新しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': 'カテゴリ名の更新に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in update_customer_field_category: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': 'カテゴリ名の更新に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/option', methods=['POST'])
-    @admin_required
-    def add_customer_field_option(store):
-        """選択肢を追加"""
-        try:
-            from database.customer_db import add_customer_field_option as db_add_option
-            
-            data = request.get_json()
-            field_key = data.get('field_key')
-            option_value = data.get('option_value')
-            display_color = data.get('display_color', '#f0f0f0')
-            
-            if not field_key or not option_value:
-                return jsonify({
-                    'success': False,
-                    'message': 'パラメータが不足しています'
-                }), 400
-            
-            option_id = db_add_option(field_key, option_value, display_color)
-            
-            if option_id:
-                return jsonify({
-                    'success': True,
-                    'message': '選択肢を追加しました',
-                    'option_id': option_id
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '選択肢の追加に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in add_customer_field_option: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '選択肢の追加に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/option/<int:option_id>', methods=['PUT'])
-    @admin_required
-    def update_customer_field_option(store, option_id):
-        """選択肢を更新"""
-        try:
-            from database.customer_db import update_customer_field_option as db_update_option
-            
-            data = request.get_json()
-            option_value = data.get('option_value')
-            display_color = data.get('display_color')
-            
-            if not option_value and not display_color:
-                return jsonify({
-                    'success': False,
-                    'message': '更新する項目を指定してください'
-                }), 400
-            
-            success = db_update_option(option_id, option_value, display_color)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '選択肢を更新しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '選択肢の更新に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in update_customer_field_option: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '選択肢の更新に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/option/<int:option_id>/visibility', methods=['PUT'])
-    @admin_required
-    def toggle_option_visibility(store, option_id):
-        """選択肢の表示/非表示を切り替え"""
-        try:
-            from database.customer_db import toggle_customer_field_option_visibility
-            
-            data = request.get_json()
-            is_hidden = data.get('is_hidden', False)
-            
-            success = toggle_customer_field_option_visibility(option_id, is_hidden)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '表示設定を更新しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '表示設定の更新に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in toggle_option_visibility: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '表示設定の更新に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/option/<int:option_id>/move', methods=['PUT'])
-    @admin_required
-    def move_customer_field_option(store, option_id):
-        """選択肢の並び順を変更"""
-        try:
-            from database.customer_db import move_customer_field_option
-            
-            data = request.get_json()
-            direction = data.get('direction')  # 'up' or 'down'
-            
-            if direction not in ['up', 'down']:
-                return jsonify({
-                    'success': False,
-                    'message': '方向の指定が不正です'
-                }), 400
-            
-            success = move_customer_field_option(option_id, direction)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '並び順を変更しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '並び順の変更に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in move_customer_field_option: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '並び順の変更に失敗しました'
-            }), 500
-
-
-    @app.route('/<store>/api/customer_fields/option/<int:option_id>', methods=['DELETE'])
-    @admin_required
-    def delete_customer_field_option(store, option_id):
-        """選択肢を削除"""
-        try:
-            from database.customer_db import delete_customer_field_option as db_delete_option
-            
-            success = db_delete_option(option_id)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '選択肢を削除しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '選択肢の削除に失敗しました（使用中の可能性があります）'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in delete_customer_field_option: {e}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False,
-                'message': '選択肢の削除に失敗しました'
-            }), 500
-
-
-    
-    
-    @app.route('/<store>/settings/cancellation_reasons/create', methods=['POST'])
-    @admin_required
-    def create_cancellation_reason_route(store):
-        """キャンセル理由を新規作成"""
-        try:
-            from database.reservation_db import create_cancellation_reason
-            
-            data = request.get_json()
-            reason_name = data.get('reason_name')
-            
-            if not reason_name:
-                return jsonify({
-                    'success': False,
-                    'message': 'キャンセル理由名を入力してください'
-                }), 400
-            
-            reason_id = create_cancellation_reason(reason_name)
-            
-            if reason_id:
-                return jsonify({
-                    'success': True,
-                    'message': 'キャンセル理由を追加しました',
-                    'reason_id': reason_id
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': 'キャンセル理由の追加に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in create_cancellation_reason: {e}")
-            return jsonify({
-                'success': False,
-                'message': 'キャンセル理由の追加に失敗しました'
-            }), 500
-    
-    
-    @app.route('/<store>/settings/cancellation_reasons/<int:reason_id>', methods=['PUT'])
-    @admin_required
-    def update_cancellation_reason_route(store, reason_id):
-        """キャンセル理由を更新"""
-        try:
-            from database.reservation_db import update_cancellation_reason
-            
-            data = request.get_json()
-            reason_name = data.get('reason_name')
-            
-            if not reason_name:
-                return jsonify({
-                    'success': False,
-                    'message': 'キャンセル理由名を入力してください'
-                }), 400
-            
-            success = update_cancellation_reason(reason_id, reason_name=reason_name)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': 'キャンセル理由を更新しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': 'キャンセル理由の更新に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in update_cancellation_reason: {e}")
-            return jsonify({
-                'success': False,
-                'message': 'キャンセル理由の更新に失敗しました'
-            }), 500
-    
-    
-    @app.route('/<store>/settings/cancellation_reasons/<int:reason_id>', methods=['DELETE'])
-    @admin_required
-    def delete_cancellation_reason_route(store, reason_id):
-        """キャンセル理由を削除"""
-        try:
-            from database.reservation_db import delete_cancellation_reason
-            
-            success = delete_cancellation_reason(reason_id)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': 'キャンセル理由を削除しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': 'キャンセル理由の削除に失敗しました（使用中の可能性があります）'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in delete_cancellation_reason: {e}")
-            return jsonify({
-                'success': False,
-                'message': 'キャンセル理由の削除に失敗しました'
-            }), 500
-    
-    
-    
-    @app.route('/<store>/settings/reservation_methods/create', methods=['POST'])
-    @admin_required
-    def create_reservation_method_route(store):
-        """予約方法を新規作成"""
-        try:
-            from database.reservation_db import create_reservation_method
-            
-            data = request.get_json()
-            method_name = data.get('method_name')
-            
-            if not method_name:
-                return jsonify({
-                    'success': False,
-                    'message': '予約方法名を入力してください'
-                }), 400
-            
-            method_id = create_reservation_method(method_name)
-            
-            if method_id:
-                return jsonify({
-                    'success': True,
-                    'message': '予約方法を追加しました',
-                    'method_id': method_id
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '予約方法の追加に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in create_reservation_method: {e}")
-            return jsonify({
-                'success': False,
-                'message': '予約方法の追加に失敗しました'
-            }), 500
-    
-    
-    @app.route('/<store>/settings/reservation_methods/<int:method_id>', methods=['PUT'])
-    @admin_required
-    def update_reservation_method_route(store, method_id):
-        """予約方法を更新"""
-        try:
-            from database.reservation_db import update_reservation_method
-            
-            data = request.get_json()
-            method_name = data.get('method_name')
-            
-            if not method_name:
-                return jsonify({
-                    'success': False,
-                    'message': '予約方法名を入力してください'
-                }), 400
-            
-            success = update_reservation_method(method_id, method_name=method_name)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '予約方法を更新しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '予約方法の更新に失敗しました'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in update_reservation_method: {e}")
-            return jsonify({
-                'success': False,
-                'message': '予約方法の更新に失敗しました'
-            }), 500
-    
-    
-    @app.route('/<store>/settings/reservation_methods/<int:method_id>', methods=['DELETE'])
-    @admin_required
-    def delete_reservation_method_route(store, method_id):
-        """予約方法を削除"""
-        try:
-            from database.reservation_db import delete_reservation_method
-            
-            success = delete_reservation_method(method_id)
-            
-            if success:
-                return jsonify({
-                    'success': True,
-                    'message': '予約方法を削除しました'
-                })
-            else:
-                return jsonify({
-                    'success': False,
-                    'message': '予約方法の削除に失敗しました（使用中の可能性があります）'
-                }), 500
-                
-        except Exception as e:
-            print(f"Error in delete_reservation_method: {e}")
-            return jsonify({
-                'success': False,
-                'message': '予約方法の削除に失敗しました'
             }), 500

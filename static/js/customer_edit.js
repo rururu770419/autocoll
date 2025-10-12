@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // セレクトボックスの変更イベント（色を反映）
     setupSelectChangeEvents();
+    
+    // 🆕 コメント欄の自動リサイズ機能
+    setupTextareaAutoResize();
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -127,6 +130,7 @@ async function loadCustomerData() {
             setFieldValue('web_member', customer.web_member);
             setFieldValue('current_points', customer.current_points);
             setFieldValue('recruitment_source', customer.recruitment_source);
+            setFieldValue('customer_number', customer.customer_number);
             
             // マイページ情報
             setFieldValue('mypage_id', customer.mypage_id);
@@ -145,6 +149,14 @@ async function loadCustomerData() {
             setTimeout(() => {
                 applySelectColors();
             }, 100);
+            
+            // 🆕 コメント欄のリサイズをトリガー
+            setTimeout(() => {
+                const commentArea = document.getElementById('comment');
+                if (commentArea && commentArea.value) {
+                    commentArea.dispatchEvent(new Event('input'));
+                }
+            }, 200);
         }
     } catch (error) {
         console.error('顧客データの読み込みエラー:', error);
@@ -289,6 +301,39 @@ function calculateAge() {
     }
     
     ageInput.value = age >= 0 ? age : '';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🆕 コメント欄の自動リサイズ機能
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function setupTextareaAutoResize() {
+    const textarea = document.getElementById('comment');
+    if (!textarea) return;
+    
+    // 初期スタイルを設定
+    textarea.style.overflow = 'hidden';
+    textarea.style.resize = 'none';
+    textarea.style.minHeight = '36px';
+    
+    // 自動リサイズ関数
+    function autoResize() {
+        // 一旦リセット
+        this.style.height = '36px';
+        
+        // 内容に合わせて高さを調整
+        const newHeight = Math.max(36, this.scrollHeight);
+        this.style.height = newHeight + 'px';
+    }
+    
+    // イベントリスナーを追加
+    textarea.addEventListener('input', autoResize);
+    textarea.addEventListener('change', autoResize);
+    
+    // 初期サイズを設定
+    setTimeout(() => {
+        textarea.style.height = '36px';
+    }, 100);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

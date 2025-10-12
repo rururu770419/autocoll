@@ -2,8 +2,6 @@
 """
 キャストマイページ用のデータベース操作関数（辞書形式対応版）
 """
-import psycopg
-from psycopg.rows import dict_row
 from datetime import datetime
 import uuid
 
@@ -20,7 +18,7 @@ def get_cast_notices(db, store_id=1, limit=20):
     Returns:
         list: お知らせ一覧（辞書形式）
     """
-    cursor = db.cursor(row_factory=dict_row)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             notice_id,
@@ -48,7 +46,7 @@ def get_cast_notice_by_id(db, notice_id):
     Returns:
         dict: お知らせ詳細
     """
-    cursor = db.cursor(row_factory=dict_row)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             notice_id,
@@ -78,7 +76,7 @@ def create_cast_notice(db, store_id, title, content, is_pinned=False):
         int: 作成されたnotice_id
     """
     try:
-        cursor = db.cursor(row_factory=dict_row)
+        cursor = db.cursor()
         cursor.execute("""
             INSERT INTO cast_notices (store_id, title, content, is_pinned)
             VALUES (%s, %s, %s, %s)
@@ -185,7 +183,7 @@ def get_cast_blog_drafts(db, cast_id, limit=50):
     Returns:
         list: 下書き一覧（辞書形式）
     """
-    cursor = db.cursor(row_factory=dict_row)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             draft_id,
@@ -214,7 +212,7 @@ def get_cast_blog_draft_by_id(db, draft_id, cast_id):
     Returns:
         dict: 下書き詳細
     """
-    cursor = db.cursor(row_factory=dict_row)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             draft_id,
@@ -246,7 +244,7 @@ def create_cast_blog_draft(db, cast_id, title="", content="", image_paths=None):
     """
     try:
         import json
-        cursor = db.cursor(row_factory=dict_row)
+        cursor = db.cursor()
         
         image_paths_json = json.dumps(image_paths or [])
         
@@ -394,7 +392,7 @@ def get_cast_session(db, session_id):
     Returns:
         dict: セッション情報
     """
-    cursor = db.cursor(row_factory=dict_row)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             session_id,

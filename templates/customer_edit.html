@@ -53,10 +53,10 @@
                 </div>
                 
                 <div class="customer-form-group">
-                    <label class="customer-label customer-label-points">現在の所持PT</label>
+                    <label class="customer-label customer-label-points">所持PT</label>
                     <div class="customer-input-group">
                         <input type="number" name="current_points" id="current_points" class="customer-input" 
-                               value="0" min="0" step="1" inputmode="numeric">
+                               value="0" min="0" step="1" inputmode="numeric" style="width: 100px;">
                         <span class="customer-input-suffix">pt</span>
                     </div>
                 </div>
@@ -86,11 +86,11 @@
                 </div>
                 
                 <div class="customer-form-group">
-                    <label class="customer-label customer-label-birthday">生年月日・年齢</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <label class="customer-label customer-label-birthday">生年月日</label>
+                    <div style="display: flex; gap: 6px; flex: 1;">
                         <input type="date" name="birthday" id="birthday" class="customer-input" style="flex: 1;">
                         <input type="text" id="age" class="customer-input customer-input-readonly" 
-                               readonly placeholder="自動" style="width: 60px;">
+                               readonly placeholder="年齢" style="width: 60px;">
                     </div>
                 </div>
             </div>
@@ -99,9 +99,9 @@
             <div class="customer-form-grid-4">
                 <div class="customer-form-group customer-form-group-span3">
                     <label class="customer-label customer-label-address">住所</label>
-                    <div style="display: flex; gap: 0;">
-                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 150px; border-radius: 4px 0 0 4px;">
-                            <option value="">選択してください</option>
+                    <div>
+                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 80px; border-radius: 4px;">
+                            <option value="">都道府県</option>
                             <option value="北海道">北海道</option>
                             <option value="青森県">青森県</option>
                             <option value="岩手県">岩手県</option>
@@ -151,12 +151,12 @@
                             <option value="沖縄県">沖縄県</option>
                         </select>
                         
-                        <select name="city" id="city" class="customer-select" style="width: 200px; border-radius: 0; border-left: none;">
-                            <option value="">都道府県を選択してください</option>
+                        <select name="city" id="city" class="customer-select" style="width: 140px; border-radius: 4px;">
+                            <option value="">市区町村</option>
                         </select>
                         
-                        <textarea name="address_detail" id="address_detail" class="customer-textarea" 
-                                  rows="1" placeholder="番地・建物名等" style="flex: 1; border-radius: 0 4px 4px 0; border-left: none; resize: none;"></textarea>
+                        <input type="text" name="address_detail" id="address_detail" class="customer-input" 
+                               placeholder="番地・建物名等" style="flex: 1; border-radius: 4px; width: 300px;">
                     </div>
                 </div>
                 
@@ -171,7 +171,7 @@
             <div class="customer-form-grid-4">
                 <div class="customer-form-group customer-form-group-span4">
                     <label class="customer-label customer-label-comment">コメント</label>
-                    <textarea name="comment" id="comment" class="customer-textarea" 
+                    <textarea name="comment" id="comment" class="customer-textarea customer-textarea-auto" 
                               rows="1" placeholder="備考・メモなど"></textarea>
                 </div>
             </div>
@@ -186,9 +186,9 @@
                 </div>
                 
                 <div class="customer-form-group">
-                    <label class="customer-label customer-label-password">マイページパスワード</label>
+                    <label class="customer-label customer-label-password">パスワード</label>
                     <input type="text" name="mypage_password" id="mypage_password" class="customer-input" 
-                           placeholder="変更する場合のみ入力" autocomplete="new-password" 
+                           placeholder="変更する場合のみ" autocomplete="new-password" 
                            pattern="[\x20-\x7E]+" title="半角文字のみ">
                 </div>
                 

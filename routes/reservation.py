@@ -26,14 +26,6 @@ from database.reservation_db import (
     reorder_cancellation_reasons
 )
 
-# 🔍 デバッグ：関数のシグネチャを確認
-import inspect
-print("=" * 60)
-print("🔍 DEBUG: 関数シグネチャ確認")
-print("get_all_reservation_methods:", inspect.signature(get_all_reservation_methods))
-print("get_all_cancellation_reasons:", inspect.signature(get_all_cancellation_reasons))
-print("=" * 60)
-
 reservation_bp = Blueprint('reservation', __name__)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -86,23 +78,12 @@ def save_reservation(store):
 @reservation_bp.route('/<store>/settings/reservation_methods', methods=['GET'])
 def get_reservation_methods(store):
     """予約方法一覧を取得"""
-    print("\n" + "=" * 60)
-    print("🔍 DEBUG: get_reservation_methods 呼び出し")
-    print(f"🔍 store = {store}")
     try:
         store_id = get_store_id(store)
-        print(f"🔍 store_id = {store_id}")
-        print(f"🔍 get_all_reservation_methods を呼び出します...")
-        print(f"🔍 引数: store_id={store_id}")
         methods = get_all_reservation_methods(store_id)
-        print(f"✅ 成功！取得した件数: {len(methods)}")
-        print("=" * 60 + "\n")
         return jsonify(methods), 200
     except Exception as e:
-        print(f"❌ Error in get_reservation_methods: {e}")
-        import traceback
-        traceback.print_exc()
-        print("=" * 60 + "\n")
+        print(f"Error in get_reservation_methods: {e}")
         return jsonify({'error': str(e)}), 500
 
 @reservation_bp.route('/<store>/settings/reservation_methods', methods=['POST'])
@@ -183,23 +164,12 @@ def reorder_methods(store):
 @reservation_bp.route('/<store>/settings/cancellation_reasons', methods=['GET'])
 def get_cancellation_reasons(store):
     """キャンセル理由一覧を取得"""
-    print("\n" + "=" * 60)
-    print("🔍 DEBUG: get_cancellation_reasons 呼び出し")
-    print(f"🔍 store = {store}")
     try:
         store_id = get_store_id(store)
-        print(f"🔍 store_id = {store_id}")
-        print(f"🔍 get_all_cancellation_reasons を呼び出します...")
-        print(f"🔍 引数: store_id={store_id}")
         reasons = get_all_cancellation_reasons(store_id)
-        print(f"✅ 成功！取得した件数: {len(reasons)}")
-        print("=" * 60 + "\n")
         return jsonify(reasons), 200
     except Exception as e:
-        print(f"❌ Error in get_cancellation_reasons: {e}")
-        import traceback
-        traceback.print_exc()
-        print("=" * 60 + "\n")
+        print(f"Error in get_cancellation_reasons: {e}")
         return jsonify({'error': str(e)}), 500
 
 @reservation_bp.route('/<store>/settings/cancellation_reasons', methods=['POST'])

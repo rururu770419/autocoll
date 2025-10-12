@@ -18,33 +18,10 @@ def get_gantt_data(db: psycopg.Connection, store_id: int, target_date: str) -> D
     
     Returns:
         dict: タイムスケジュール表示用データ
-            {
-                'date': '2025-10-10',
-                'casts': [
-                    {
-                        'cast_id': 1,
-                        'cast_name': '田中',
-                        'start_time': '10:00',
-                        'end_time': '18:00',
-                        'reservations': [
-                            {
-                                'reservation_id': 1,
-                                'start_time': '14:00',
-                                'end_time': '16:00',
-                                'customer_name': '山田太郎',
-                                'hotel_name': 'ホテルABC',
-                                'room_number': '101',
-                                ...
-                            }
-                        ]
-                    }
-                ]
-            }
     """
     cursor = db.cursor()
     
     try:
-        # 出勤スケジュールを取得（予約データは後で追加）
         cursor.execute(
             """
             SELECT 
@@ -68,15 +45,18 @@ def get_gantt_data(db: psycopg.Connection, store_id: int, target_date: str) -> D
         
         rows = cursor.fetchall()
         
-        # データを整形
         casts = []
         for row in rows:
+            cast_id = row[0]
+            
+            reservations = get_cast_reservations(db, cast_id, target_date)
+            
             cast_data = {
-                'cast_id': row[0],
+                'cast_id': cast_id,
                 'cast_name': row[1],
                 'start_time': str(row[2]) if row[2] else None,
                 'end_time': str(row[3]) if row[3] else None,
-                'reservations': []  # 予約は後で実装
+                'reservations': reservations
             }
             casts.append(cast_data)
         
@@ -84,6 +64,59 @@ def get_gantt_data(db: psycopg.Connection, store_id: int, target_date: str) -> D
             'date': target_date,
             'casts': casts
         }
+    
+    finally:
+        cursor.close()
+
+
+def get_cast_reservations(db: psycopg.Connection, cast_id: int, target_date: str) -> List[Dict[str, Any]]:
+    """
+    キャストの予約一覧を取得
+    
+    Args:
+        db: データベース接続
+        cast_id: キャストID
+        target_date: 対象日（YYYY-MM-DD形式）
+    
+    Returns:
+        list: 予約データのリスト
+    """
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute(
+            """
+            SELECT 
+                reservation_id,
+                customer_name,
+                reservation_datetime,
+                end_datetime,
+                hotel_name,
+                room_number
+            FROM reservations
+            WHERE cast_id = %s
+                AND business_date = %s
+                AND status NOT IN ('cancelled', 'deleted')
+            ORDER BY reservation_datetime
+            """,
+            (cast_id, target_date)
+        )
+        
+        rows = cursor.fetchall()
+        
+        reservations = []
+        for row in rows:
+            reservation_data = {
+                'reservation_id': row[0],
+                'customer_name': row[1],
+                'start_time': row[2].strftime('%H:%M') if row[2] else None,
+                'end_time': row[3].strftime('%H:%M') if row[3] else None,
+                'hotel_name': row[4],
+                'room_number': row[5]
+            }
+            reservations.append(reservation_data)
+        
+        return reservations
     
     finally:
         cursor.close()
@@ -105,7 +138,6 @@ def get_time_slots(start_hour: int = 6, end_hour: int = 29, interval_minutes: in
     
     for hour in range(start_hour, end_hour + 1):
         for minute in range(0, 60, interval_minutes):
-            # 24時以降の表記を処理
             display_hour = hour if hour < 24 else hour - 24
             time_value = f"{hour:02d}:{minute:02d}"
             time_label = f"{display_hour}:{minute:02d}"
@@ -115,7 +147,6 @@ def get_time_slots(start_hour: int = 6, end_hour: int = 29, interval_minutes: in
                 'label': time_label
             })
             
-            # 終了時刻に達したら終了
             if hour == end_hour and minute >= 30:
                 break
     
@@ -131,16 +162,11 @@ def get_store_schedule_settings(db: psycopg.Connection, store_id: int) -> Dict[s
         store_id: 店舗ID
     
     Returns:
-        dict: {
-            'start_time': '06:00',
-            'end_time': '05:30',
-            'time_unit': 30
-        }
+        dict: スケジュール設定
     """
     cursor = db.cursor()
     
     try:
-        # まずカラムの存在を確認
         cursor.execute(
             """
             SELECT column_name 
@@ -152,7 +178,6 @@ def get_store_schedule_settings(db: psycopg.Connection, store_id: int) -> Dict[s
         
         existing_columns = [row[0] for row in cursor.fetchall()]
         
-        # カラムが存在しない場合はデフォルト値を返す
         if not existing_columns:
             return {
                 'start_time': '06:00',
@@ -160,7 +185,6 @@ def get_store_schedule_settings(db: psycopg.Connection, store_id: int) -> Dict[s
                 'time_unit': 30
             }
         
-        # カラムが存在する場合は取得
         cursor.execute(
             """
             SELECT 
@@ -182,7 +206,6 @@ def get_store_schedule_settings(db: psycopg.Connection, store_id: int) -> Dict[s
                 'time_unit': row[2] if row[2] else 30
             }
         else:
-            # デフォルト値
             return {
                 'start_time': '06:00',
                 'end_time': '05:30',
@@ -190,13 +213,49 @@ def get_store_schedule_settings(db: psycopg.Connection, store_id: int) -> Dict[s
             }
     
     except Exception as e:
-        # エラー時もデフォルト値を返す
-        print(f"[WARNING] スケジュール設定取得エラー（デフォルト値を使用）: {str(e)}")
         return {
             'start_time': '06:00',
             'end_time': '05:30',
             'time_unit': 30
         }
+    
+    finally:
+        cursor.close()
+
+
+def update_reservation_room_number(db: psycopg.Connection, reservation_id: int, room_number: Optional[str]) -> bool:
+    """
+    予約の部屋番号を更新
+    
+    Args:
+        db: データベース接続
+        reservation_id: 予約ID
+        room_number: 部屋番号（Noneの場合は空にする）
+    
+    Returns:
+        bool: 更新成功したらTrue
+    """
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute(
+            """
+            UPDATE reservations
+            SET room_number = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE reservation_id = %s
+            """,
+            (room_number, reservation_id)
+        )
+        
+        success = cursor.rowcount > 0
+        db.commit()
+        
+        return success
+    
+    except Exception as e:
+        db.rollback()
+        raise e
     
     finally:
         cursor.close()

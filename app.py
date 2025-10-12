@@ -51,41 +51,37 @@ app.register_blueprint(main_routes)
 
 # 設定管理ルートの登録
 from routes.settings import register_settings_routes
+from routes.settings_management import register_settings_management_routes
 register_settings_routes(app)
+register_settings_management_routes(app)
 
-
+# 予約設定ルートの登録
+from routes.reservation_settings import register_reservation_settings_routes
+register_reservation_settings_routes(app)
 
 # NG項目管理ルートの登録
 from routes.ng_routes import ng_bp
 app.register_blueprint(ng_bp)
-print("✅ NG項目管理APIを登録しました")
-
 
 # キャストマイページルートの登録
 from routes.cast_mypage import cast_mypage_bp
 app.register_blueprint(cast_mypage_bp)
-print("✅ キャストマイページを登録しました")
 
 # お知らせ管理ルートの登録
 from routes.notice_admin import notice_admin_bp
 app.register_blueprint(notice_admin_bp)
-print("✅ お知らせ管理を登録しました")
 
-# ★★★ 出勤管理ルートの登録（新規追加）★★★
+# 出勤管理ルートの登録
 from routes.schedule import register_schedule_routes
 register_schedule_routes(app)
-print("✅ 出勤管理を登録しました")
 
-# ★★★ ガントチャートルートの登録（新規追加）★★★
+# ガントチャートルートの登録
 from routes.gantt import gantt_bp
 app.register_blueprint(gantt_bp)
-print("✅ ガントチャートを登録しました")
 
-# ★★★ ここに追加 ★★★
 # 予約管理Blueprint
 from routes.reservation import reservation_bp
 app.register_blueprint(reservation_bp)
-print("✅ 予約管理を登録しました")
 
 # ===== Twilio音声通話エンドポイント =====
 @app.route('/twilio/voice', methods=['GET', 'POST'])

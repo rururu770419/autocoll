@@ -3,7 +3,6 @@
 {% block title %}ガントチャート - {{ date_display }}{% endblock %}
 
 {% block content %}
-<!-- ★ここでCSSを読み込む（ブロックの外）★ -->
 <link rel="stylesheet" href="/static/css/gantt_chart.css">
 
 <div class="gantt-container">
@@ -71,15 +70,34 @@
             <div class="gantt-reservation-bar" 
                  data-start="{{ reservation.start_time }}"
                  data-end="{{ reservation.end_time }}"
-                 data-reservation-id="{{ reservation.reservation_id }}"
-                 onclick="showReservationDetail({{ reservation.reservation_id }})">
+                 data-reservation-id="{{ reservation.reservation_id }}">
               <div class="gantt-reservation-content">
+                <!-- 編集ボタン + お客様名 -->
+                <div class="gantt-reservation-header">
+                  <a href="{{ url_for('reservation.edit_reservation', store=store, reservation_id=reservation.reservation_id) }}" 
+                     class="gantt-edit-btn"
+                     onclick="event.stopPropagation()">
+                    編集
+                  </a>
+                  <span class="gantt-reservation-customer">{{ reservation.customer_name }}様</span>
+                </div>
+                
+                <!-- 予約時間 -->
                 <div class="gantt-reservation-time">{{ reservation.start_time }}～{{ reservation.end_time }}</div>
-                <div class="gantt-reservation-customer">{{ reservation.customer_name }}様</div>
+                
+                <!-- ホテル + 部屋番号入力 -->
                 {% if reservation.hotel_name %}
-                <div class="gantt-reservation-hotel">
-                  {{ reservation.hotel_name }}
-                  {% if reservation.room_number %}[{{ reservation.room_number }}号室]{% endif %}
+                <div class="gantt-reservation-hotel-row">
+                  <span class="gantt-hotel-name">{{ reservation.hotel_name }}</span>
+                  <input type="text" 
+                         class="gantt-room-number-input" 
+                         value="{{ reservation.room_number or '' }}"
+                         maxlength="3"
+                         placeholder="___"
+                         data-reservation-id="{{ reservation.reservation_id }}"
+                         onclick="event.stopPropagation()"
+                         onchange="updateRoomNumber(this)"
+                         title="部屋番号を入力">
                 </div>
                 {% endif %}
               </div>
@@ -98,63 +116,8 @@
   </div>
 </div>
 
-<!-- 予約詳細モーダル（将来実装） -->
-<div id="reservationModal" class="gantt-modal" style="display: none;">
-  <div class="gantt-modal-overlay" onclick="closeReservationModal()"></div>
-  <div class="gantt-modal-content">
-    <h2>予約詳細</h2>
-    <div id="reservationDetail"></div>
-    <button onclick="closeReservationModal()">閉じる</button>
-  </div>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/gantt_chart.js') }}"></script>
-<script>
-// 時間から位置（%）を計算
-function calculatePosition(time, timeSlots) {
-  if (!time) return 0;
-  
-  // time は "10:00" 形式
-  const targetMinutes = timeToMinutes(time);
-  const startMinutes = timeToMinutes('{{ time_slots[0].value }}');
-  const endMinutes = timeToMinutes('{{ time_slots[-1].value }}');
-  const totalMinutes = endMinutes - startMinutes;
-  
-  return ((targetMinutes - startMinutes) / totalMinutes) * 100;
-}
-
-// 時間から幅（%）を計算
-function calculateDuration(startTime, endTime, timeSlots) {
-  if (!startTime || !endTime) return 0;
-  
-  const startMinutes = timeToMinutes(startTime);
-  const endMinutes = timeToMinutes(endTime);
-  const duration = endMinutes - startMinutes;
-  
-  const totalStartMinutes = timeToMinutes('{{ time_slots[0].value }}');
-  const totalEndMinutes = timeToMinutes('{{ time_slots[-1].value }}');
-  const totalMinutes = totalEndMinutes - totalStartMinutes;
-  
-  return (duration / totalMinutes) * 100;
-}
-
-// 時刻を分に変換
-function timeToMinutes(time) {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-}
-
-// 予約詳細表示
-function showReservationDetail(reservationId) {
-  alert(`予約ID: ${reservationId} の詳細表示（未実装）`);
-}
-
-// モーダルを閉じる
-function closeReservationModal() {
-  document.getElementById('reservationModal').style.display = 'none';
-}
-</script>
 {% endblock %}

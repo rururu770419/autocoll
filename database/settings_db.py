@@ -225,3 +225,122 @@ def get_line_config():
         'enabled': get_setting('line_notify_enabled') == 'true',
         'message_template': get_setting('line_message_template')
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# カード手数料管理関数
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def get_card_fee_rate(store_id=None):
+    """
+    カード手数料率を取得
+    
+    Args:
+        store_id (int, optional): 店舗ID（将来の拡張用、現在は未使用）
+    
+    Returns:
+        float: カード手数料率（デフォルト: 5.0）
+    """
+    conn = get_db_connection()
+    cur = conn.cursor(row_factory=dict_row)
+    
+    try:
+        cur.execute("""
+            SELECT setting_value
+            FROM store_settings
+            WHERE setting_key = 'card_fee_rate'
+            LIMIT 1
+        """)
+        
+        result = cur.fetchone()
+        
+        if result and result['setting_value']:
+            return float(result['setting_value'])
+        else:
+            return 5.0
+            
+    except Exception as e:
+        print(f"Error in get_card_fee_rate: {e}")
+        return 5.0
+    finally:
+        cur.close()
+        conn.close()
+
+
+def save_card_fee_rate(store_id, rate, updated_by=None):
+    """
+    カード手数料率を保存
+    
+    Args:
+        store_id (int): 店舗ID（将来の拡張用、現在は未使用）
+        rate (float): カード手数料率（0〜100）
+        updated_by (str, optional): 更新者のログインID
+        
+    Returns:
+        bool: 成功したらTrue
+    """
+    conn = get_db_connection()
+    cur = conn.cursor(row_factory=dict_row)
+    
+    try:
+        # 既存レコードの存在確認
+        cur.execute("""
+            SELECT setting_id
+            FROM store_settings
+            WHERE setting_key = 'card_fee_rate'
+            LIMIT 1
+        """)
+        existing = cur.fetchone()
+        
+        if existing:
+            # 更新
+            if updated_by:
+                cur.execute("""
+                    UPDATE store_settings
+                    SET setting_value = %s,
+                        updated_at = CURRENT_TIMESTAMP,
+                        updated_by = %s
+                    WHERE setting_key = 'card_fee_rate'
+                """, (str(rate), updated_by))
+            else:
+                cur.execute("""
+                    UPDATE store_settings
+                    SET setting_value = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE setting_key = 'card_fee_rate'
+                """, (str(rate),))
+        else:
+            # 新規作成
+            cur.execute("""
+                INSERT INTO store_settings (
+                    setting_key,
+                    setting_value,
+                    setting_name,
+                    category,
+                    setting_type,
+                    display_order,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    'card_fee_rate',
+                    %s,
+                    'カード手数料率',
+                    'payment',
+                    'number',
+                    100,
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP
+                )
+            """, (str(rate),))
+        
+        conn.commit()
+        return True
+        
+    except Exception as e:
+        print(f"Error in save_card_fee_rate: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cur.close()
+        conn.close()

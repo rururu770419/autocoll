@@ -4,320 +4,365 @@
    全体コンテナ
 ============================================ */
 .gantt-container {
-    max-width: 100%;
-    margin: 20px auto;
-    padding: 0 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  margin: 20px auto;
+  padding: 0 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   ヘッダー部分（出勤表と同じスタイル）
+============================================ */
+.gantt-header {
+  padding: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.gantt-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.gantt-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.gantt-nav-btn {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.gantt-nav-btn:hover {
+  background-color: #0056b3;
+}
+
+.gantt-date-display {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  text-align: center;
+}
+
+/* ============================================
+   ガントチャート本体
+============================================ */
+.gantt-body {
+  padding: 20px;
+  overflow: hidden;
+}
+
+.gantt-wrapper {
+  display: flex;
+  position: relative;
+}
+
+/* ============================================
+   左側：キャスト名列（固定）
+============================================ */
+.gantt-cast-column {
+  flex-shrink: 0;
+  width: 150px;
+  border-right: 2px solid #dee2e6;
+  position: sticky;
+  left: 0;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.gantt-cast-header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: bold;
+  color: #495057;
+  font-size: 14px;
+}
+
+.gantt-cast-cell {
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #dee2e6;
+  padding: 8px;
+  background-color: #fff;
+}
+
+.gantt-cast-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.gantt-cast-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.gantt-no-data {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ============================================
+   右側：タイムライン（スクロール可能）
+============================================ */
+.gantt-timeline-wrapper {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.gantt-timeline-header {
+  display: flex;
+  height: 50px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.gantt-time-cell {
+  flex-shrink: 0;
+  width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #e9ecef;
+  font-size: 13px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.gantt-timeline-body {
+  position: relative;
+}
+
+.gantt-timeline-row {
+  position: relative;
+  height: 80px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+}
+
+.gantt-time-grid {
+  flex-shrink: 0;
+  width: 90px;
+  height: 100%;
+  border-right: 1px solid #f0f0f0;
+}
+
+/* ============================================
+   出勤時間背景
+============================================ */
+.gantt-work-bg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: #e3f2fd;
+  opacity: 0.5;
+  z-index: 1;
+  border-left: 2px solid #2196f3;
+  border-right: 2px solid #2196f3;
+}
+
+/* ============================================
+   予約バー
+============================================ */
+.gantt-reservation-bar {
+  position: absolute;
+  top: 10px;
+  height: 60px;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c94b7a 100%);
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.gantt-reservation-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 3;
+}
+
+.gantt-reservation-content {
+  padding: 4px 8px;
+  color: white;
+  font-size: 11px;
+  line-height: 1.3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 編集ボタン + お客様名 */
+.gantt-reservation-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.gantt-edit-btn {
+  padding: 2px 6px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #c94b7a;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.gantt-edit-btn:hover {
+  background-color: #fff;
+  color: #a83860;
+  transform: scale(1.05);
+}
+
+.gantt-reservation-customer {
+  font-size: 12px;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-reservation-time {
+  font-weight: bold;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+/* ホテル + 部屋番号 */
+.gantt-reservation-hotel-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.gantt-hotel-name {
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.gantt-room-number-input {
+  width: 32px;
+  padding: 1px 3px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  color: #333;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.gantt-room-number-input:hover {
+  background-color: #fff;
+  border-color: #fff;
+}
+
+.gantt-room-number-input:focus {
+  outline: none;
+  background-color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   レスポンシブ対応
+============================================ */
+@media (max-width: 1200px) {
+  .gantt-container {
+    padding: 0 10px;
   }
-  
-  /* ============================================
-     ヘッダー部分（出勤表と同じスタイル）
-  ============================================ */
-  .gantt-header {
-    padding: 20px;
-    border-bottom: 2px solid #e0e0e0;
-  }
-  
+}
+
+@media (max-width: 768px) {
   .gantt-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-    margin: 0 0 15px 0;
+    font-size: 20px;
   }
   
   .gantt-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .gantt-nav-btn {
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-  }
-  
-  .gantt-nav-btn:hover {
-    background-color: #0056b3;
+    flex-direction: column;
+    gap: 10px;
   }
   
   .gantt-date-display {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    flex: 1;
-    text-align: center;
+    font-size: 16px;
   }
   
-  /* ============================================
-     ガントチャート本体
-  ============================================ */
-  .gantt-body {
-    padding: 20px;
-    overflow: hidden;
-  }
-  
-  .gantt-wrapper {
-    display: flex;
-    position: relative;
-  }
-  
-  /* ============================================
-     左側：キャスト名列（固定）
-  ============================================ */
   .gantt-cast-column {
-    flex-shrink: 0;
-    width: 150px;
-    border-right: 2px solid #dee2e6;
-    position: sticky;
-    left: 0;
-    background-color: #fff;
-    z-index: 10;
-  }
-  
-  .gantt-cast-header {
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    font-weight: bold;
-    color: #495057;
-    font-size: 14px;
-  }
-  
-  .gantt-cast-cell {
-    height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-bottom: 1px solid #dee2e6;
-    padding: 8px;
-    background-color: #fff;
+    width: 120px;
   }
   
   .gantt-cast-name {
-    font-size: 15px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 4px;
+    font-size: 13px;
   }
   
   .gantt-cast-time {
-    font-size: 12px;
-    color: #666;
+    font-size: 11px;
+  }
+}
+
+/* ============================================
+   印刷用スタイル
+============================================ */
+@media print {
+  .gantt-header {
+    page-break-after: avoid;
   }
   
-  .gantt-no-data {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    font-size: 14px;
-  }
-  
-  /* ============================================
-     右側：タイムライン（スクロール可能）
-  ============================================ */
-  .gantt-timeline-wrapper {
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  
-  .gantt-timeline-header {
-    display: flex;
-    height: 50px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-  }
-  
-  .gantt-time-cell {
-    flex-shrink: 0;
-    width: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid #e9ecef;
-    font-size: 13px;
-    color: #495057;
-    font-weight: 600;
-  }
-  
-  .gantt-timeline-body {
-    position: relative;
+  .gantt-nav-btn {
+    display: none;
   }
   
   .gantt-timeline-row {
-    position: relative;
-    height: 80px;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
+    page-break-inside: avoid;
   }
   
-  .gantt-time-grid {
-    flex-shrink: 0;
-    width: 90px;
-    height: 100%;
-    border-right: 1px solid #f0f0f0;
+  .gantt-edit-btn {
+    display: none;
   }
   
-  /* ============================================
-     出勤時間背景
-  ============================================ */
-  .gantt-work-bg {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    background-color: #e3f2fd;
-    opacity: 0.5;
-    z-index: 1;
-    border-left: 2px solid #2196f3;
-    border-right: 2px solid #2196f3;
-  }
-  
-  /* ============================================
-     予約バー
-  ============================================ */
-  .gantt-reservation-bar {
-    position: absolute;
-    top: 10px;
-    height: 60px;
-    background: linear-gradient(135deg, #ff6b9d 0%, #c94b7a 100%);
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    z-index: 2;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    overflow: hidden;
-  }
-  
-  .gantt-reservation-bar:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    z-index: 3;
-  }
-  
-  .gantt-reservation-content {
-    padding: 6px 10px;
+  .gantt-room-number-input {
+    border: none;
+    background: transparent;
     color: white;
-    font-size: 12px;
-    line-height: 1.4;
   }
-  
-  .gantt-reservation-time {
-    font-weight: bold;
-    margin-bottom: 2px;
-  }
-  
-  .gantt-reservation-customer {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-  
-  .gantt-reservation-hotel {
-    font-size: 11px;
-    opacity: 0.9;
-  }
-  
-  /* ============================================
-     予約詳細モーダル
-  ============================================ */
-  .gantt-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .gantt-modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1001;
-  }
-  
-  .gantt-modal-content {
-    position: relative;
-    background-color: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    z-index: 1002;
-    max-width: 600px;
-    width: 90%;
-  }
-  
-  /* ============================================
-     レスポンシブ対応
-  ============================================ */
-  @media (max-width: 1200px) {
-    .gantt-container {
-      padding: 0 10px;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .gantt-title {
-      font-size: 20px;
-    }
-    
-    .gantt-controls {
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .gantt-date-display {
-      font-size: 16px;
-    }
-    
-    .gantt-cast-column {
-      width: 120px;
-    }
-    
-    .gantt-cast-name {
-      font-size: 13px;
-    }
-    
-    .gantt-cast-time {
-      font-size: 11px;
-    }
-  }
-  
-  /* ============================================
-     印刷用スタイル
-  ============================================ */
-  @media print {
-    .gantt-header {
-      page-break-after: avoid;
-    }
-    
-    .gantt-nav-btn {
-      display: none;
-    }
-    
-    .gantt-timeline-row {
-      page-break-inside: avoid;
-    }
-  }
+}

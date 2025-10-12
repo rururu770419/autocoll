@@ -7,11 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ガントチャート初期化
 function initializeGantt() {
-    // 時間スロットを取得
     const timeSlots = getTimeSlots();
     
     if (timeSlots.length === 0) {
-        console.error('時間スロットが取得できませんでした');
         return;
     }
     
@@ -51,7 +49,6 @@ function getTimeSlots() {
     
     timeCells.forEach(function(cell) {
         const timeText = cell.textContent.trim();
-        // "10:00" 形式を "10:00" に変換
         const time = convertTimeFormat(timeText);
         if (time) {
             slots.push(time);
@@ -63,8 +60,6 @@ function getTimeSlots() {
 
 // 時刻表示を "HH:MM" 形式に変換
 function convertTimeFormat(timeText) {
-    // "10:00" → "10:00"
-    // "25:30" → "25:30"（翌日表記対応）
     const match = timeText.match(/(\d{1,2}):(\d{2})/);
     if (match) {
         const hours = parseInt(match[1]);
@@ -116,16 +111,47 @@ function timeToMinutes(time) {
     return hours * 60 + minutes;
 }
 
-// 予約詳細表示
-function showReservationDetail(reservationId) {
-    // TODO: 予約詳細モーダルを表示
-    alert('予約ID: ' + reservationId + ' の詳細表示（未実装）');
+// 部屋番号を更新（自動保存）
+function updateRoomNumber(inputElement) {
+    const reservationId = inputElement.getAttribute('data-reservation-id');
+    const roomNumber = inputElement.value.trim();
+    
+    if (!reservationId) {
+        return;
+    }
+    
+    const store = getStoreFromPath();
+    
+    fetch(`/${store}/gantt/api/update_room_number`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            reservation_id: parseInt(reservationId),
+            room_number: roomNumber
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            inputElement.style.borderColor = 'rgba(40, 167, 69, 0.8)';
+            setTimeout(() => {
+                inputElement.style.borderColor = '';
+            }, 1000);
+        } else {
+            alert('部屋番号の更新に失敗しました: ' + (data.error || '不明なエラー'));
+            inputElement.style.borderColor = 'rgba(220, 53, 69, 0.8)';
+        }
+    })
+    .catch(error => {
+        alert('エラーが発生しました: ' + error.message);
+        inputElement.style.borderColor = 'rgba(220, 53, 69, 0.8)';
+    });
 }
 
-// モーダルを閉じる
-function closeReservationModal() {
-    const modal = document.getElementById('reservationModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+// URLから店舗コードを取得
+function getStoreFromPath() {
+    const pathSegments = window.location.pathname.split('/');
+    return pathSegments[1] || 'nagano';
 }

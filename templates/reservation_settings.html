@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}予約設定{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+  
+  <h1 class="settings-title">予約設定</h1>
+  
+  <div id="message-container"></div>
+  
+  <!-- タブナビゲーション -->
+  <div class="settings-tabs">
+    <button class="settings-tab-btn active" onclick="switchTab('reservation_management')">予約管理</button>
+    <button class="settings-tab-btn" onclick="switchTab('ng_settings')">キャストNG設定</button>
+  </div>
+  
+  <!-- タブコンテンツ -->
+  <div id="settingsContent">
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 予約管理タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="reservation_management" class="settings-tab-content active">
+      <h2 class="settings-section-title">予約管理</h2>
+      
+      <!-- キャンセル理由管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">🚫 キャンセル理由管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-cancellation-reason-btn">
+            ➕ 新規追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 70%;">理由名</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="cancellation-reasons-tbody">
+              <tr>
+                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- 予約方法管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">📞 予約方法管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-reservation-method-btn">
+            ➕ 新規追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 70%;">方法名</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="reservation-methods-tbody">
+              <tr>
+                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- カード手数料設定 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">💳 カード手数料設定</h3>
+        </div>
+        
+        <div class="settings-card-fee-wrapper">
+          <div class="settings-form-group">
+            <label for="card-fee-rate-input" class="settings-label">
+              カード手数料率（％）
+            </label>
+            <div class="settings-input-with-unit">
+              <input 
+                type="number" 
+                id="card-fee-rate-input" 
+                class="settings-input settings-form-input-number"
+                min="0" 
+                max="100" 
+                step="0.1"
+                value="5.0"
+                placeholder="例: 5.0"
+              >
+              <span class="settings-input-unit">%</span>
+            </div>
+            <p class="settings-form-help">
+              カード決済時に加算される手数料の割合を設定します。<br>
+              例: 5% の場合、10,000円の予約に対して500円の手数料が加算されます。
+            </p>
+          </div>
+          
+          <div class="settings-form-actions">
+            <button 
+              type="button" 
+              id="save-card-fee-btn" 
+              class="settings-btn settings-btn-primary"
+            >
+              💾 保存
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- キャストNG設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="ng_settings" class="settings-tab-content">
+      <h2 class="settings-section-title">キャストNG設定</h2>
+      
+      <!-- NGエリア管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">🚫 NGエリア管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-area-btn">
+            ➕ 新規エリア追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 70%;">エリア名</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="ng-areas-tbody">
+              <tr>
+                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      
+      <!-- 年齢NG管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">👤 年齢NG管理</h3>
+          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-age-btn">
+            ➕ 新規年齢NG追加
+          </button>
+        </div>
+        
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 40%;">パターン名</th>
+                <th style="width: 30%;">備考</th>
+                <th style="width: 30%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="ng-ages-tbody">
+              <tr>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- メッセージ表示エリア -->
+  <div id="saveMessage" class="settings-message"></div>
+  
+</div>
+
+<!-- キャンセル理由追加・編集モーダル -->
+<div id="cancellation-reason-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="cancellation-reason-modal-title">キャンセル理由を追加</h3>
+      <span class="modal-close settings-modal-close" onclick="closeCancellationReasonModal()">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="cancellation-reason-form" onsubmit="saveCancellationReason(event)">
+        <input type="hidden" id="cancellation-reason-id" name="reason_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            理由名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="cancellation-reason-name" name="reason_name" 
+                 class="settings-input" placeholder="例: 体調不良" required>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  onclick="closeCancellationReasonModal()">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 予約方法追加・編集モーダル -->
+<div id="reservation-method-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="reservation-method-modal-title">予約方法を追加</h3>
+      <span class="modal-close settings-modal-close" onclick="closeReservationMethodModal()">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="reservation-method-form" onsubmit="saveReservationMethod(event)">
+        <input type="hidden" id="reservation-method-id" name="method_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            方法名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="reservation-method-name" name="method_name" 
+                 class="settings-input" placeholder="例: 電話予約" required>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  onclick="closeReservationMethodModal()">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- NGエリア追加/編集モーダル -->
+<div id="ng-area-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="ng-area-modal-title">新規エリア追加</h3>
+      <span class="modal-close settings-modal-close" onclick="closeNgAreaModal()">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="ng-area-form" onsubmit="saveNgArea(event)">
+        <input type="hidden" id="ng-area-id" name="ng_area_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            エリア名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="ng-area-name" name="area_name" 
+                 class="settings-input" placeholder="例: 新宿区" required>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  onclick="closeNgAreaModal()">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 年齢NG追加/編集モーダル -->
+<div id="ng-age-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="ng-age-modal-title">新規年齢NG追加</h3>
+      <span class="modal-close settings-modal-close" onclick="closeNgAgeModal()">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="ng-age-form" onsubmit="saveNgAge(event)">
+        <input type="hidden" id="ng-age-id" name="ng_age_id">
+        
+        <div class="settings-form-group">
+          <label class="settings-label">
+            パターン名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="ng-age-pattern-name" name="pattern_name" 
+                 class="settings-input" placeholder="例: 20代NG" required>
+        </div>
+
+        <div class="settings-form-group">
+          <label class="settings-label">備考</label>
+          <textarea id="ng-age-description" name="description" 
+                    class="settings-input settings-textarea" rows="3" 
+                    placeholder="補足説明があれば入力してください"></textarea>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary" 
+                  onclick="closeNgAgeModal()">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// URLを設定
+window.reservationSettingsUrls = {
+  store: "/{{ store }}",
+  cancellationReasons: "/{{ store }}/reservation-settings/cancellation_reasons",
+  reservationMethods: "/{{ store }}/reservation-settings/reservation_methods",
+  cardFeeRate: "/{{ store }}/reservation-settings/card_fee_rate",
+  ngAreas: "/{{ store }}/reservation-settings/ng_areas",
+  ngAges: "/{{ store }}/reservation-settings/ng_ages"
+};
+</script>
+<script src="{{ url_for('static', filename='js/reservation_settings.js') }}"></script>
+
+{% endblock %}
