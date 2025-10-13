@@ -1,0 +1,298 @@
+/* ============================================
+   base.html 専用CSS
+   ヘッダーとサイドバーのスタイル
+   ============================================ */
+
+/* リセット */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* ============================================
+   ヘッダー
+   ============================================ */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #00BCD4; /* ターコイズブルー */
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    margin-left: auto;
+    padding-right: 15px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ハンバーガーメニュー */
+.hamburger-menu {
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 0;
+    margin-right: 15px;
+}
+
+.hamburger-menu .line {
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+/* ============================================
+   サイドナビゲーション
+   ============================================ */
+.nav-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 250px;
+    height: 100%;
+    background-color: #e9ecef; /* ライトグレー */
+    color: #333;
+    padding-top: 60px;
+    transition: left 0.3s ease;
+    z-index: 999;
+    overflow-y: auto; /* スクロール対応 */
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-menu.active {
+    left: 0;
+}
+
+.nav-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-menu li a {
+    display: block;
+    padding: 12px 15px;
+    font-size: 16px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+.nav-menu li a:hover {
+    background-color: #dee2e6;
+    color: #00BCD4;
+}
+
+/* アイコン付きリンク */
+.nav-menu li a i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+/* ============================================
+   メニューオーバーレイ（スマホ版のみ）
+   ============================================ */
+.nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ============================================
+   コンテンツエリア
+   ============================================ */
+.content {
+    margin-top: 60px;
+    padding: 20px;
+}
+
+/* ============================================
+   階層メニュー専用CSS
+   ============================================ */
+
+/* 親メニューアイテム */
+.nav-parent {
+    position: relative;
+}
+
+.nav-parent-link {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+.nav-parent-link:hover {
+    background-color: #dee2e6;
+    color: #00BCD4;
+}
+
+/* 矢印アイコン */
+.nav-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+/* サブメニュー */
+.nav-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    transition: max-height 0.3s ease;
+}
+
+.nav-submenu.nav-submenu-open {
+    max-height: 400px;
+}
+
+.nav-submenu li {
+    margin: 0;
+}
+
+.nav-submenu li a {
+    display: block;
+    padding: 10px 15px 10px 40px;
+    color: #666;
+    text-decoration: none;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-submenu li a:hover {
+    background-color: #e9ecef;
+    color: #00BCD4;
+}
+
+/* 最後のサブメニューアイテムの境界線を非表示 */
+.nav-submenu li:last-child a {
+    border-bottom: none;
+}
+
+/* ============================================
+   PC版レイアウト (769px以上)
+   ============================================ */
+@media (min-width: 769px) {
+    /* ハンバーガーメニューを非表示 */
+    .hamburger-menu {
+        display: none;
+    }
+    
+    /* サイドナビを常時表示 */
+    .nav-menu {
+        left: 0;
+        position: fixed;
+        width: 200px;
+    }
+    
+    /* コンテンツエリアをサイドナビ分右に移動 */
+    .content {
+        margin-left: 200px;
+        margin-top: 60px;
+        padding: 20px;
+    }
+    
+    /* オーバーレイはPC版では不要 */
+    .nav-overlay {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   スマホレイアウト (768px以下)
+   ============================================ */
+@media (max-width: 768px) {
+    /* スマホではスライド式を維持 */
+    .hamburger-menu {
+        display: flex;
+        width: 25px;
+        height: 25px;
+        margin-right: 10px;
+    }
+    
+    .nav-menu {
+        left: -300px;
+        width: 220px;
+        padding-top: 50px;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    /* ヘッダー調整 */
+    .header {
+        height: 50px;
+        padding: 0 10px;
+    }
+    
+    .user-info {
+        font-size: 0.9rem;
+        padding-right: 10px;
+    }
+    
+    .content {
+        margin-top: 50px;
+        margin-left: 0;
+        padding: 15px 10px;
+    }
+    
+    .nav-menu li a {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    .nav-parent-link {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    .nav-submenu li a {
+        padding: 10px 15px 10px 35px;
+        font-size: 15px;
+    }
+}

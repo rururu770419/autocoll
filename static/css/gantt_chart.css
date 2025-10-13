@@ -1,4 +1,4 @@
-/* ガントチャート CSS */
+/* ガントチャート CSS - 改善版 */
 
 /* ============================================
    全体コンテナ
@@ -13,7 +13,7 @@
 }
 
 /* ============================================
-   ヘッダー部分（出勤表と同じスタイル）
+   ヘッダー部分
 ============================================ */
 .gantt-header {
   padding: 20px;
@@ -85,7 +85,7 @@
 }
 
 .gantt-cast-header {
-  height: 50px;
+  height: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,7 +97,7 @@
 }
 
 .gantt-cast-cell {
-  height: 80px;
+  height: 56px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -135,57 +135,84 @@
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
+  min-width: 0; /* flexアイテムの縮小を許可 */
 }
 
 .gantt-timeline-header {
   display: flex;
-  height: 50px;
+  height: 35px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
+  min-width: fit-content; /* コンテンツに合わせて幅を確保 */
 }
 
 .gantt-time-cell {
   flex-shrink: 0;
-  width: 180px;
+  width: 30px; /* JavaScriptで上書きされる */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 1px solid #e9ecef;
-  font-size: 13px;
+  font-size: 11px;
   color: #495057;
   font-weight: 600;
+  /* ヘッダーの細い罫線は削除 */
+}
+
+/* 1時間ごとの区切り（太い線）のみ表示 */
+.gantt-time-cell.gantt-hour-marker {
+  border-right: 2px solid #dee2e6;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .gantt-timeline-body {
   position: relative;
+  min-width: fit-content; /* コンテンツに合わせて幅を確保 */
 }
 
 .gantt-timeline-row {
   position: relative;
-  height: 80px;
+  height: 56px;
   border-bottom: 1px solid #dee2e6;
   display: flex;
 }
 
 .gantt-time-grid {
   flex-shrink: 0;
-  width: 90px;
+  width: 30px; /* JavaScriptで上書きされる */
   height: 100%;
-  border-right: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0; /* キャスト行には細い罫線を残す */
+  box-sizing: border-box;
+}
+
+/* 1時間ごとの区切り（太い線） */
+.gantt-time-grid.gantt-hour-marker {
+  border-right: 2px solid #e0e0e0;
+}
+
+/* 出勤時間外（灰色） */
+.gantt-time-grid.gantt-off-time {
+  background-color: #d0d0d0;
+}
+
+/* 出勤時間内（白） */
+.gantt-time-grid.gantt-work-time {
+  background-color: #ffffff;
 }
 
 /* ============================================
-   出勤時間背景
+   出勤時間背景（非表示 - グリッドで制御）
 ============================================ */
 .gantt-work-bg {
   position: absolute;
   top: 0;
   height: 100%;
-  background-color: #e3f2fd;
-  opacity: 0.5;
   z-index: 1;
+  pointer-events: none;
+  /* 背景色はグリッドで制御するため、ここでは境界線のみ */
   border-left: 2px solid #2196f3;
   border-right: 2px solid #2196f3;
+  background-color: transparent;
 }
 
 /* ============================================
@@ -193,8 +220,8 @@
 ============================================ */
 .gantt-reservation-bar {
   position: absolute;
-  top: 10px;
-  height: 60px;
+  top: 8px;
+  height: 40px;
   background: linear-gradient(135deg, #ff6b9d 0%, #c94b7a 100%);
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);

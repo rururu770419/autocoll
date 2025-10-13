@@ -1,0 +1,400 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   スタッフシフト管理ページ専用CSS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* コンテナ */
+.staff-shift-container {
+    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* ヘッダー */
+.staff-shift-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.staff-shift-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.staff-shift-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.staff-shift-month-display {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    min-width: 150px;
+    text-align: center;
+}
+
+/* ボタン */
+.staff-shift-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.staff-shift-btn-prev,
+.staff-shift-btn-next {
+    background: #4CAF50;
+    color: white;
+}
+
+.staff-shift-btn-prev:hover,
+.staff-shift-btn-next:hover {
+    background: #45a049;
+}
+
+.staff-shift-btn-primary {
+    background: #2196F3;
+    color: white;
+}
+
+.staff-shift-btn-primary:hover {
+    background: #0b7dda;
+}
+
+.staff-shift-btn-secondary {
+    background: #9E9E9E;
+    color: white;
+}
+
+.staff-shift-btn-secondary:hover {
+    background: #757575;
+}
+
+.staff-shift-btn-delete {
+    background: #f44336;
+    color: white;
+}
+
+.staff-shift-btn-delete:hover {
+    background: #da190b;
+}
+
+/* メッセージ */
+.staff-shift-message {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.staff-shift-message-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.staff-shift-message-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* テーブルラッパー */
+.staff-shift-table-wrapper {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* テーブル */
+.staff-shift-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.staff-shift-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f5f5f5;
+}
+
+.staff-shift-table th {
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+    border: 1px solid #ddd;
+    background: #f5f5f5;
+}
+
+.staff-shift-th-date {
+    width: 60px;
+    min-width: 60px;
+}
+
+.staff-shift-th-day {
+    width: 60px;
+    min-width: 60px;
+}
+
+.staff-shift-th-staff {
+    min-width: 100px;
+}
+
+.staff-shift-th-memo {
+    width: 200px;
+    min-width: 200px;
+}
+
+.staff-shift-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+}
+
+/* 日付セル */
+.staff-shift-td-date {
+    font-weight: bold;
+    background: #fafafa;
+}
+
+.staff-shift-td-day {
+    font-size: 12px;
+    background: #fafafa;
+}
+
+.staff-shift-day-sunday {
+    color: #f44336;
+}
+
+.staff-shift-day-saturday {
+    color: #2196F3;
+}
+
+/* シフトセル */
+.staff-shift-cell {
+    cursor: pointer;
+    min-height: 40px;
+    transition: background 0.3s;
+}
+
+.staff-shift-cell:hover {
+    background: #f0f0f0;
+}
+
+.staff-shift-cell-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.staff-shift-type-badge {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.staff-shift-time-display {
+    font-size: 11px;
+    color: #666;
+}
+
+.staff-shift-has-memo {
+    font-size: 10px;
+    color: #2196F3;
+}
+
+/* 備考セル */
+.staff-shift-memo-cell {
+    cursor: pointer;
+    text-align: left;
+    padding: 8px;
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.staff-shift-memo-cell:hover {
+    background: #f0f0f0;
+}
+
+.staff-shift-memo-placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* モーダル */
+.staff-shift-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.staff-shift-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.staff-shift-modal-memo {
+    width: 600px;
+}
+
+.staff-shift-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+}
+
+.staff-shift-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.staff-shift-modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.staff-shift-modal-close:hover {
+    color: #000;
+}
+
+.staff-shift-modal-body {
+    padding: 20px;
+}
+
+.staff-shift-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* フォーム */
+.staff-shift-form-group {
+    margin-bottom: 20px;
+}
+
+.staff-shift-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.staff-shift-input,
+.staff-shift-select,
+.staff-shift-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.staff-shift-input:focus,
+.staff-shift-select:focus,
+.staff-shift-textarea:focus {
+    outline: none;
+    border-color: #2196F3;
+}
+
+.staff-shift-textarea {
+    resize: vertical;
+}
+
+/* 入力タイプ切り替え */
+.staff-shift-input-type-switch {
+    display: flex;
+    gap: 20px;
+}
+
+.staff-shift-radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.staff-shift-radio-label input[type="radio"] {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.staff-shift-radio-label span {
+    font-size: 14px;
+    color: #333;
+}
+
+/* 時間入力 */
+.staff-shift-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.staff-shift-time-inputs .staff-shift-input {
+    width: auto;
+    flex: 1;
+}
+
+.staff-shift-time-separator {
+    font-weight: bold;
+    color: #666;
+}
+
+/* ローディング */
+.staff-shift-loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 16px;
+    color: #666;
+}
+
+/* 空状態 */
+.staff-shift-empty {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}

@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}ガントチャート - {{ date_display }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gantt_chart.css') }}">
+{% endblock %}
+
+{% block title %}タイムスケジュール - {{ date_display }}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="/static/css/gantt_chart.css">
-
 <div class="gantt-container">
   <!-- ヘッダー -->
   <div class="gantt-header">
@@ -33,7 +35,13 @@
         {% for cast in gantt_data.casts %}
         <div class="gantt-cast-cell">
           <span class="gantt-cast-name">{{ cast.cast_name }}</span>
-          <span class="gantt-cast-time">{{ cast.start_time }}～{{ cast.end_time }}</span>
+          <span class="gantt-cast-time">
+            {% if cast.start_time %}
+              {{ cast.start_time[:5] }}～{{ cast.end_time[:5] }}
+            {% else %}
+              出勤時間未設定
+            {% endif %}
+          </span>
         </div>
         {% endfor %}
         
@@ -46,30 +54,32 @@
 
       <!-- 右側：タイムライン（スクロール可能） -->
       <div class="gantt-timeline-wrapper">
-        <!-- 時間軸ヘッダー（1時間ごとに表示） -->
-        <div class="gantt-timeline-header">
-          {% for slot in time_slots %}
-          {% if slot.value.endswith(':00') %}
-          <div class="gantt-time-cell" style="width: 180px;">{{ slot.label }}</div>
-          {% endif %}
-          {% endfor %}
+        <!-- 時間軸ヘッダー（JavaScriptで動的生成） -->
+        <div class="gantt-timeline-header" id="ganttTimelineHeader">
+          <!-- JavaScriptで生成 -->
         </div>
 
         <!-- タイムライン本体 -->
-        <div class="gantt-timeline-body">
+        <div class="gantt-timeline-body" id="ganttTimelineBody">
           {% for cast in gantt_data.casts %}
-          <div class="gantt-timeline-row" data-cast-id="{{ cast.cast_id }}">
-            <!-- 出勤時間の背景 -->
+          <div class="gantt-timeline-row" 
+               data-cast-id="{{ cast.cast_id }}"
+               data-start-time="{% if cast.start_time %}{{ cast.start_time[:5] }}{% endif %}"
+               data-end-time="{% if cast.end_time %}{{ cast.end_time[:5] }}{% endif %}">
+            
+            <!-- 出勤時間の背景（JavaScriptで位置調整） -->
+            {% if cast.start_time and cast.end_time %}
             <div class="gantt-work-bg" 
-                 data-start="{{ cast.start_time }}"
-                 data-end="{{ cast.end_time }}">
+                 data-start="{{ cast.start_time[:5] }}"
+                 data-end="{{ cast.end_time[:5] }}">
             </div>
+            {% endif %}
             
             <!-- 予約バー -->
             {% for reservation in cast.reservations %}
             <div class="gantt-reservation-bar" 
-                 data-start="{{ reservation.start_time }}"
-                 data-end="{{ reservation.end_time }}"
+                 data-start="{{ reservation.start_time[:5] }}"
+                 data-end="{{ reservation.end_time[:5] }}"
                  data-reservation-id="{{ reservation.reservation_id }}">
               <div class="gantt-reservation-content">
                 <!-- 編集ボタン + お客様名 -->
@@ -83,7 +93,7 @@
                 </div>
                 
                 <!-- 予約時間 -->
-                <div class="gantt-reservation-time">{{ reservation.start_time }}～{{ reservation.end_time }}</div>
+                <div class="gantt-reservation-time">{{ reservation.start_time[:5] }}～{{ reservation.end_time[:5] }}</div>
                 
                 <!-- ホテル + 部屋番号入力 -->
                 {% if reservation.hotel_name %}
@@ -104,10 +114,7 @@
             </div>
             {% endfor %}
             
-            <!-- 時間グリッド -->
-            {% for slot in time_slots %}
-            <div class="gantt-time-grid"></div>
-            {% endfor %}
+            <!-- グリッドはJavaScriptで動的生成 -->
           </div>
           {% endfor %}
         </div>
@@ -116,8 +123,16 @@
   </div>
 </div>
 
+<!-- 営業時間設定をJavaScriptに渡す -->
+<div id="ganttConfig" 
+     data-start-hour="{{ schedule_settings.start_time.split(':')[0] }}" 
+     data-end-hour="{% if schedule_settings.end_time.split(':')[0]|int < schedule_settings.start_time.split(':')[0]|int %}{{ schedule_settings.end_time.split(':')[0]|int + 24 }}{% else %}{{ schedule_settings.end_time.split(':')[0] }}{% endif %}"
+     data-interval="10"
+     style="display: none;">
+</div>
+
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/gantt_chart.js') }}"></script>
 {% endblock %}

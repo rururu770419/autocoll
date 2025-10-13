@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}スタッフシフト管理{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_shift.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="staff-shift-container">
+    <div class="staff-shift-header">
+        <h1 class="staff-shift-title">スタッフシフト管理</h1>
+        
+        <div class="staff-shift-controls">
+            <button class="staff-shift-btn staff-shift-btn-prev" onclick="changeMonth(-1)">
+                ← 前月
+            </button>
+            
+            <div class="staff-shift-month-display">
+                <span id="currentMonth"></span>
+            </div>
+            
+            <button class="staff-shift-btn staff-shift-btn-next" onclick="changeMonth(1)">
+                次月 →
+            </button>
+        </div>
+    </div>
+    
+    <div class="staff-shift-message" id="messageArea" style="display: none;"></div>
+    
+    <div class="staff-shift-table-wrapper">
+        <table class="staff-shift-table" id="shiftTable">
+            <thead>
+                <tr>
+                    <th class="staff-shift-th-date">日付</th>
+                    <th class="staff-shift-th-day">曜日</th>
+                    <!-- スタッフ列はJavaScriptで動的生成 -->
+                    <th class="staff-shift-th-memo">備考</th>
+                </tr>
+            </thead>
+            <tbody id="shiftTableBody">
+                <!-- JavaScriptで動的生成 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- シフト入力モーダル -->
+<div id="shiftModal" class="staff-shift-modal">
+    <div class="staff-shift-modal-content">
+        <div class="staff-shift-modal-header">
+            <h3 id="modalTitle">シフト入力</h3>
+            <span class="staff-shift-modal-close" onclick="closeShiftModal()">&times;</span>
+        </div>
+        
+        <div class="staff-shift-modal-body">
+            <form id="shiftForm">
+                <input type="hidden" id="modalStaffId" name="staff_id">
+                <input type="hidden" id="modalShiftDate" name="shift_date">
+                
+                <div class="staff-shift-form-group">
+                    <label class="staff-shift-label">入力方法</label>
+                    <div class="staff-shift-input-type-switch">
+                        <label class="staff-shift-radio-label">
+                            <input type="radio" name="input_type" value="shift_type" checked onchange="toggleInputType()">
+                            <span>シフト種別</span>
+                        </label>
+                        <label class="staff-shift-radio-label">
+                            <input type="radio" name="input_type" value="custom_time" onchange="toggleInputType()">
+                            <span>時間入力</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- シフト種別選択 -->
+                <div id="shiftTypeSection" class="staff-shift-form-group">
+                    <label class="staff-shift-label">シフト種別</label>
+                    <select id="modalShiftType" name="shift_type_id" class="staff-shift-select">
+                        <option value="">選択してください</option>
+                        <!-- JavaScriptで動的生成 -->
+                    </select>
+                </div>
+                
+                <!-- カスタム時間入力 -->
+                <div id="customTimeSection" class="staff-shift-form-group" style="display: none;">
+                    <label class="staff-shift-label">勤務時間</label>
+                    <div class="staff-shift-time-inputs">
+                        <input type="time" id="modalStartTime" name="start_time" class="staff-shift-input">
+                        <span class="staff-shift-time-separator">～</span>
+                        <input type="time" id="modalEndTime" name="end_time" class="staff-shift-input">
+                    </div>
+                </div>
+                
+                <!-- 個人メモ -->
+                <div class="staff-shift-form-group">
+                    <label class="staff-shift-label">メモ（個人）</label>
+                    <textarea id="modalMemo" name="memo" class="staff-shift-textarea" rows="3" placeholder="個人的なメモを入力"></textarea>
+                </div>
+                
+                <div class="staff-shift-modal-footer">
+                    <button type="button" class="staff-shift-btn staff-shift-btn-delete" onclick="deleteShift()">
+                        削除
+                    </button>
+                    <button type="button" class="staff-shift-btn staff-shift-btn-secondary" onclick="closeShiftModal()">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="staff-shift-btn staff-shift-btn-primary">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 日付別備考モーダル -->
+<div id="memoModal" class="staff-shift-modal">
+    <div class="staff-shift-modal-content staff-shift-modal-memo">
+        <div class="staff-shift-modal-header">
+            <h3 id="memoModalTitle">備考入力</h3>
+            <span class="staff-shift-modal-close" onclick="closeMemoModal()">&times;</span>
+        </div>
+        
+        <div class="staff-shift-modal-body">
+            <form id="memoForm">
+                <input type="hidden" id="memoDate" name="memo_date">
+                
+                <div class="staff-shift-form-group">
+                    <label class="staff-shift-label">日付全体の備考</label>
+                    <textarea id="memoText" name="memo_text" class="staff-shift-textarea" rows="5" placeholder="この日付全体に関する備考を入力"></textarea>
+                </div>
+                
+                <div class="staff-shift-modal-footer">
+                    <button type="button" class="staff-shift-btn staff-shift-btn-secondary" onclick="closeMemoModal()">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="staff-shift-btn staff-shift-btn-primary">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// ストア名をJavaScriptに渡す
+window.staffShiftStore = "{{ store }}";
+</script>
+<script src="{{ url_for('static', filename='js/staff_shift.js') }}" defer></script>
+{% endblock %}

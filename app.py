@@ -83,6 +83,11 @@ app.register_blueprint(gantt_bp)
 from routes.reservation import reservation_bp
 app.register_blueprint(reservation_bp)
 
+# スタッフシフト管理Blueprint
+from routes.staff_shift import staff_shift_bp
+app.register_blueprint(staff_shift_bp)
+
+
 # ===== Twilio音声通話エンドポイント =====
 @app.route('/twilio/voice', methods=['GET', 'POST'])
 def twilio_voice():
