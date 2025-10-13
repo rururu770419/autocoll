@@ -277,7 +277,6 @@ def add_option(name, price, cast_back_amount, store_id=1, is_active=True):
     try:
         db = get_db()
         if db is None:
-            print("エラー: データベース接続取得失敗")
             return False
         
         cursor = db.cursor()
@@ -286,15 +285,12 @@ def add_option(name, price, cast_back_amount, store_id=1, is_active=True):
         max_sort_result = cursor.fetchone()
         sort_order = max_sort_result['next_sort_order'] if max_sort_result else 1
         
-        print(f"オプション登録: name={name}, price={price}, cast_back_amount={cast_back_amount}, sort_order={sort_order}, store_id={store_id}, is_active={is_active}")
-        
         cursor.execute("""
             INSERT INTO options (name, price, cast_back_amount, sort_order, store_id, is_active, created_at, updated_at) 
             VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """, (name, price, cast_back_amount, sort_order, store_id, is_active))
         
         db.commit()
-        print(f"オプション登録成功: {name}, is_active={is_active}")
         return True
     except Exception as e:
         print(f"オプション登録エラー: {e}")
@@ -317,7 +313,6 @@ def update_option(option_id, name, price, cast_back_amount, is_active):
         """, (name, price, cast_back_amount, is_active, option_id))
         
         db.commit()
-        print(f"オプション更新成功: option_id {option_id}")
         return True
     except Exception as e:
         print(f"オプション更新エラー (option_id: {option_id}): {e}")
@@ -333,7 +328,6 @@ def delete_option(option_id):
         cursor = db.cursor()
         cursor.execute("DELETE FROM options WHERE option_id = %s", (option_id,))
         db.commit()
-        print(f"オプション削除成功: option_id {option_id}")
         return True
     except Exception as e:
         print(f"オプション削除エラー (option_id: {option_id}): {e}")
@@ -364,7 +358,6 @@ def move_option_up(option_id):
         result = cursor.fetchone()
         
         if not result:
-            print(f"オプション並び順変更: option_id {option_id} は既に最上位です")
             return False
         
         prev_option_id = result['option_id']
@@ -374,7 +367,6 @@ def move_option_up(option_id):
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (current_sort, prev_option_id))
         
         db.commit()
-        print(f"オプション並び順変更成功: option_id {option_id} を上に移動")
         return True
     except Exception as e:
         print(f"オプション並び順変更エラー (上移動, option_id: {option_id}): {e}")
@@ -405,7 +397,6 @@ def move_option_down(option_id):
         result = cursor.fetchone()
         
         if not result:
-            print(f"オプション並び順変更: option_id {option_id} は既に最下位です")
             return False
         
         next_option_id = result['option_id']
@@ -415,7 +406,6 @@ def move_option_down(option_id):
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (current_sort, next_option_id))
         
         db.commit()
-        print(f"オプション並び順変更成功: option_id {option_id} を下に移動")
         return True
     except Exception as e:
         print(f"オプション並び順変更エラー (下移動, option_id: {option_id}): {e}")

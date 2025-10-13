@@ -1,0 +1,529 @@
+/* ============================================
+   割引マスタ管理専用CSS（オプション管理と同じデザイン）
+   ============================================ */
+
+/* ============================================
+   コンテナ
+   ============================================ */
+   .discount-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.discount-title {
+    font-size: 1.75rem;
+    margin: 0;
+    padding-bottom: 30px;
+    color: #333;
+}
+
+/* セクションタイトル */
+.discount-section-title {
+    font-size: 1.3rem;
+    margin: 0 0 15px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+/* ============================================
+   登録フォーム（2列レイアウト）
+   ============================================ */
+.discount-form-card {
+    background-color: #f5f5f5;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.discount-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.discount-form-group {
+    margin-bottom: 0;
+}
+
+.discount-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.discount-form-input {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.discount-form-input:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #00BCD4;
+    outline: 0;
+}
+
+.discount-form-input::placeholder {
+    color: #999;
+    opacity: 0.6;
+}
+
+.discount-form-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* ============================================
+   種類ボタン
+   ============================================ */
+.discount-type-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.discount-type-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border: 2px solid #ced4da;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.discount-type-btn input[type="radio"] {
+    display: none;
+}
+
+.discount-type-btn span {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.discount-type-btn:hover {
+    border-color: #00BCD4;
+}
+
+.discount-type-btn input[type="radio"]:checked + span {
+    color: #fff;
+}
+
+.discount-type-btn-active,
+.discount-type-btn:has(input[type="radio"]:checked) {
+    background-color: #00BCD4;
+    border-color: #00BCD4;
+}
+
+.discount-type-btn-active span,
+.discount-type-btn:has(input[type="radio"]:checked) span {
+    color: #fff;
+}
+
+/* ============================================
+   トグルスイッチ（オプションと同じ丸型デザイン）
+   ============================================ */
+.discount-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.discount-toggle-label {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.discount-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.discount-toggle-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.discount-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.discount-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.discount-toggle-checkbox:checked + .discount-toggle-slider {
+    background-color: #00BCD4;
+}
+
+.discount-toggle-checkbox:checked + .discount-toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* ============================================
+   フォームボタン
+   ============================================ */
+.discount-form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.discount-btn-reset {
+    padding: 10px 24px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.discount-btn-reset:hover {
+    background-color: #5a6268;
+}
+
+.discount-btn-submit {
+    padding: 10px 24px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.discount-btn-submit:hover {
+    background-color: #00a8b8;
+}
+
+/* ============================================
+   一覧テーブル
+   ============================================ */
+.discount-list-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    margin-bottom: 30px;
+}
+
+.discount-table-wrapper {
+    overflow-x: auto;
+    padding: 0;
+}
+
+.discount-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.discount-table thead th {
+    background-color: #5a5a5a;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    border-bottom: none;
+}
+
+.discount-table tbody td {
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.discount-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 操作列のセル：アイコンを横並びにする */
+.discount-table tbody td:last-child {
+    white-space: nowrap;
+}
+
+/* 並び順ボタン（オプションと同じサイズ） */
+.discount-sort-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 2px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.discount-sort-btn:hover {
+    background-color: #00a8b8;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 状態表示（丸いボタン型・白文字） */
+.discount-status-active {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #28a745;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.discount-status-inactive {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 操作アイコン（オプションと同じ） */
+.discount-action-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.discount-action-btn:hover {
+    opacity: 0.7;
+    text-decoration: none;
+}
+
+.discount-edit-icon {
+    color: #00BCD4;
+}
+
+.discount-delete-icon {
+    color: #dc3545;
+}
+
+/* ============================================
+   モーダル
+   ============================================ */
+.discount-modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.discount-modal.show {
+    display: block;
+}
+
+.discount-modal-dialog {
+    position: relative;
+    width: auto;
+    max-width: 500px;
+    margin: 50px auto;
+}
+
+.discount-modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.3);
+}
+
+.discount-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.discount-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.discount-modal-close {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1;
+    color: #000;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.discount-modal-close:hover {
+    opacity: 0.75;
+}
+
+.discount-modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 20px;
+}
+
+.discount-modal-group {
+    margin-bottom: 20px;
+}
+
+.discount-modal-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.discount-modal-input {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.discount-modal-input:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #00BCD4;
+    outline: 0;
+}
+
+.discount-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.discount-modal-btn-cancel {
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.discount-modal-btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+.discount-modal-btn-save {
+    padding: 10px 20px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.discount-modal-btn-save:hover {
+    background-color: #00a8b8;
+}
+
+/* ============================================
+   アラート
+   ============================================ */
+.discount-alert {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 0;
+}
+
+.discount-alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.discount-alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}

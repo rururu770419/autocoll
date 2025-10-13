@@ -47,8 +47,6 @@ function setupFormValidation() {
             return false;
         }
     });
-    
-    console.log('✅ フォームバリデーション設定完了');
 }
 
 // トグルスイッチの連動設定
@@ -69,8 +67,6 @@ function setupToggleSwitches() {
             editHidden.value = this.checked ? 'true' : 'false';
         });
     }
-    
-    console.log('✅ トグルスイッチ設定完了');
 }
 
 // フォームリセット
@@ -84,8 +80,6 @@ function resetForm() {
         if (toggle) {
             toggle.checked = true;
         }
-        
-        console.log('🔄 フォームをリセットしました');
     }
 }
 
@@ -97,7 +91,6 @@ function openEditModal(optionId, name, price, castBackAmount, isActive) {
     const form = document.getElementById('editForm');
     
     if (!modal || !form) {
-        console.error('❌ モーダル要素が見つかりません');
         return;
     }
     
@@ -122,8 +115,6 @@ function openEditModal(optionId, name, price, castBackAmount, isActive) {
     // モーダルを表示
     modal.classList.add('show');
     document.body.style.overflow = 'hidden'; // スクロール防止
-    
-    console.log('✅ 編集モーダルを開きました');
 }
 
 // 編集モーダルを閉じる
@@ -133,7 +124,6 @@ function closeEditModal() {
     if (modal) {
         modal.classList.remove('show');
         document.body.style.overflow = ''; // スクロール復元
-        console.log('✅ 編集モーダルを閉じました');
     }
 }
 

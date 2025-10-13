@@ -25,7 +25,15 @@ from .dashboard import (
 from .money import money_management, delete_money_record, register_change, check_change_registration
 from .option import options, register_option, edit_option, update_option_route, delete_option_route, move_option_up_route, move_option_down_route
 # 割引管理を追加
-from .discount import discount_management, register_discount_page, edit_discount_page, delete_discount_route
+from .discount import (
+    discount_management, 
+    get_discounts_api,
+    get_discount_api,
+    register_discount_api,
+    update_discount_api,
+    delete_discount_api,
+    move_discount_api
+)
 # 評価管理を追加（修正版）
 from .rating import (
     rating_items_management_view, 
@@ -138,11 +146,16 @@ main_routes.add_url_rule('/<store>/options/<int:option_id>/delete', 'delete_opti
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_up', 'move_option_up_route', move_option_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_down', 'move_option_down_route', move_option_down_route, methods=['GET'])
 
-# 割引管理
+# 割引管理（画面）
 main_routes.add_url_rule('/<store>/discount_management', 'discount_management', discount_management, methods=['GET'])
-main_routes.add_url_rule('/<store>/register_discount', 'register_discount', register_discount_page, methods=['GET', 'POST'])
-main_routes.add_url_rule('/<store>/edit_discount/<int:discount_id>', 'edit_discount', edit_discount_page, methods=['GET', 'POST'])
-main_routes.add_url_rule('/<store>/delete_discount/<int:discount_id>', 'delete_discount', delete_discount_route, methods=['GET'])
+
+# 割引管理（API）
+main_routes.add_url_rule('/<store>/discount_management/api/list', 'get_discounts_api', get_discounts_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/discount_management/api/get/<int:discount_id>', 'get_discount_api', get_discount_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/discount_management/api/register', 'register_discount_api', register_discount_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/discount_management/api/update/<int:discount_id>', 'update_discount_api', update_discount_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/discount_management/api/delete/<int:discount_id>', 'delete_discount_api', delete_discount_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/discount_management/api/move/<int:discount_id>', 'move_discount_api', move_discount_api, methods=['POST'])
 
 # 評価項目マスタ管理（画面）
 main_routes.add_url_rule('/<store>/rating_items_management', 'rating_items_management', rating_items_management_view, methods=['GET'])

@@ -3,7 +3,7 @@ from database.connection import get_db
 # ==== 割引マスタ管理関数 ====
 
 def get_all_discounts(db, store_id=None, active_only=False):
-    """割引マスタ一覧を取得"""
+    """割引マスタ一覧を取得（並び順でソート）"""
     cursor = db.cursor()
     
     query = "SELECT * FROM discounts WHERE 1=1"
@@ -16,7 +16,7 @@ def get_all_discounts(db, store_id=None, active_only=False):
     if active_only:
         query += " AND is_active = TRUE"
     
-    query += " ORDER BY created_at DESC"
+    query += " ORDER BY sort_order ASC, discount_id ASC"
     
     cursor.execute(query, params)
     return cursor.fetchall()
@@ -44,13 +44,18 @@ def register_discount(db, discount_data):
     try:
         cursor = db.cursor()
         
+        # 最大のsort_orderを取得
+        cursor.execute("SELECT COALESCE(MAX(sort_order), 0) as max_order FROM discounts")
+        result = cursor.fetchone()
+        next_order = result.max_order + 1 if result else 1
+        
         cursor.execute("""
             INSERT INTO discounts (
                 name, discount_type, value, is_active, store_id,
-                created_at, updated_at
+                sort_order, created_at, updated_at
             ) VALUES (
                 %s, %s, %s, %s, %s,
-                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
             RETURNING discount_id
         """, (
@@ -58,17 +63,16 @@ def register_discount(db, discount_data):
             discount_data['discount_type'],
             discount_data['value'],
             discount_data.get('is_active', True),
-            discount_data.get('store_id', 1)
+            discount_data.get('store_id', 1),
+            next_order
         ))
         
         result = cursor.fetchone()
         if result:
-            new_discount_id = result.discount_id  # インデックスではなく属性名でアクセス
+            new_discount_id = result.discount_id
             db.commit()
-            print(f"割引マスタ登録成功: {discount_data['name']} (ID: {new_discount_id})")
             return new_discount_id
         else:
-            print("割引マスタ登録エラー: RETURNINGで値が返されませんでした")
             db.rollback()
             return False
         
@@ -103,13 +107,85 @@ def update_discount(db, discount_id, discount_data):
             query = f"UPDATE discounts SET {', '.join(update_fields)} WHERE discount_id = %s"
             cursor.execute(query, params)
             db.commit()
-            print(f"割引マスタ更新成功: discount_id {discount_id}")
             return True
         
         return False
         
     except Exception as e:
         print(f"割引マスタ更新エラー: {e}")
+        db.rollback()
+        return False
+
+def move_discount_order(db, discount_id, direction):
+    """
+    割引の並び順を変更
+    
+    Args:
+        db: データベース接続
+        discount_id: 移動する割引のID
+        direction: 'up'（上へ）または 'down'（下へ）
+    
+    Returns:
+        bool: 成功したらTrue
+    """
+    try:
+        cursor = db.cursor()
+        
+        # 現在の割引を取得
+        cursor.execute("""
+            SELECT discount_id, sort_order 
+            FROM discounts 
+            WHERE discount_id = %s
+        """, (discount_id,))
+        current = cursor.fetchone()
+        
+        if not current:
+            return False
+        
+        # 交換先の割引を取得
+        if direction == 'up':
+            # より小さいsort_orderの中で最大のものを取得
+            cursor.execute("""
+                SELECT discount_id, sort_order 
+                FROM discounts 
+                WHERE sort_order < %s 
+                ORDER BY sort_order DESC 
+                LIMIT 1
+            """, (current.sort_order,))
+        else:  # down
+            # より大きいsort_orderの中で最小のものを取得
+            cursor.execute("""
+                SELECT discount_id, sort_order 
+                FROM discounts 
+                WHERE sort_order > %s 
+                ORDER BY sort_order ASC 
+                LIMIT 1
+            """, (current.sort_order,))
+        
+        target = cursor.fetchone()
+        
+        if not target:
+            # 交換先がない（既に最上位または最下位）
+            return False
+        
+        # sort_orderを交換
+        cursor.execute("""
+            UPDATE discounts 
+            SET sort_order = %s 
+            WHERE discount_id = %s
+        """, (target.sort_order, current.discount_id))
+        
+        cursor.execute("""
+            UPDATE discounts 
+            SET sort_order = %s 
+            WHERE discount_id = %s
+        """, (current.sort_order, target.discount_id))
+        
+        db.commit()
+        return True
+        
+    except Exception as e:
+        print(f"並び順変更エラー: {e}")
         db.rollback()
         return False
 
@@ -123,7 +199,6 @@ def delete_discount(db, discount_id):
             WHERE discount_id = %s
         """, (discount_id,))
         db.commit()
-        print(f"割引マスタ削除成功: discount_id {discount_id}")
         return True
     except Exception as e:
         print(f"割引マスタ削除エラー: {e}")
@@ -146,13 +221,11 @@ def delete_discount_permanently(db, discount_id):
     try:
         # 使用チェック
         if is_discount_used(db, discount_id):
-            print(f"割引削除エラー: discount_id {discount_id} は予約で使用されています")
             return False
         
         cursor = db.cursor()
         cursor.execute("DELETE FROM discounts WHERE discount_id = %s", (discount_id,))
         db.commit()
-        print(f"割引マスタ完全削除成功: discount_id {discount_id}")
         return True
     except Exception as e:
         print(f"割引マスタ削除エラー: {e}")
