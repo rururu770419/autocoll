@@ -158,16 +158,19 @@ function renderTimelineRows(timeSlots) {
 function isWithinWorkTime(time, startTime, endTime) {
     if (!startTime || !endTime || !time) return false;
     
-    const timeMinutes = timeToMinutes(time);
+    let timeMinutes = timeToMinutes(time);  // ✅ let に変更
     const startMinutes = timeToMinutes(startTime);
     let endMinutes = timeToMinutes(endTime);
     
     // 終了時刻が開始時刻より小さい場合（日をまたぐ場合）
     if (endMinutes <= startMinutes) {
         endMinutes += 24 * 60;
+        // ✅ 判定する時刻も日をまたぐ処理を追加
+        if (timeMinutes <= startMinutes) {
+            timeMinutes += 24 * 60;
+        }
     }
     
-    // 開始時刻より大きい（開始時刻ちょうどは含まない）かつ終了時刻以下（終了時刻ちょうどは含む）
     return timeMinutes > startMinutes && timeMinutes <= endMinutes;
 }
 

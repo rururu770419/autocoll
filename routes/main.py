@@ -131,12 +131,12 @@ main_routes.add_url_rule('/<store>/dashboard/get_course_data', 'get_course_data'
 
 # オプション管理
 main_routes.add_url_rule('/<store>/options', 'options', options, methods=['GET'])
-main_routes.add_url_rule('/<store>/register_option', 'register_option', register_option, methods=['POST'])
-main_routes.add_url_rule('/<store>/edit_option/<int:option_id>', 'edit_option', edit_option, methods=['GET'])
-main_routes.add_url_rule('/<store>/update_option/<int:option_id>', 'update_option_route', update_option_route, methods=['POST'])
-main_routes.add_url_rule('/<store>/delete_option/<int:option_id>', 'delete_option_route', delete_option_route, methods=['GET'])
-main_routes.add_url_rule('/<store>/move_option_up/<int:option_id>', 'move_option_up_route', move_option_up_route, methods=['GET'])
-main_routes.add_url_rule('/<store>/move_option_down/<int:option_id>', 'move_option_down_route', move_option_down_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/options/register', 'register_option', register_option, methods=['POST'])
+main_routes.add_url_rule('/<store>/options/<int:option_id>/edit', 'edit_option', edit_option, methods=['GET'])
+main_routes.add_url_rule('/<store>/options/<int:option_id>/update', 'update_option_route', update_option_route, methods=['POST'])
+main_routes.add_url_rule('/<store>/options/<int:option_id>/delete', 'delete_option_route', delete_option_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/options/<int:option_id>/move_up', 'move_option_up_route', move_option_up_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/options/<int:option_id>/move_down', 'move_option_down_route', move_option_down_route, methods=['GET'])
 
 # 割引管理
 main_routes.add_url_rule('/<store>/discount_management', 'discount_management', discount_management, methods=['GET'])

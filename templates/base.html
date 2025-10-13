@@ -50,8 +50,8 @@
                         <span class="nav-arrow">▶</span>
                     </a>
                     <ul class="nav-submenu" id="item-register">
-                        <li><a href="/{{ session['store'] }}/settings">⚙️ 設定</a></li>
-                        <li><a href="{{ url_for('rs_main', store=session.get('store', 'nagano')) }}">📅 予約設定</a></li>
+                        <li><a href="/{{ session['store'] }}/settings">設定</a></li>
+                        <li><a href="{{ url_for('rs_main', store=session.get('store', 'nagano')) }}">予約設定</a></li>
                         <li><a href="{{ url_for('main_routes.register_staff', store=session.get('store', 'nagano')) }}">スタッフ</a></li>
                         <li><a href="{{ url_for('main_routes.cast_management', store=session.get('store', 'nagano')) }}">キャスト</a></li>
                         <li><a href="{{ url_for('main_routes.register_course', store=session.get('store', 'nagano')) }}">コース</a></li>

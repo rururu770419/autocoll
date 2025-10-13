@@ -272,29 +272,34 @@ def get_option_by_id(option_id):
         print(f"オプション取得エラー (option_id: {option_id}): {e}")
         return None
 
-def add_option(name, price, cast_back_amount, store_id=1):
+def add_option(name, price, cast_back_amount, store_id=1, is_active=True):
     """新しいオプションを追加"""
     try:
         db = get_db()
         if db is None:
+            print("エラー: データベース接続取得失敗")
             return False
         
         cursor = db.cursor()
         
-        cursor.execute("SELECT COALESCE(MAX(sort_order), 0) + 1 FROM options")
+        cursor.execute("SELECT COALESCE(MAX(sort_order), 0) + 1 as next_sort_order FROM options")
         max_sort_result = cursor.fetchone()
-        sort_order = max_sort_result[0] if max_sort_result else 1
+        sort_order = max_sort_result['next_sort_order'] if max_sort_result else 1
+        
+        print(f"オプション登録: name={name}, price={price}, cast_back_amount={cast_back_amount}, sort_order={sort_order}, store_id={store_id}, is_active={is_active}")
         
         cursor.execute("""
             INSERT INTO options (name, price, cast_back_amount, sort_order, store_id, is_active, created_at, updated_at) 
-            VALUES (%s, %s, %s, %s, %s, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """, (name, price, cast_back_amount, sort_order, store_id))
+            VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """, (name, price, cast_back_amount, sort_order, store_id, is_active))
         
         db.commit()
-        print(f"オプション登録成功: {name}")
+        print(f"オプション登録成功: {name}, is_active={is_active}")
         return True
     except Exception as e:
         print(f"オプション登録エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def update_option(option_id, name, price, cast_back_amount, is_active):
@@ -345,7 +350,7 @@ def move_option_up(option_id):
         if not current_option:
             return False
         
-        current_sort = current_option.sort_order
+        current_sort = current_option['sort_order']
         
         cursor = db.cursor()
         
@@ -359,10 +364,11 @@ def move_option_up(option_id):
         result = cursor.fetchone()
         
         if not result:
+            print(f"オプション並び順変更: option_id {option_id} は既に最上位です")
             return False
         
-        prev_option_id = result.option_id
-        prev_sort = result.sort_order
+        prev_option_id = result['option_id']
+        prev_sort = result['sort_order']
         
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (prev_sort, option_id))
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (current_sort, prev_option_id))
@@ -385,7 +391,7 @@ def move_option_down(option_id):
         if not current_option:
             return False
         
-        current_sort = current_option.sort_order
+        current_sort = current_option['sort_order']
         
         cursor = db.cursor()
         
@@ -399,10 +405,11 @@ def move_option_down(option_id):
         result = cursor.fetchone()
         
         if not result:
+            print(f"オプション並び順変更: option_id {option_id} は既に最下位です")
             return False
         
-        next_option_id = result.option_id
-        next_sort = result.sort_order
+        next_option_id = result['option_id']
+        next_sort = result['sort_order']
         
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (next_sort, option_id))
         cursor.execute("UPDATE options SET sort_order = %s, updated_at = CURRENT_TIMESTAMP WHERE option_id = %s", (current_sort, next_option_id))
