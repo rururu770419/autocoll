@@ -47,7 +47,7 @@ def register_discount(db, discount_data):
         # 最大のsort_orderを取得
         cursor.execute("SELECT COALESCE(MAX(sort_order), 0) as max_order FROM discounts")
         result = cursor.fetchone()
-        next_order = result.max_order + 1 if result else 1
+        next_order = result['max_order'] + 1 if result else 1
         
         cursor.execute("""
             INSERT INTO discounts (
@@ -69,7 +69,7 @@ def register_discount(db, discount_data):
         
         result = cursor.fetchone()
         if result:
-            new_discount_id = result.discount_id
+            new_discount_id = result['discount_id']
             db.commit()
             return new_discount_id
         else:
@@ -151,7 +151,7 @@ def move_discount_order(db, discount_id, direction):
                 WHERE sort_order < %s 
                 ORDER BY sort_order DESC 
                 LIMIT 1
-            """, (current.sort_order,))
+            """, (current['sort_order'],))
         else:  # down
             # より大きいsort_orderの中で最小のものを取得
             cursor.execute("""
@@ -160,7 +160,7 @@ def move_discount_order(db, discount_id, direction):
                 WHERE sort_order > %s 
                 ORDER BY sort_order ASC 
                 LIMIT 1
-            """, (current.sort_order,))
+            """, (current['sort_order'],))
         
         target = cursor.fetchone()
         
@@ -173,13 +173,13 @@ def move_discount_order(db, discount_id, direction):
             UPDATE discounts 
             SET sort_order = %s 
             WHERE discount_id = %s
-        """, (target.sort_order, current.discount_id))
+        """, (target['sort_order'], current['discount_id']))
         
         cursor.execute("""
             UPDATE discounts 
             SET sort_order = %s 
             WHERE discount_id = %s
-        """, (current.sort_order, target.discount_id))
+        """, (current['sort_order'], target['discount_id']))
         
         db.commit()
         return True
@@ -243,12 +243,12 @@ def calculate_discount_amount(discount, course_price):
     Returns:
         int: 割引金額
     """
-    if discount.discount_type == 'fixed':
+    if discount['discount_type'] == 'fixed':
         # 固定金額割引
-        return min(int(discount.value), course_price)
-    elif discount.discount_type == 'percent':
+        return min(int(discount['value']), course_price)
+    elif discount['discount_type'] == 'percent':
         # パーセント割引
-        return int(course_price * (discount.value / 100))
+        return int(course_price * (discount['value'] / 100))
     return 0
 
 # ==== 予約-割引関連関数 ====
