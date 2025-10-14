@@ -127,7 +127,7 @@
         const tbody = document.getElementById('cancellation-reasons-tbody');
         
         if (!reasons || reasons.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" class="settings-table-empty">登録されているキャンセル理由はありません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan=\"3\" class=\"settings-table-empty\">登録されているキャンセル理由はありません</td></tr>';
             return;
         }
         
@@ -137,11 +137,13 @@
                 <td>
                     <button type="button" class="settings-btn-small settings-btn-edit" 
                             onclick="window.editCancellationReason(${reason.reason_id}, '${escapeHtml(reason.reason_name)}')">
-                        編集
+                        <i class="fas fa-pencil-alt"></i>
                     </button>
+                </td>
+                <td>
                     <button type="button" class="settings-btn-small settings-btn-delete" 
                             onclick="window.deleteCancellationReason(${reason.reason_id}, '${escapeHtml(reason.reason_name)}')">
-                        削除
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             </tr>
@@ -255,7 +257,7 @@
         const tbody = document.getElementById('reservation-methods-tbody');
         
         if (!methods || methods.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" class="settings-table-empty">登録されている予約方法はありません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan=\"3\" class=\"settings-table-empty\">登録されている予約方法はありません</td></tr>';
             return;
         }
         
@@ -265,11 +267,13 @@
                 <td>
                     <button type="button" class="settings-btn-small settings-btn-edit" 
                             onclick="window.editReservationMethod(${method.method_id}, '${escapeHtml(method.method_name)}')">
-                        編集
+                        <i class="fas fa-pencil-alt"></i>
                     </button>
+                </td>
+                <td>
                     <button type="button" class="settings-btn-small settings-btn-delete" 
                             onclick="window.deleteReservationMethod(${method.method_id}, '${escapeHtml(method.method_name)}')">
-                        削除
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             </tr>
@@ -435,7 +439,7 @@
         const tbody = document.getElementById('ng-areas-tbody');
         
         if (!areas || areas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" class="settings-table-empty">登録されているNGエリアはありません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan=\"3\" class=\"settings-table-empty\">登録されているNGエリアはありません</td></tr>';
             return;
         }
         
@@ -445,11 +449,13 @@
                 <td>
                     <button type="button" class="settings-btn-small settings-btn-edit" 
                             onclick="window.editNgArea(${area.ng_area_id}, '${escapeHtml(area.area_name)}')">
-                        編集
+                        <i class="fas fa-pencil-alt"></i>
                     </button>
+                </td>
+                <td>
                     <button type="button" class="settings-btn-small settings-btn-delete" 
                             onclick="window.deleteNgArea(${area.ng_area_id}, '${escapeHtml(area.area_name)}')">
-                        削除
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             </tr>
@@ -563,7 +569,7 @@
         const tbody = document.getElementById('ng-ages-tbody');
         
         if (!ages || ages.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="settings-table-empty">登録されている年齢NGはありません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan=\"4\" class=\"settings-table-empty\">登録されている年齢NGはありません</td></tr>';
             return;
         }
         
@@ -574,11 +580,13 @@
                 <td>
                     <button type="button" class="settings-btn-small settings-btn-edit" 
                             onclick="window.editNgAge(${age.ng_age_id}, '${escapeHtml(age.pattern_name)}', '${escapeHtml(age.description || '')}')">
-                        編集
+                        <i class="fas fa-pencil-alt"></i>
                     </button>
+                </td>
+                <td>
                     <button type="button" class="settings-btn-small settings-btn-delete" 
                             onclick="window.deleteNgAge(${age.ng_age_id}, '${escapeHtml(age.pattern_name)}')">
-                        削除
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             </tr>

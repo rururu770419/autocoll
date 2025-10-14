@@ -3,7 +3,8 @@
 {% block title %}予約設定{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reservation_settings.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -31,9 +32,9 @@
       <!-- キャンセル理由管理 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
-          <h3 class="settings-subsection-title">🚫 キャンセル理由管理</h3>
-          <button type="button" class="settings-btn settings-btn-secondary" id="add-cancellation-reason-btn">
-            ➕ 新規追加
+          <h3 class="settings-subsection-title">キャンセル理由管理</h3>
+          <button type="button" class="settings-btn settings-btn-primary" id="add-cancellation-reason-btn">
+            新規追加
           </button>
         </div>
         
@@ -41,27 +42,27 @@
           <table class="settings-table">
             <thead>
               <tr>
-                <th style="width: 70%;">理由名</th>
-                <th style="width: 30%;">操作</th>
+                <th style="width: 60%;">理由名</th>
+                <th style="width: 20%;">編集</th>
+                <th style="width: 20%;">削除</th>
               </tr>
             </thead>
             <tbody id="cancellation-reasons-tbody">
               <tr>
-                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       
-      <div class="settings-divider"></div>
       
       <!-- 予約方法管理 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
-          <h3 class="settings-subsection-title">📞 予約方法管理</h3>
-          <button type="button" class="settings-btn settings-btn-secondary" id="add-reservation-method-btn">
-            ➕ 新規追加
+          <h3 class="settings-subsection-title">予約方法管理</h3>
+          <button type="button" class="settings-btn settings-btn-primary" id="add-reservation-method-btn">
+            新規追加
           </button>
         </div>
         
@@ -69,25 +70,25 @@
           <table class="settings-table">
             <thead>
               <tr>
-                <th style="width: 70%;">方法名</th>
-                <th style="width: 30%;">操作</th>
+                <th style="width: 60%;">方法名</th>
+                <th style="width: 20%;">編集</th>
+                <th style="width: 20%;">削除</th>
               </tr>
             </thead>
             <tbody id="reservation-methods-tbody">
               <tr>
-                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       
-      <div class="settings-divider"></div>
       
       <!-- カード手数料設定 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
-          <h3 class="settings-subsection-title">💳 カード手数料設定</h3>
+          <h3 class="settings-subsection-title">カード手数料設定</h3>
         </div>
         
         <div class="settings-card-fee-wrapper">
@@ -120,7 +121,7 @@
               id="save-card-fee-btn" 
               class="settings-btn settings-btn-primary"
             >
-              💾 保存
+              保存
             </button>
           </div>
         </div>
@@ -136,9 +137,9 @@
       <!-- NGエリア管理 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
-          <h3 class="settings-subsection-title">🚫 NGエリア管理</h3>
-          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-area-btn">
-            ➕ 新規エリア追加
+          <h3 class="settings-subsection-title">NGエリア管理</h3>
+          <button type="button" class="settings-btn settings-btn-primary" id="add-ng-area-btn">
+            新規エリア追加
           </button>
         </div>
         
@@ -146,27 +147,27 @@
           <table class="settings-table">
             <thead>
               <tr>
-                <th style="width: 70%;">エリア名</th>
-                <th style="width: 30%;">操作</th>
+                <th style="width: 60%;">エリア名</th>
+                <th style="width: 20%;">編集</th>
+                <th style="width: 20%;">削除</th>
               </tr>
             </thead>
             <tbody id="ng-areas-tbody">
               <tr>
-                <td colspan="2" class="settings-table-loading">読み込み中...</td>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       
-      <div class="settings-divider"></div>
       
       <!-- 年齢NG管理 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
-          <h3 class="settings-subsection-title">👤 年齢NG管理</h3>
-          <button type="button" class="settings-btn settings-btn-secondary" id="add-ng-age-btn">
-            ➕ 新規年齢NG追加
+          <h3 class="settings-subsection-title">年齢NG管理</h3>
+          <button type="button" class="settings-btn settings-btn-primary" id="add-ng-age-btn">
+            新規年齢NG追加
           </button>
         </div>
         
@@ -176,7 +177,8 @@
               <tr>
                 <th style="width: 40%;">パターン名</th>
                 <th style="width: 30%;">備考</th>
-                <th style="width: 30%;">操作</th>
+                <th style="width: 20%;">編集</th>
+                <th style="width: 20%;">削除</th>
               </tr>
             </thead>
             <tbody id="ng-ages-tbody">

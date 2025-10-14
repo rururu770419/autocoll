@@ -106,8 +106,9 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 | **タイトル** | `margin: 0` |
 | **フォームカード背景** | `#f5f5f5` |
 | **テーブルヘッダー背景** | `#5a5a5a` |
+| **テーブルセルパディング** | `6px` |
 | **トグルスイッチ** | 丸型（`border-radius: 24px` / つまみ`50%`）、有効時`#00BCD4` |
-| **並び順ボタン** | `padding: 4px 8px`, `font-size: 16px`, 背景`#00BCD4` |
+| **並び順ボタン** | `padding: 2px 6px`, `font-size: 14px`, 背景`#00BCD4` |
 | **編集アイコン** | `fa-pencil-alt`, 色`#00BCD4` |
 | **削除アイコン** | `fa-trash-alt`, 色`#dc3545` |
 | **状態表示** | `padding: 4px 12px`, `border-radius: 20px`, 背景色付き＋白文字 |
