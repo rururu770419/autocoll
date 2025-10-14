@@ -31,6 +31,17 @@ db.close()
 **重要：**
 - `get_db()`は既に`dict_row`設定済み → `cursor(row_factory=dict_row)`は不要
 - プレースホルダーは`%s`を使用（`?`ではない）
+- **結果は辞書形式** → `result['column_name']`でアクセス（`result.column_name`ではない）
+
+```python
+# ❌ 間違い：属性アクセス
+result.max_order      # エラー
+current.sort_order    # エラー
+
+# ✅ 正しい：辞書アクセス
+result['max_order']   # OK
+current['sort_order'] # OK
+```
 
 ---
 
@@ -222,7 +233,24 @@ cursor = db.cursor()  # 自動的にdict_row
 
 ---
 
-### ❌ 間違い3：register_XXX_routes(app)形式
+### ❌ 間違い3：属性アクセスで辞書にアクセス
+```python
+# ❌ 間違い
+cursor.execute("SELECT MAX(sort_order) as max_order FROM discounts")
+result = cursor.fetchone()
+next_order = result.max_order + 1  # AttributeError
+
+# ✅ 正しい
+cursor.execute("SELECT MAX(sort_order) as max_order FROM discounts")
+result = cursor.fetchone()
+next_order = result['max_order'] + 1  # OK
+```
+
+**重要：** `get_db()`は辞書形式で返すため、必ず`result['column_name']`でアクセスする
+
+---
+
+### ❌ 間違い4：register_XXX_routes(app)形式
 ```python
 # ❌ 間違い
 def register_example_routes(app):
@@ -237,7 +265,7 @@ def example_management(store):
 
 ---
 
-### ❌ 間違い4：store_idでフィルタしない
+### ❌ 間違い5：store_idでフィルタしない
 ```python
 # ❌ 間違い
 cursor.execute("SELECT * FROM customers")  # 全店舗のデータが取れる
@@ -248,7 +276,7 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 
 ---
 
-### ❌ 間違い5：デザインが既存ページと違う
+### ❌ 間違い6：デザインが既存ページと違う
 
 **必ず既存ページ（オプション管理など）と同じデザインにする**
 

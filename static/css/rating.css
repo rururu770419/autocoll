@@ -1,315 +1,497 @@
-/* ================================
-   評価システム共通スタイル（スマホ対応）
-   ================================ */
+/* ============================================
+   Rating System - 統一スタイルシート
+   一覧ページ + 編集ページ + 登録ページ
+   ============================================ */
+
+/* ============================================
+   共通スタイル
+   ============================================ */
 
 /* コンテナ */
 .rating-container {
-    max-width: 100%;
-    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-/* ヘッダー */
-.rating-header {
-    margin-bottom: 20px;
-}
-
+/* タイトル */
 .rating-title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 15px;
+    font-size: 1.75rem;
+    margin: 0;
+    padding-bottom: 30px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* セクションタイトル */
+.rating-section-title {
+    font-size: 1.3rem;
+    margin: 0 0 15px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+/* 戻るボタン */
+.rating-back-wrapper {
+    margin-bottom: 20px;
 }
 
 .rating-back-btn {
     display: inline-block;
-    padding: 8px 15px;
+    padding: 8px 16px;
     background-color: #6c757d;
-    color: white;
+    color: #fff;
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: 0;
     font-size: 14px;
-    margin-bottom: 15px;
+    transition: background-color 0.2s ease;
 }
 
-/* ボタン */
-.rating-btn-new {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    background-color: #28a745;
-    color: white;
-    text-align: center;
+.rating-back-btn:hover {
+    background-color: #5a6268;
+    color: #fff;
     text-decoration: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    border: none;
-}
-
-.rating-btn-submit {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-}
-
-.rating-btn-edit {
-    flex: 1;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.rating-btn-delete {
-    padding: 10px 15px;
-    background-color: #dc3545;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 14px;
 }
 
 /* アラート */
 .rating-alert {
-    padding: 12px;
-    margin-bottom: 15px;
-    border-radius: 6px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 0;
 }
 
 .rating-alert-success {
-    background-color: #d4edda;
     color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
 }
 
 .rating-alert-error {
-    background-color: #f8d7da;
     color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
 }
 
-/* カード */
-.rating-item-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* ============================================
+   一覧ページ専用スタイル
+   ============================================ */
+
+/* 新規登録ボタン */
+.rating-btn-new-wrapper {
+    margin-bottom: 30px;
 }
 
-.rating-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.rating-item-name {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.rating-item-options {
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
+.rating-btn-new {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #00BCD4;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 0;
     font-size: 14px;
-    line-height: 1.6;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
 }
 
-.rating-item-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
+.rating-btn-new:hover {
+    background-color: #00a8b8;
+    color: #fff;
+    text-decoration: none;
 }
 
-/* バッジ */
-.rating-badge {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+.rating-btn-new i {
+    margin-right: 5px;
 }
 
-.rating-badge-active {
-    background-color: #28a745;
-    color: white;
+/* 一覧テーブル */
+.rating-list-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    margin-bottom: 30px;
 }
 
-.rating-badge-inactive {
-    background-color: #6c757d;
-    color: white;
+.rating-table-wrapper {
+    overflow-x: auto;
+    padding: 0;
 }
 
-/* フォーム */
-.rating-form {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
+.rating-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
 }
 
-.rating-form-group {
-    margin-bottom: 20px;
+.rating-table thead th {
+    background-color: #5a5a5a;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    border-bottom: none;
 }
 
-.rating-label {
-    display: block;
+.rating-table tbody td {
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.rating-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 並び順ボタン */
+.rating-sort-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+    border-radius: 0;
     font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 8px;
+    cursor: pointer;
+    margin: 0 2px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
 }
 
-.rating-required {
+.rating-sort-btn:hover {
+    background-color: #00a8b8;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ステータス表示 */
+.rating-status-active {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #28a745;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.rating-status-inactive {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 操作アイコン */
+.rating-action-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.rating-action-btn:hover {
+    opacity: 0.7;
+    text-decoration: none;
+}
+
+.rating-edit-icon {
+    color: #00BCD4;
+}
+
+.rating-delete-icon {
     color: #dc3545;
 }
 
-.rating-input,
-.rating-textarea {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    box-sizing: border-box;
+/* ============================================
+   編集・登録ページ専用スタイル
+   ============================================ */
+
+/* フォームカード */
+.rating-form-card {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    margin-bottom: 30px;
 }
 
-.rating-textarea {
-    min-height: 120px;
-    resize: vertical;
+/* フォームグリッド（2列レイアウト） */
+.rating-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
 }
 
-.rating-help {
+/* フォームグループ */
+.rating-form-group {
+    margin-bottom: 0;
+}
+
+.rating-form-group label {
     display: block;
-    font-size: 13px;
-    color: #666;
-    margin-top: 5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
 }
 
-/* ラジオボタングループ */
-.rating-radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
+.rating-form-group label .required {
+    color: #dc3545;
+    margin-left: 3px;
 }
 
-.rating-radio-item {
+/* 入力フィールド */
+.rating-form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+}
+
+.rating-form-input:focus {
+    outline: none;
+    border-color: #00BCD4;
+}
+
+/* セレクトボックス */
+select.rating-form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    padding-right: 35px;
+    cursor: pointer;
+}
+
+select.rating-form-input::-ms-expand {
+    display: none;
+}
+
+/* 選択肢セクション */
+.rating-options-section {
+    margin-bottom: 25px;
+}
+
+.rating-options-section h3 {
+    font-size: 1.1rem;
+    margin: 0 0 15px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.rating-options-list {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    padding: 15px;
+}
+
+.rating-option-item {
     display: flex;
     align-items: center;
-    padding: 12px;
-    background-color: white;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
-.rating-radio-item:active {
-    background-color: #e9ecef;
+.rating-option-item:last-child {
+    margin-bottom: 0;
 }
 
-.rating-radio-item input[type="radio"] {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-}
-
-.rating-radio-item label {
+.rating-option-input {
     flex: 1;
-    font-size: 15px;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    font-size: 14px;
+}
+
+.rating-option-input:focus {
+    outline: none;
+    border-color: #00BCD4;
+}
+
+.rating-option-delete-btn {
+    padding: 8px 12px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
     cursor: pointer;
-    margin: 0;
+    transition: background-color 0.2s ease;
 }
 
-.rating-radio-item input[type="radio"]:checked + label {
-    font-weight: bold;
-    color: #007bff;
+.rating-option-delete-btn:hover {
+    background-color: #c82333;
 }
 
-/* 評価セクション */
-.rating-section {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
+.rating-btn-add-option {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
 }
 
-.rating-section-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #007bff;
+.rating-btn-add-option:hover {
+    background-color: #5a6268;
 }
 
-/* 空メッセージ */
-.rating-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: #666;
-    font-size: 15px;
+/* ステータス切り替え（トグルスイッチ） */
+.rating-status-toggle {
+    margin-bottom: 25px;
 }
 
-/* チェックボックス */
-.rating-checkbox-group {
+.rating-status-toggle h3 {
+    font-size: 1.1rem;
+    margin: 0 0 15px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.rating-toggle-wrapper {
     display: flex;
     align-items: center;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
+    gap: 15px;
 }
 
-.rating-checkbox-group input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-}
-
-.rating-checkbox-group label {
-    font-size: 15px;
-    cursor: pointer;
-    margin: 0;
-}
-
-/* 顧客情報表示 */
-.rating-customer-info {
-    background-color: #e7f3ff;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.rating-customer-name {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.rating-customer-detail {
+.rating-toggle-label {
     font-size: 14px;
     color: #666;
 }
 
-/* レスポンシブ対応 */
-@media (min-width: 768px) {
-    .rating-container {
-        max-width: 600px;
-        margin: 0 auto;
+.rating-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 28px;
+}
+
+.rating-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.rating-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.rating-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.rating-toggle-switch input:checked + .rating-toggle-slider {
+    background-color: #00BCD4;
+}
+
+.rating-toggle-switch input:checked + .rating-toggle-slider:before {
+    transform: translateX(32px);
+}
+
+/* ボタングループ */
+.rating-btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.rating-btn-submit {
+    padding: 12px 40px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.rating-btn-submit:hover {
+    background-color: #00a8b8;
+}
+
+.rating-btn-cancel {
+    padding: 12px 40px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.rating-btn-cancel:hover {
+    background-color: #5a6268;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ============================================
+   レスポンシブ対応
+   ============================================ */
+
+@media (max-width: 768px) {
+    .rating-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .rating-btn-group {
+        flex-direction: column;
+    }
+    
+    .rating-btn-submit,
+    .rating-btn-cancel {
+        width: 100%;
+    }
+    
+    .rating-table-wrapper {
+        overflow-x: scroll;
     }
 }

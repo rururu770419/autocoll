@@ -1,31 +1,51 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rating.css') }}">
 {% endblock %}
 
-{% block title %}評価項目編集 - {{ display_name }}{% endblock %}
+{% block title %}評価項目編集 | {{ display_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2>評価項目編集</h2>
+<div class="rating-container">
+    <h1 class="rating-title">評価項目編集</h1>
     
-    <div class="card">
-        <div class="card-body">
-            <form id="editForm">
-                <input type="hidden" id="item_id" value="{{ item.item_id }}">
-                
-                <!-- 項目名 -->
-                <div class="form-group">
-                    <label for="item_name">項目名 <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="item_name" 
-                           value="{{ item.item_name }}" required>
+    <!-- 戻るリンク -->
+    <div class="rating-back-wrapper">
+        <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" class="rating-back-btn">
+            <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
+    </div>
+    
+    <!-- メッセージエリア -->
+    <div id="rating-message-area"></div>
+    
+    <!-- 編集フォーム -->
+    <div class="rating-form-card">
+        <form id="editForm" onsubmit="submitForm(event)">
+            <input type="hidden" id="item_id" value="{{ item.item_id }}">
+            
+            <div class="rating-form-grid">
+                <!-- 左列：項目名 -->
+                <div class="rating-form-group">
+                    <label for="item_name" class="rating-form-label">
+                        項目名 <span style="color: #dc3545;">*</span>
+                    </label>
+                    <input type="text" 
+                           class="rating-form-input" 
+                           id="item_name" 
+                           value="{{ item.item_name }}" 
+                           required 
+                           placeholder="例）サービス満足度">
                 </div>
                 
-                <!-- 評価タイプ -->
-                <div class="form-group">
-                    <label for="item_type">評価タイプ <span class="text-danger">*</span></label>
-                    <select class="form-control" id="item_type" required>
+                <!-- 右列：評価タイプ -->
+                <div class="rating-form-group">
+                    <label for="item_type" class="rating-form-label">
+                        評価タイプ <span style="color: #dc3545;">*</span>
+                    </label>
+                    <select class="rating-form-input" id="item_type" required onchange="toggleOptionsSection()">
                         <option value="radio" {% if item.item_type == 'radio' %}selected{% endif %}>
                             ラジオボタン（1つだけ選択）
                         </option>
@@ -36,85 +56,86 @@
                             テキストエリア（自由記述）
                         </option>
                     </select>
+                    
                 </div>
+            </div>
+            
+            <!-- 選択肢設定（ラジオ・チェックボックスの場合のみ表示） -->
+            <div id="options-section" class="rating-options-section" {% if item.item_type == 'textarea' %}style="display:none;"{% endif %}>
+                <h3 class="rating-section-subtitle">選択肢設定</h3>
                 
-                <!-- 選択肢設定（ラジオ・チェックボックスの場合のみ表示） -->
-                <div id="options-section" {% if item.item_type == 'textarea' %}style="display:none;"{% endif %}>
-                    <label>選択肢設定</label>
-                    <div id="options-container">
-                        {% for option in item.options_list %}
-                        <div class="option-item mb-2">
-                            <div class="input-group">
-                                <input type="text" class="form-control option-value" 
-                                       value="{{ option.value }}" placeholder="選択肢を入力">
-                                <div class="input-group-append">
-                                    <div class="input-group-text">
-                                        <input type="checkbox" class="option-enabled" 
-                                               {% if option.enabled %}checked{% endif %}>
-                                        <label class="mb-0 ml-1">有効</label>
-                                    </div>
-                                    <button type="button" class="btn btn-danger btn-sm btn-delete" 
-                                            onclick="removeOption(this)">削除</button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+                <div id="options-container" class="rating-options-container">
+                    {% for option in item.options_list %}
+                    <div class="rating-option-item">
+                        <input type="text" 
+                               class="rating-option-input" 
+                               value="{{ option.value }}" 
+                               placeholder="選択肢を入力">
+                        <button type="button" 
+                                class="rating-option-delete-btn" 
+                                onclick="removeOption(this)"
+                                title="削除">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm mt-2" 
-                            onclick="addOption()">
-                        選択肢を追加
-                    </button>
+                    {% endfor %}
                 </div>
                 
-                <!-- 有効/無効 -->
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="is_active" 
+                <button type="button" class="rating-btn-add-option" onclick="addOption()">
+                    <i class="fas fa-plus-circle"></i> 選択肢を追加
+                </button>
+            </div>
+            
+            <!-- 状態 -->
+            <div class="rating-form-group">
+                <label class="rating-form-label">状態</label>
+                <div class="rating-toggle-wrapper">
+                    <span class="rating-toggle-label">無効</span>
+                    <label class="rating-toggle-switch">
+                        <input type="checkbox" 
+                               class="rating-toggle-checkbox" 
+                               id="is_active" 
                                {% if item.is_active %}checked{% endif %}>
-                        <label class="form-check-label" for="is_active">
-                            この項目を有効にする
-                        </label>
-                    </div>
+                        <span class="rating-toggle-slider"></span>
+                    </label>
+                    <span class="rating-toggle-label">有効</span>
                 </div>
-                
-                <!-- ボタン -->
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-koushin-rating">更新</button>
-                    <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" 
-                       class="btn btn-secondary">キャンセル</a>
-                </div>
-            </form>
-        </div>
+            </div>
+            
+            <!-- ボタン -->
+            <div class="rating-btn-group">
+                <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" 
+                   class="rating-btn-cancel">キャンセル</a>
+                <button type="submit" class="rating-btn-submit">更新</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
+const store = "{{ store }}";
+
 // 評価タイプ変更時の処理
-document.getElementById('item_type').addEventListener('change', function() {
+function toggleOptionsSection() {
+    const itemType = document.getElementById('item_type').value;
     const optionsSection = document.getElementById('options-section');
-    if (this.value === 'textarea') {
+    
+    if (itemType === 'textarea') {
         optionsSection.style.display = 'none';
     } else {
         optionsSection.style.display = 'block';
     }
-});
+}
 
 // 選択肢を追加
 function addOption() {
     const container = document.getElementById('options-container');
     const optionHtml = `
-        <div class="option-item mb-2">
-            <div class="input-group">
-                <input type="text" class="form-control option-value" placeholder="選択肢を入力">
-                <div class="input-group-append">
-                    <div class="input-group-text">
-                        <input type="checkbox" class="option-enabled" checked>
-                        <label class="mb-0 ml-1">有効</label>
-                    </div>
-                    <button type="button" class="btn btn-danger btn-sm" 
-                            onclick="removeOption(this)">削除</button>
-                </div>
-            </div>
+        <div class="rating-option-item">
+            <input type="text" class="rating-option-input" placeholder="選択肢を入力">
+            <button type="button" class="rating-option-delete-btn" onclick="removeOption(this)" title="削除">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', optionHtml);
@@ -122,12 +143,17 @@ function addOption() {
 
 // 選択肢を削除
 function removeOption(button) {
-    button.closest('.option-item').remove();
+    const optionItems = document.querySelectorAll('.rating-option-item');
+    if (optionItems.length <= 1) {
+        showMessage('選択肢は最低1つ必要です', 'error');
+        return;
+    }
+    button.closest('.rating-option-item').remove();
 }
 
 // フォーム送信処理
-document.getElementById('editForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+function submitForm(event) {
+    event.preventDefault();
     
     const itemId = document.getElementById('item_id').value;
     const itemName = document.getElementById('item_name').value.trim();
@@ -135,30 +161,32 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
     const isActive = document.getElementById('is_active').checked;
     
     if (!itemName) {
-        alert('項目名を入力してください');
+        showMessage('項目名を入力してください', 'error');
         return;
     }
     
     // 選択肢を収集
     let options = [];
     if (itemType !== 'textarea') {
-        const optionItems = document.querySelectorAll('.option-item');
-        optionItems.forEach(item => {
-            const value = item.querySelector('.option-value').value.trim();
-            const enabled = item.querySelector('.option-enabled').checked;
+        const optionInputs = document.querySelectorAll('.rating-option-input');
+        optionInputs.forEach(input => {
+            const value = input.value.trim();
             if (value) {
-                options.push({value: value, enabled: enabled});
+                options.push({
+                    value: value,
+                    enabled: true  // 常に有効として扱う
+                });
             }
         });
         
         if (options.length === 0) {
-            alert('選択肢を1つ以上追加してください');
+            showMessage('選択肢を1つ以上追加してください', 'error');
             return;
         }
     }
     
-    // APIに送信
-    fetch(`/{{ store }}/api/rating_item/update`, {
+    // API送信
+    fetch(`/${store}/api/rating_item/update`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -172,15 +200,37 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message || '更新しました');
-            window.location.href = '/{{ store }}/rating_items_management';
+            showMessage(data.message || '更新しました', 'success');
+            setTimeout(() => {
+                window.location.href = `/${store}/rating_items_management`;
+            }, 1000);
         } else {
-            alert('エラー: ' + (data.error || '更新に失敗しました'));
+            showMessage(data.error || '更新に失敗しました', 'error');
         }
     })
     .catch(error => {
-        alert('通信エラー: ' + error);
+        showMessage('通信エラー: ' + error, 'error');
     });
-});
+}
+
+// メッセージ表示
+function showMessage(message, type) {
+    const messageArea = document.getElementById('rating-message-area');
+    const alertClass = type === 'success' ? 'rating-alert-success' : 'rating-alert-error';
+    
+    messageArea.innerHTML = `
+        <div class="rating-alert ${alertClass}">
+            ${message}
+        </div>
+    `;
+    
+    // 上部にスクロール
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 3秒後に自動で消す
+    setTimeout(() => {
+        messageArea.innerHTML = '';
+    }, 3000);
+}
 </script>
 {% endblock %}

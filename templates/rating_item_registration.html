@@ -1,204 +1,230 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
-<script src="{{ url_for('static', filename='js/customer_registration.js') }}" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rating.css') }}">
 {% endblock %}
 
-{% block title %}顧客登録 - {{ display_name }}{% endblock %}
+{% block title %}評価項目登録 | {{ display_name }}{% endblock %}
 
 {% block content %}
-<div class="customer-container">
-    <!-- ヘッダー -->
-    <div class="customer-header">
-        <div class="customer-title-area">
-            <h1>顧客登録</h1>
-            <a href="{{ url_for('main_routes.customer_management', store=store) }}" class="customer-back-btn">
-                ← 一覧に戻る
-            </a>
-        </div>
+<div class="rating-container">
+    <h1 class="rating-title">評価項目登録</h1>
+    
+    <!-- 戻るリンク -->
+    <div class="rating-back-wrapper">
+        <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" class="rating-back-btn">
+            <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
     </div>
-
+    
     <!-- メッセージエリア -->
-    <div id="messageArea"></div>
-
-    <!-- フォームエリア -->
-    <div class="customer-form-container">
-        <form id="customerForm" class="customer-form">
-            <!-- 1行目：名前、フリガナ、電話番号、会員種別 -->
-            <div class="customer-form-grid-4">
-                <div class="customer-form-group">
-                    <label class="customer-label customer-label-required">名前</label>
-                    <input type="text" name="name" class="customer-input" required>
+    <div id="rating-message-area"></div>
+    
+    <!-- 登録フォーム -->
+    <div class="rating-form-card">
+        <form id="registrationForm" onsubmit="submitForm(event)">
+            
+            <div class="rating-form-grid">
+                <!-- 左列：項目名 -->
+                <div class="rating-form-group">
+                    <label for="item_name" class="rating-form-label">
+                        項目名 <span style="color: #dc3545;">*</span>
+                    </label>
+                    <input type="text" 
+                           class="rating-form-input" 
+                           id="item_name" 
+                           required 
+                           placeholder="例）サービス満足度">
                 </div>
                 
-                <div class="customer-form-group">
-                    <label class="customer-label">フリガナ</label>
-                    <input type="text" name="furigana" class="customer-input">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">電話番号</label>
-                    <input type="tel" name="phone" class="customer-input" placeholder="09012345678">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">会員種別</label>
-                    <select name="member_type" class="customer-select">
-                        <option value="通常会員">通常会員</option>
-                        <option value="本会員">本会員</option>
+                <!-- 右列：評価タイプ -->
+                <div class="rating-form-group">
+                    <label for="item_type" class="rating-form-label">
+                        評価タイプ <span style="color: #dc3545;">*</span>
+                    </label>
+                    <select class="rating-form-input" id="item_type" required onchange="toggleOptionsSection()">
+                        <option value="radio" selected>
+                            ラジオボタン（1つだけ選択）
+                        </option>
+                        <option value="checkbox">
+                            チェックボックス（複数選択可）
+                        </option>
+                        <option value="textarea">
+                            テキストエリア（自由記述）
+                        </option>
                     </select>
+                    <small class="rating-form-hint">選択後は選択肢の設定が必要です</small>
                 </div>
             </div>
-
-            <!-- 2行目：ステータス、メールアドレス、生年月日、年齢 -->
-            <div class="customer-form-grid-4">
-                <div class="customer-form-group">
-                    <label class="customer-label">ステータス</label>
-                    <select name="status" class="customer-select">
-                        <option value="普通">普通</option>
-                        <option value="優良">優良</option>
-                        <option value="要注意">要注意</option>
-                        <option value="出禁">出禁</option>
-                    </select>
-                </div>
+            
+            <!-- 選択肢設定（ラジオ・チェックボックスの場合のみ表示） -->
+            <div id="options-section" class="rating-options-section">
+                <h3 class="rating-section-subtitle">選択肢設定</h3>
                 
-                <div class="customer-form-group">
-                    <label class="customer-label">メールアドレス</label>
-                    <input type="email" name="email" class="customer-input" placeholder="example@email.com">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">生年月日</label>
-                    <input type="date" name="birthday" id="birthday" class="customer-input">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">年齢</label>
-                    <input type="text" id="age" class="customer-input customer-input-readonly" 
-                           readonly placeholder="自動計算">
-                </div>
-            </div>
-
-            <!-- 3行目：都道府県、市区町村、住所詳細（2列分） -->
-            <div class="customer-form-grid-4">
-                <div class="customer-form-group">
-                    <label class="customer-label">都道府県</label>
-                    <select name="prefecture" id="prefecture" class="customer-select">
-                        <option value="">選択してください</option>
-                        <option value="北海道">北海道</option>
-                        <option value="青森県">青森県</option>
-                        <option value="岩手県">岩手県</option>
-                        <option value="宮城県">宮城県</option>
-                        <option value="秋田県">秋田県</option>
-                        <option value="山形県">山形県</option>
-                        <option value="福島県">福島県</option>
-                        <option value="茨城県">茨城県</option>
-                        <option value="栃木県">栃木県</option>
-                        <option value="群馬県">群馬県</option>
-                        <option value="埼玉県">埼玉県</option>
-                        <option value="千葉県">千葉県</option>
-                        <option value="東京都">東京都</option>
-                        <option value="神奈川県">神奈川県</option>
-                        <option value="新潟県">新潟県</option>
-                        <option value="富山県">富山県</option>
-                        <option value="石川県">石川県</option>
-                        <option value="福井県">福井県</option>
-                        <option value="山梨県">山梨県</option>
-                        <option value="長野県">長野県</option>
-                        <option value="岐阜県">岐阜県</option>
-                        <option value="静岡県">静岡県</option>
-                        <option value="愛知県">愛知県</option>
-                        <option value="三重県">三重県</option>
-                        <option value="滋賀県">滋賀県</option>
-                        <option value="京都府">京都府</option>
-                        <option value="大阪府">大阪府</option>
-                        <option value="兵庫県">兵庫県</option>
-                        <option value="奈良県">奈良県</option>
-                        <option value="和歌山県">和歌山県</option>
-                        <option value="鳥取県">鳥取県</option>
-                        <option value="島根県">島根県</option>
-                        <option value="岡山県">岡山県</option>
-                        <option value="広島県">広島県</option>
-                        <option value="山口県">山口県</option>
-                        <option value="徳島県">徳島県</option>
-                        <option value="香川県">香川県</option>
-                        <option value="愛媛県">愛媛県</option>
-                        <option value="高知県">高知県</option>
-                        <option value="福岡県">福岡県</option>
-                        <option value="佐賀県">佐賀県</option>
-                        <option value="長崎県">長崎県</option>
-                        <option value="熊本県">熊本県</option>
-                        <option value="大分県">大分県</option>
-                        <option value="宮崎県">宮崎県</option>
-                        <option value="鹿児島県">鹿児島県</option>
-                        <option value="沖縄県">沖縄県</option>
-                    </select>
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">市区町村</label>
-                    <select name="city" id="city" class="customer-select">
-                        <option value="">都道府県を選択してください</option>
-                    </select>
-                </div>
-                
-                <div class="customer-form-group customer-form-group-span2">
-                    <label class="customer-label">住所詳細</label>
-                    <textarea name="address_detail" class="customer-textarea" 
-                              rows="1" placeholder="番地・建物名等"></textarea>
-                </div>
-            </div>
-
-            <!-- 4行目：マイページID、パスワード、募集媒体、所持PT -->
-            <div class="customer-form-grid-4">
-                <div class="customer-form-group">
-                    <label class="customer-label">マイページID</label>
-                    <input type="text" name="mypage_id" class="customer-input" 
-                           placeholder="ログインID" autocomplete="off">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">マイページパスワード</label>
-                    <input type="password" name="mypage_password" class="customer-input" 
-                           placeholder="パスワード" autocomplete="new-password">
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">募集媒体</label>
-                    <select name="recruitment_source" class="customer-select">
-                        <option value="">選択してください</option>
-                        <option value="HP">HP</option>
-                        <option value="Twitter">Twitter</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="求人サイト">求人サイト</option>
-                        <option value="紹介">紹介</option>
-                        <option value="その他">その他</option>
-                    </select>
-                </div>
-                
-                <div class="customer-form-group">
-                    <label class="customer-label">現在の所持PT</label>
-                    <div class="customer-input-group">
-                        <input type="number" name="current_points" class="customer-input" 
-                               value="0" min="0" step="100">
-                        <span class="customer-input-suffix">pt</span>
+                <div id="options-container" class="rating-options-container">
+                    <!-- 初期状態で1つ選択肢を表示 -->
+                    <div class="rating-option-item">
+                        <input type="text" 
+                               class="rating-option-input" 
+                               placeholder="選択肢を入力">
+                        <button type="button" 
+                                class="rating-option-delete-btn" 
+                                onclick="removeOption(this)"
+                                title="削除">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- 保存ボタン -->
-            <div class="customer-form-actions">
-                <button type="submit" class="customer-submit-btn">
-                    顧客を登録
+                
+                <button type="button" class="rating-btn-add-option" onclick="addOption()">
+                    <i class="fas fa-plus-circle"></i> 選択肢を追加
                 </button>
-                <a href="{{ url_for('main_routes.customer_management', store=store) }}" 
-                   class="customer-cancel-btn">
-                    キャンセル
-                </a>
+            </div>
+            
+            <!-- 状態 -->
+            <div class="rating-form-group">
+                <label class="rating-form-label">状態</label>
+                <div class="rating-toggle-wrapper">
+                    <span class="rating-toggle-label">無効</span>
+                    <label class="rating-toggle-switch">
+                        <input type="checkbox" 
+                               class="rating-toggle-checkbox" 
+                               id="is_active" 
+                               checked>
+                        <span class="rating-toggle-slider"></span>
+                    </label>
+                    <span class="rating-toggle-label">有効</span>
+                </div>
+            </div>
+            
+            <!-- ボタン -->
+            <div class="rating-btn-group">
+                <a href="{{ url_for('main_routes.rating_items_management', store=store) }}" 
+                   class="rating-btn-cancel">キャンセル</a>
+                <button type="submit" class="rating-btn-submit">登録</button>
             </div>
         </form>
     </div>
 </div>
 
+<script>
+const store = "{{ store }}";
+
+// 評価タイプ変更時の処理
+function toggleOptionsSection() {
+    const itemType = document.getElementById('item_type').value;
+    const optionsSection = document.getElementById('options-section');
+    
+    if (itemType === 'textarea') {
+        optionsSection.style.display = 'none';
+    } else {
+        optionsSection.style.display = 'block';
+    }
+}
+
+// 選択肢を追加
+function addOption() {
+    const container = document.getElementById('options-container');
+    const optionHtml = `
+        <div class="rating-option-item">
+            <input type="text" class="rating-option-input" placeholder="選択肢を入力">
+            <button type="button" class="rating-option-delete-btn" onclick="removeOption(this)" title="削除">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', optionHtml);
+}
+
+// 選択肢を削除
+function removeOption(button) {
+    const optionItems = document.querySelectorAll('.rating-option-item');
+    if (optionItems.length <= 1) {
+        showMessage('選択肢は最低1つ必要です', 'error');
+        return;
+    }
+    button.closest('.rating-option-item').remove();
+}
+
+// フォーム送信処理
+function submitForm(event) {
+    event.preventDefault();
+    
+    const itemName = document.getElementById('item_name').value.trim();
+    const itemType = document.getElementById('item_type').value;
+    const isActive = document.getElementById('is_active').checked;
+    
+    if (!itemName) {
+        showMessage('項目名を入力してください', 'error');
+        return;
+    }
+    
+    // 選択肢を収集
+    let options = [];
+    if (itemType !== 'textarea') {
+        const optionInputs = document.querySelectorAll('.rating-option-input');
+        optionInputs.forEach(input => {
+            const value = input.value.trim();
+            if (value) {
+                options.push({
+                    value: value,
+                    enabled: true  // 常に有効として扱う
+                });
+            }
+        });
+        
+        if (options.length === 0) {
+            showMessage('選択肢を1つ以上追加してください', 'error');
+            return;
+        }
+    }
+    
+    // API送信
+    fetch(`/${store}/api/rating_item/add`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            item_name: itemName,
+            item_type: itemType,
+            options: options,
+            is_active: isActive
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message || '登録しました', 'success');
+            setTimeout(() => {
+                window.location.href = `/${store}/rating_items_management`;
+            }, 1000);
+        } else {
+            showMessage(data.error || '登録に失敗しました', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('通信エラー: ' + error, 'error');
+    });
+}
+
+// メッセージ表示
+function showMessage(message, type) {
+    const messageArea = document.getElementById('rating-message-area');
+    const alertClass = type === 'success' ? 'rating-alert-success' : 'rating-alert-error';
+    
+    messageArea.innerHTML = `
+        <div class="rating-alert ${alertClass}">
+            ${message}
+        </div>
+    `;
+    
+    // 上部にスクロール
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 3秒後に自動で消す
+    setTimeout(() => {
+        messageArea.innerHTML = '';
+    }, 3000);
+}
+</script>
 {% endblock %}
