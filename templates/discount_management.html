@@ -88,16 +88,18 @@
                     {% for discount in discounts %}
                     <tr>
                         <td>
-                            <a href="javascript:void(0);" onclick="moveDiscount({{ discount.discount_id }}, 'up')" 
-                               class="discount-sort-btn" 
-                               title="上に移動">
+                            <button onclick="moveDiscount({{ discount.discount_id }}, 'up')" 
+                                    class="discount-sort-btn {% if loop.first %}discount-sort-btn-disabled{% endif %}"
+                                    {% if loop.first %}disabled{% endif %}
+                                    title="上に移動">
                                 <i class="fas fa-chevron-up"></i>
-                            </a>
-                            <a href="javascript:void(0);" onclick="moveDiscount({{ discount.discount_id }}, 'down')" 
-                               class="discount-sort-btn" 
-                               title="下に移動">
+                            </button>
+                            <button onclick="moveDiscount({{ discount.discount_id }}, 'down')" 
+                                    class="discount-sort-btn {% if loop.last %}discount-sort-btn-disabled{% endif %}"
+                                    {% if loop.last %}disabled{% endif %}
+                                    title="下に移動">
                                 <i class="fas fa-chevron-down"></i>
-                            </a>
+                            </button>
                         </td>
                         <td>{{ discount.name }}</td>
                         <td>

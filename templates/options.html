@@ -86,12 +86,14 @@
                     <tr>
                         <td>
                             <a href="{{ url_for('main_routes.move_option_up_route', store=store, option_id=opt.option_id) }}" 
-                               class="options-sort-btn" 
+                               class="options-sort-btn {% if loop.first %}options-sort-btn-disabled{% endif %}"
+                               {% if loop.first %}onclick="return false;" style="pointer-events: none;"{% endif %}
                                title="上に移動">
                                 <i class="fas fa-chevron-up"></i>
                             </a>
                             <a href="{{ url_for('main_routes.move_option_down_route', store=store, option_id=opt.option_id) }}" 
-                               class="options-sort-btn" 
+                               class="options-sort-btn {% if loop.last %}options-sort-btn-disabled{% endif %}"
+                               {% if loop.last %}onclick="return false;" style="pointer-events: none;"{% endif %}
                                title="下に移動">
                                 <i class="fas fa-chevron-down"></i>
                             </a>

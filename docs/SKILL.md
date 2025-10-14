@@ -162,6 +162,45 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 
 ---
 
+### 🔼 並び順ボタン
+
+```html
+<button onclick="moveUp(...)" 
+        class="xxx-sort-btn {% if loop.first %}xxx-sort-btn-disabled{% endif %}"
+        {% if loop.first %}disabled{% endif %}>
+    <i class="fas fa-chevron-up"></i>
+</button>
+<button onclick="moveDown(...)" 
+        class="xxx-sort-btn {% if loop.last %}xxx-sort-btn-disabled{% endif %}"
+        {% if loop.last %}disabled{% endif %}>
+    <i class="fas fa-chevron-down"></i>
+</button>
+```
+
+```css
+.xxx-sort-btn {
+    padding: 4px 8px;
+    font-size: 16px;
+    background-color: #00BCD4;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.xxx-sort-btn-disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+```
+
+**ポイント:**
+- 一番上の項目では「上に移動」をdisabled
+- 一番下の項目では「下に移動」をdisabled
+- `{% if loop.first %}`と`{% if loop.last %}`を使用
+- disabled時はクラス追加とdisabled属性の両方を設定
+
+---
+
 ### 🎯 デザイン統一の手順
 
 1. **既存の類似ページを確認**（例：オプション管理）
@@ -194,6 +233,7 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 - [ ] トグルスイッチは丸型
 - [ ] 状態表示は丸いボタン型
 - [ ] アイコンは`fa-pencil-alt`、`fa-trash-alt`
+- [ ] 並び順ボタンは`loop.first`/`loop.last`でdisabled
 
 ### HTML
 - [ ] `{% extends "base.html" %}`
@@ -291,6 +331,28 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 
 ---
 
+### ❌ 間違い7：並び順ボタンのdisabled処理を忘れる
+
+**一番上/下の項目でもボタンが押せてしまう**
+
+```html
+<!-- ❌ 間違い：disabledなし -->
+<button onclick="moveUp(...)" class="xxx-sort-btn">
+    <i class="fas fa-chevron-up"></i>
+</button>
+
+<!-- ✅ 正しい：loop.firstでdisabled -->
+<button onclick="moveUp(...)" 
+        class="xxx-sort-btn {% if loop.first %}xxx-sort-btn-disabled{% endif %}"
+        {% if loop.first %}disabled{% endif %}>
+    <i class="fas fa-chevron-up"></i>
+</button>
+```
+
+**重要:** クラス追加とdisabled属性の両方を設定する
+
+---
+
 ## 📚 クイックリファレンス
 
 ### データベース接続
@@ -361,6 +423,7 @@ main_routes.add_url_rule('/<store>/example', 'example_management',
 5. **メインカラー`#00BCD4`**を使用
 6. **状態表示は丸いボタン型**（背景色付き＋白文字）
 7. **トグルスイッチは丸型**（角型ではない）
+8. **並び順ボタンは`loop.first`/`loop.last`でdisabled処理**
 
 ---
 

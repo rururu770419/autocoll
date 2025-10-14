@@ -91,7 +91,7 @@ def get_course_by_id(course_id, db=None):
         print(f"コース取得エラー (course_id: {course_id}): {e}")
         return None
 
-def add_course(name, category_id, time_minutes, price=None, cast_back_amount=None, store_id=1):
+def add_course(name, category_id, time_minutes, price=None, cast_back_amount=None, is_active=True, store_id=1):
     """新しいコースを追加"""
     try:
         db = get_db()
@@ -114,7 +114,7 @@ def add_course(name, category_id, time_minutes, price=None, cast_back_amount=Non
         cursor.execute("""
             INSERT INTO courses (name, category_id, time_minutes, price, cast_back_amount, sort_order, store_id, is_active, created_at, updated_at) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """, (name, category_id, time_minutes, price, cast_back_amount, next_order, store_id, True))
+        """, (name, category_id, time_minutes, price, cast_back_amount, next_order, store_id, is_active))
         
         db.commit()
         print(f"コース追加成功: {name}")
@@ -275,7 +275,7 @@ def get_course_category_by_id(category_id):
         print(f"コースカテゴリ取得エラー (category_id: {category_id}): {e}")
         return None
 
-def add_course_category(category_name, store_id=1):
+def add_course_category(category_name, is_active=True, store_id=1):
     """新しいコースカテゴリを追加"""
     try:
         db = get_db()
@@ -295,8 +295,8 @@ def add_course_category(category_name, store_id=1):
         
         print(f"カテゴリ追加: {category_name}, 並び順: {next_order}")
         
-        cursor.execute("INSERT INTO course_categories (category_name, sort_order, store_id) VALUES (%s, %s, %s)", 
-                      (category_name, next_order, store_id))
+        cursor.execute("INSERT INTO course_categories (category_name, sort_order, is_active, store_id) VALUES (%s, %s, %s, %s)", 
+                      (category_name, next_order, is_active, store_id))
         db.commit()
         
         print(f"カテゴリ追加成功: {category_name}")
@@ -308,7 +308,7 @@ def add_course_category(category_name, store_id=1):
         traceback.print_exc()
         return False
 
-def update_course_category(category_id, category_name):
+def update_course_category(category_id, category_name, is_active=True):
     """コースカテゴリを更新"""
     try:
         db = get_db()
@@ -316,7 +316,7 @@ def update_course_category(category_id, category_name):
             return False
         
         cursor = db.cursor()
-        cursor.execute("UPDATE course_categories SET category_name = %s WHERE category_id = %s", (category_name, category_id))
+        cursor.execute("UPDATE course_categories SET category_name = %s, is_active = %s WHERE category_id = %s", (category_name, is_active, category_id))
         db.commit()
         return True
     except Exception as e:

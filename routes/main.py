@@ -6,8 +6,24 @@ from .auth import index, login, logout
 from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id
 # キャスト関連にsave_cast_ng_settingsを追加
 from .cast import register_cast, edit_cast, delete_cast, cast_management, save_cast_ng_settings
-# コース関連（move_course_up, move_course_downを追加）
-from .course import register_course, edit_course, delete_course, move_course_up, move_course_down
+# コース関連（move_course_up, move_course_down + カテゴリ管理関数を追加）
+from .course import (
+    course_registration, 
+    edit_course, 
+    delete_course, 
+    move_course_up, 
+    move_course_down,
+    update_course_endpoint,  # コース更新API
+    # カテゴリ管理関数
+    course_category_management_view,
+    course_category_registration_view,
+    course_category_edit_view,
+    add_category_endpoint,
+    update_category_endpoint,
+    delete_category_endpoint,
+    move_category_up,
+    move_category_down
+)
 from .hotel import register_hotel, edit_hotel, delete_hotel, register_category, register_area, move_hotel_up_route, move_hotel_down_route
 from .pickup import pickup_register
 # ★ dashboard関連のインポートを修正（get_record_dates, get_course_dataを追加）
@@ -98,11 +114,33 @@ main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', de
 main_routes.add_url_rule('/<store>/cast/<int:cast_id>/ng-settings', 'save_cast_ng_settings', save_cast_ng_settings, methods=['POST'])
 
 # コース管理（既存のルート + 並び順変更を追加）
-main_routes.add_url_rule('/<store>/register_course', 'register_course', register_course, methods=['GET', 'POST'])
+main_routes.add_url_rule('/<store>/course_registration', 'course_registration', course_registration, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/edit_course/<int:course_id>', 'edit_course', edit_course, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/delete_course/<int:course_id>', 'delete_course', delete_course, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/move_course_up/<int:course_id>', 'move_course_up', move_course_up, methods=['GET'])
 main_routes.add_url_rule('/<store>/move_course_down/<int:course_id>', 'move_course_down', move_course_down, methods=['GET'])
+# API: コース更新
+main_routes.add_url_rule('/<store>/api/course/update', 'update_course_endpoint', update_course_endpoint, methods=['POST'])
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# コースカテゴリ管理（新規追加）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# カテゴリ管理一覧
+main_routes.add_url_rule('/<store>/course_category_management', 'course_category_management', course_category_management_view, methods=['GET'])
+# カテゴリ登録ページ
+main_routes.add_url_rule('/<store>/course_category_registration', 'course_category_registration', course_category_registration_view, methods=['GET'])
+# カテゴリ編集ページ
+main_routes.add_url_rule('/<store>/course_category_edit', 'course_category_edit', course_category_edit_view, methods=['GET'])
+# API: カテゴリ追加
+main_routes.add_url_rule('/<store>/api/course_category/add', 'api_add_course_category', add_category_endpoint, methods=['POST'])
+# API: カテゴリ更新
+main_routes.add_url_rule('/<store>/api/course_category/update', 'api_update_course_category', update_category_endpoint, methods=['POST'])
+# API: カテゴリ削除
+main_routes.add_url_rule('/<store>/api/course_category/delete', 'api_delete_course_category', delete_category_endpoint, methods=['POST'])
+# カテゴリ並び順変更（上）
+main_routes.add_url_rule('/<store>/move_category_up/<int:category_id>', 'move_category_up_route', move_category_up, methods=['GET'])
+# カテゴリ並び順変更（下）
+main_routes.add_url_rule('/<store>/move_category_down/<int:category_id>', 'move_category_down_route', move_category_down, methods=['GET'])
 
 # カテゴリ・エリア管理
 main_routes.add_url_rule('/<store>/register_category', 'register_category', register_category, methods=['GET', 'POST'])
@@ -173,7 +211,7 @@ main_routes.add_url_rule('/<store>/customer_management', 'customer_management', 
 main_routes.add_url_rule('/<store>/customer_registration', 'customer_registration', customer_registration_view, methods=['GET'])
 main_routes.add_url_rule('/<store>/customer_edit/<int:customer_id>', 'edit_customer', customer_edit_view, methods=['GET'])
 
-# 顧客管理（API）A
+# 顧客管理（API）
 main_routes.add_url_rule('/<store>/api/customers', 'api_get_customers', api_get_customers_endpoint, methods=['GET'])
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>', 'api_get_customer', api_get_customer_endpoint, methods=['GET'])
 main_routes.add_url_rule('/<store>/api/customers/add', 'api_add_customer', api_add_customer_endpoint, methods=['POST'])
@@ -182,7 +220,7 @@ main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>/delete', 'api
 main_routes.add_url_rule('/<store>/api/customers/search', 'api_search_customers', api_search_customers_endpoint, methods=['GET'])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 顧客情報設定API（新規追加）
+# 顧客情報設定API
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 main_routes.add_url_rule('/<store>/api/customer_fields', 'api_get_customer_fields', api_get_customer_fields, methods=['GET'])
 main_routes.add_url_rule('/<store>/api/customer_fields/options', 'api_get_customer_field_options', api_get_customer_field_options_for_edit, methods=['GET'])

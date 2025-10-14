@@ -49,21 +49,21 @@
                     {% for item in items %}
                     <tr>
                         <!-- 並び順 -->
+                        <!-- 並び順 -->
                         <td>
-                            <a href="javascript:void(0);" 
-                               onclick="moveItem({{ item.item_id }}, 'up')" 
-                               class="rating-sort-btn" 
-                               title="上に移動">
+                            <button onclick="moveItem({{ item.item_id }}, 'up')" 
+                                    class="rating-sort-btn {% if loop.first %}rating-sort-btn-disabled{% endif %}"
+                                    {% if loop.first %}disabled{% endif %}
+                                    title="上に移動">
                                 <i class="fas fa-chevron-up"></i>
-                            </a>
-                            <a href="javascript:void(0);" 
-                               onclick="moveItem({{ item.item_id }}, 'down')" 
-                               class="rating-sort-btn" 
-                               title="下に移動">
+                            </button>
+                            <button onclick="moveItem({{ item.item_id }}, 'down')" 
+                                    class="rating-sort-btn {% if loop.last %}rating-sort-btn-disabled{% endif %}"
+                                    {% if loop.last %}disabled{% endif %}
+                                    title="下に移動">
                                 <i class="fas fa-chevron-down"></i>
-                            </a>
+                            </button>
                         </td>
-                        
                         <!-- 項目名 -->
                         <td>{{ item.item_name }}</td>
                         

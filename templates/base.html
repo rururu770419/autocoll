@@ -54,7 +54,7 @@
                         <li><a href="{{ url_for('rs_main', store=session.get('store', 'nagano')) }}">予約設定</a></li>
                         <li><a href="{{ url_for('main_routes.register_staff', store=session.get('store', 'nagano')) }}">スタッフ</a></li>
                         <li><a href="{{ url_for('main_routes.cast_management', store=session.get('store', 'nagano')) }}">キャスト</a></li>
-                        <li><a href="{{ url_for('main_routes.register_course', store=session.get('store', 'nagano')) }}">コース</a></li>
+                        <li><a href="{{ url_for('main_routes.course_registration', store=session.get('store', 'nagano')) }}">コース</a></li>
                         <li><a href="{{ url_for('main_routes.options', store=session.get('store', 'nagano')) }}">オプション</a></li>
                         <li><a href="{{ url_for('main_routes.discount_management', store=session.get('store', 'nagano')) }}">割引</a></li>
                         <li><a href="{{ url_for('main_routes.rating_items_management', store=session.get('store', 'nagano')) }}">評価項目</a></li>
