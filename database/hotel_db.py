@@ -43,8 +43,12 @@ def register_category(db, name):
         
         cursor.execute("INSERT INTO categories (category_id, name) VALUES (%s, %s)", (new_category_id, name))
         db.commit()
+        return True  # ✅ 追加
     except psycopg.IntegrityError:
         raise
+    except Exception as e:
+        print(f"カテゴリ登録エラー: {e}")
+        return False
 
 def find_category_by_id(db, category_id):
     """IDでカテゴリを検索"""
@@ -66,14 +70,23 @@ def update_category(db, category_id, name):
         cursor = db.cursor()
         cursor.execute("UPDATE categories SET name = %s WHERE category_id = %s", (name, category_id))
         db.commit()
+        return True  # ✅ 追加
     except psycopg.IntegrityError:
         raise
+    except Exception as e:
+        print(f"カテゴリ更新エラー: {e}")
+        return False
 
 def delete_category_by_id(db, category_id):
     """IDでカテゴリを削除"""
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM categories WHERE category_id = %s", (category_id,))
-    db.commit()
+    try:
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM categories WHERE category_id = %s", (category_id,))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"カテゴリ削除エラー: {e}")
+        return False
 
 # ==== エリア関連の関数 ====
 def get_all_areas(db):
@@ -125,11 +138,13 @@ def update_area(db, area_id, name, transportation_fee=0, travel_time_minutes=0):
     """エリア情報を更新（所要時間対応）"""
     try:
         cursor = db.cursor()
+        
         cursor.execute("""
             UPDATE areas 
             SET name = %s, transportation_fee = %s, travel_time_minutes = %s 
             WHERE area_id = %s
         """, (name, transportation_fee, travel_time_minutes, area_id))
+        
         db.commit()
         return True
     except psycopg.IntegrityError:
@@ -147,6 +162,78 @@ def delete_area_by_id(db, area_id):
         return True
     except Exception as e:
         print(f"エリア削除エラー: {e}")
+        return False
+
+def move_area_up(db, area_id):
+    """エリアの並び順を上に移動"""
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute("SELECT sort_order FROM areas WHERE area_id = %s", (area_id,))
+        current = cursor.fetchone()
+        
+        if not current:
+            return False
+        
+        current_order = current['sort_order']
+        
+        cursor.execute("""
+            SELECT area_id, sort_order FROM areas 
+            WHERE sort_order < %s 
+            ORDER BY sort_order DESC LIMIT 1
+        """, (current_order,))
+        upper = cursor.fetchone()
+        
+        if upper:
+            upper_id = upper['area_id']
+            upper_order = upper['sort_order']
+            
+            cursor.execute("UPDATE areas SET sort_order = %s WHERE area_id = %s", (upper_order, area_id))
+            cursor.execute("UPDATE areas SET sort_order = %s WHERE area_id = %s", (current_order, upper_id))
+            
+            db.commit()
+            return True
+        else:
+            return False
+            
+    except Exception as e:
+        print(f"エリア並び順上移動エラー: {e}")
+        return False
+
+def move_area_down(db, area_id):
+    """エリアの並び順を下に移動"""
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute("SELECT sort_order FROM areas WHERE area_id = %s", (area_id,))
+        current = cursor.fetchone()
+        
+        if not current:
+            return False
+        
+        current_order = current['sort_order']
+        
+        cursor.execute("""
+            SELECT area_id, sort_order FROM areas 
+            WHERE sort_order > %s 
+            ORDER BY sort_order ASC LIMIT 1
+        """, (current_order,))
+        lower = cursor.fetchone()
+        
+        if lower:
+            lower_id = lower['area_id']
+            lower_order = lower['sort_order']
+            
+            cursor.execute("UPDATE areas SET sort_order = %s WHERE area_id = %s", (lower_order, area_id))
+            cursor.execute("UPDATE areas SET sort_order = %s WHERE area_id = %s", (current_order, lower_id))
+            
+            db.commit()
+            return True
+        else:
+            return False
+            
+    except Exception as e:
+        print(f"エリア並び順下移動エラー: {e}")
         return False
 
 # ==== ホテル関連の関数 ====
@@ -259,12 +346,9 @@ def register_hotel(db, name, category_id, area_id, base_price=0, additional_time
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """, (new_hotel_id, name, category_id, area_id, base_price, additional_time, next_sort_order, True))
         db.commit()
-        print(f"ホテル登録成功: {name} (基本料金: {base_price}円, 追加時間: {additional_time}分)")
         return True
     except Exception as e:
         print(f"ホテル登録エラー: {e}")
-        import traceback
-        traceback.print_exc()
         return False
 
 def update_hotel(db, hotel_id, name, category_id, area_id, base_price=None, additional_time=None, is_active=True):
@@ -286,7 +370,6 @@ def update_hotel(db, hotel_id, name, category_id, area_id, base_price=None, addi
             """, (name, category_id, area_id, is_active, hotel_id))
         
         db.commit()
-        print(f"ホテル更新成功: hotel_id {hotel_id}")
         return True
     except Exception as e:
         print(f"ホテル更新エラー: {e}")

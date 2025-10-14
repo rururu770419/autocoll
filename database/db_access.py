@@ -12,22 +12,7 @@ from flask import g
 # PostgreSQL接続設定を読み込み
 from config import DATABASE_CONFIG
 
-
-def find_hotel_by_name_category_area(db, name, category_id, area_id):
-    """名前・カテゴリ・エリアの組み合わせでホテルを検索"""
-    try:
-        if db is None:
-            db = get_db()
-        
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT hotel_id, name, category_id, area_id FROM hotels WHERE name = %s AND category_id = %s AND area_id = %s",
-            (name, category_id, area_id)
-        )
-        return cursor.fetchone()
-    except Exception as e:
-        print(f"ホテル検索エラー: {e}")
-        return None
+# ❌ 削除: find_hotel_by_name_category_area は hotel_db.py にあるので重複
 
 def get_staff_list(db):
     """スタッフ一覧を取得（ダッシュボード用）"""

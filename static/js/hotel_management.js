@@ -1,289 +1,694 @@
-// ホテル管理用JavaScript - 完全版
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ホテル管理ページ JavaScript
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// ==== 共通のユーティリティ関数 ====
-function toggleEditMode(type, id, isEditing) {
-  const nameElement = document.getElementById(`${type}-name-${id}`);
-  const editElement = document.getElementById(`${type}-edit-${id}`);
-  const editButton = document.querySelector(`[onclick="edit${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
-  const saveButton = document.querySelector(`[onclick="save${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
-  const cancelButton = document.querySelector(`[onclick="cancelEdit${type.charAt(0).toUpperCase() + type.slice(1)}(${id})"]`);
-
-  if (isEditing) {
-      if (nameElement) nameElement.classList.add('hidden');
-      if (editElement) editElement.classList.remove('hidden');
-      if (editButton) editButton.classList.add('hidden');
-      if (saveButton) saveButton.classList.remove('hidden');
-      if (cancelButton) cancelButton.classList.remove('hidden');
-  } else {
-      if (nameElement) nameElement.classList.remove('hidden');
-      if (editElement) editElement.classList.add('hidden');
-      if (editButton) editButton.classList.remove('hidden');
-      if (saveButton) saveButton.classList.add('hidden');
-      if (cancelButton) cancelButton.classList.add('hidden');
-  }
-}
-
-// ==== カテゴリ（ホテル種別）管理 ====
-function editCategory(id) {
-  console.log(`カテゴリ編集開始: ID=${id}`);
-  toggleEditMode('category', id, true);
-}
-
-function cancelEditCategory(id) {
-  console.log(`カテゴリ編集キャンセル: ID=${id}`);
-  toggleEditMode('category', id, false);
-}
-
-function saveCategory(id) {
-  console.log(`カテゴリ保存開始: ID=${id}`);
-  const newName = document.getElementById(`category-edit-${id}`).value.trim();
-  if (!newName) {
-      alert('ホテル種別名を入力してください。');
-      return;
-  }
-  
-  console.log(`新しいカテゴリ名: "${newName}"`);
-  
-  // 隠しフォームのinput要素に値を設定
-  const hiddenInput = document.getElementById(`category-name-input-${id}`);
-  if (hiddenInput) {
-      hiddenInput.value = newName;
-      console.log(`隠しフィールドに値設定完了`);
-  } else {
-      console.error(`隠しフィールドが見つかりません: category-name-input-${id}`);
-      return;
-  }
-  
-  // フォームを送信
-  const form = document.getElementById(`category-form-${id}`);
-  if (form) {
-      console.log(`フォーム送信開始`);
-      form.submit();
-  } else {
-      console.error(`フォームが見つかりません: category-form-${id}`);
-  }
-}
-
-// ==== エリア管理（交通費・所要時間対応完全版） ====
-function editArea(id) {
-  console.log(`エリア編集開始: ID=${id}`);
-  
-  // 表示要素を取得
-  const nameElement = document.getElementById(`area-name-${id}`);
-  const feeDisplayElement = document.getElementById(`area-fee-display-${id}`);
-  const editFieldsElement = document.getElementById(`area-edit-fields-${id}`);
-  const editButton = document.getElementById(`area-edit-btn-${id}`);
-  const saveButton = document.getElementById(`area-save-btn-${id}`);
-  const cancelButton = document.getElementById(`area-cancel-btn-${id}`);
-
-  // 要素の存在確認
-  if (!nameElement || !feeDisplayElement || !editFieldsElement || !editButton || !saveButton || !cancelButton) {
-      console.error('エリア編集: 必要な要素が見つかりません', {
-          nameElement: !!nameElement,
-          feeDisplayElement: !!feeDisplayElement,
-          editFieldsElement: !!editFieldsElement,
-          editButton: !!editButton,
-          saveButton: !!saveButton,
-          cancelButton: !!cancelButton
-      });
-      return;
-  }
-
-  // 編集モードに切り替え
-  nameElement.classList.add('hidden');
-  feeDisplayElement.classList.add('hidden');
-  editFieldsElement.classList.remove('hidden');
-  editButton.classList.add('hidden');
-  saveButton.classList.remove('hidden');
-  cancelButton.classList.remove('hidden');
-  
-  console.log(`エリア編集モード切り替え完了: ID=${id}`);
-}
-
-function cancelEditArea(id) {
-  console.log(`エリア編集キャンセル: ID=${id}`);
-  
-  // 表示要素を取得
-  const nameElement = document.getElementById(`area-name-${id}`);
-  const feeDisplayElement = document.getElementById(`area-fee-display-${id}`);
-  const editFieldsElement = document.getElementById(`area-edit-fields-${id}`);
-  const editButton = document.getElementById(`area-edit-btn-${id}`);
-  const saveButton = document.getElementById(`area-save-btn-${id}`);
-  const cancelButton = document.getElementById(`area-cancel-btn-${id}`);
-
-  if (nameElement && feeDisplayElement && editFieldsElement && editButton && saveButton && cancelButton) {
-      // 表示モードに戻す
-      nameElement.classList.remove('hidden');
-      feeDisplayElement.classList.remove('hidden');
-      editFieldsElement.classList.add('hidden');
-      editButton.classList.remove('hidden');
-      saveButton.classList.add('hidden');
-      cancelButton.classList.add('hidden');
-      
-      console.log(`エリア編集キャンセル完了: ID=${id}`);
-  } else {
-      console.error(`エリア編集キャンセル: 要素が見つかりません ID=${id}`);
-  }
-}
-
-function saveArea(id) {
-  console.log(`エリア保存開始: ID=${id}`);
-  
-  // 入力値を取得
-  const newName = document.getElementById(`area-edit-name-${id}`).value.trim();
-  const newFee = document.getElementById(`area-edit-fee-${id}`).value;
-  const newTime = document.getElementById(`area-edit-time-${id}`).value;
-  
-  console.log(`入力値確認:`, {
-      name: newName,
-      fee: newFee,
-      time: newTime
-  });
-  
-  // バリデーション
-  if (!newName) {
-      alert('エリア名を入力してください。');
-      return;
-  }
-  
-  // 数値バリデーション
-  const feeValue = parseInt(newFee) || 0;
-  const timeValue = parseInt(newTime) || 0;
-  
-  if (feeValue < 0) {
-      alert('交通費は0以上で入力してください。');
-      return;
-  }
-  
-  if (timeValue < 0) {
-      alert('所要時間は0以上で入力してください。');
-      return;
-  }
-  
-  console.log(`バリデーション通過: fee=${feeValue}, time=${timeValue}`);
-  
-  // 隠しフォームのinput要素に値を設定
-  const nameInput = document.getElementById(`area-name-input-${id}`);
-  const feeInput = document.getElementById(`area-fee-input-${id}`);
-  const timeInput = document.getElementById(`area-time-input-${id}`);
-  
-  if (!nameInput || !feeInput || !timeInput) {
-      console.error('エリア保存: 隠しフィールドが見つかりません', {
-          nameInput: !!nameInput,
-          feeInput: !!feeInput,
-          timeInput: !!timeInput
-      });
-      alert('フォーム送信エラーが発生しました。');
-      return;
-  }
-  
-  nameInput.value = newName;
-  feeInput.value = feeValue;
-  timeInput.value = timeValue;
-  
-  console.log(`隠しフィールド設定完了`);
-  
-  // フォームを送信
-  const form = document.getElementById(`area-form-${id}`);
-  if (form) {
-      console.log(`エリアフォーム送信開始`);
-      form.submit();
-  } else {
-      console.error(`エリアフォームが見つかりません: area-form-${id}`);
-      alert('フォーム送信エラーが発生しました。');
-  }
-}
-
-// ==== モーダル制御 ====
-function openModal(modalId) {
-  console.log(`モーダル開く: ${modalId}`);
-  const modal = document.getElementById(modalId);
-  if (modal) {
-      modal.classList.add('show');
-  } else {
-      console.error(`モーダルが見つかりません: ${modalId}`);
-  }
-}
-
-function closeModal(modalId) {
-  console.log(`モーダル閉じる: ${modalId}`);
-  const modal = document.getElementById(modalId);
-  if (modal) {
-      modal.classList.remove('show');
-  } else {
-      console.error(`モーダルが見つかりません: ${modalId}`);
-  }
-}
-
-// ==== DOM読み込み完了後の初期化 ====
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('ホテル管理JS初期化開始');
-  
-  // すべてのモーダルに対してクリックイベントを設定
-  const modals = document.querySelectorAll('.modal');
-  console.log(`モーダル数: ${modals.length}`);
-  
-  modals.forEach(function(modal, index) {
-      modal.addEventListener('click', function(event) {
-          if (event.target === modal) {
-              console.log(`モーダル外側クリック: ${modal.id}`);
-              modal.classList.remove('show');
-          }
-      });
-      console.log(`モーダル${index + 1}にイベント設定完了: ${modal.id}`);
-  });
-  
-  // 並び順ボタンのクリック追跡（デバッグ用）
-  const sortButtons = document.querySelectorAll('a[href*="move_hotel"]');
-  console.log(`並び順ボタン数: ${sortButtons.length}`);
-  
-  sortButtons.forEach(function(button, index) {
-      button.addEventListener('click', function(event) {
-          const href = button.getAttribute('href');
-          const direction = href.includes('move_hotel_up') ? '上' : '下';
-          const hotelId = href.split('/').pop();
-          console.log(`並び順ボタンクリック: ホテルID=${hotelId}, 方向=${direction}`);
-      });
-  });
-  
-  console.log('ホテル管理JS初期化完了');
-});
-
-// ==== エラーハンドリング ====
-window.addEventListener('error', function(event) {
-  console.error('JavaScript エラー:', {
-      message: event.message,
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-      error: event.error
-  });
-});
-
-// ==== デバッグ用ヘルパー関数 ====
-function debugHotelManagement() {
-  console.log('=== ホテル管理デバッグ情報 ===');
-  
-  // モーダルの状態
-  const modals = document.querySelectorAll('.modal');
-  console.log('モーダル状態:');
-  modals.forEach(modal => {
-      console.log(`  ${modal.id}: ${modal.classList.contains('show') ? '開' : '閉'}`);
-  });
-  
-  // 隠し要素の状態
-  const hiddenElements = document.querySelectorAll('.hidden');
-  console.log(`隠し要素数: ${hiddenElements.length}`);
-  
-  // フォームの状態
-  const forms = document.querySelectorAll('form');
-  console.log(`フォーム数: ${forms.length}`);
-  forms.forEach((form, index) => {
-      console.log(`  フォーム${index + 1}: action="${form.action}", method="${form.method}"`);
-  });
-  
-  console.log('=== デバッグ情報終了 ===');
-}
-
-// デバッグ関数をグローバルに公開
-window.debugHotelManagement = debugHotelManagement;
+(function() {
+    'use strict';
+    
+    // ストアID
+    let storeId = null;
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 初期化
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 店舗IDを取得
+        const pathParts = window.location.pathname.split('/');
+        storeId = pathParts[1];
+        
+        // データを読み込み
+        loadHotelTypes();
+        loadAreas();
+        loadHotels();
+        
+        // イベントリスナーを設定
+        setupEventListeners();
+    });
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // イベントリスナー設定
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function setupEventListeners() {
+        // ホテル管理種別追加ボタン
+        const addHotelTypeBtn = document.getElementById('add-hotel-type-btn');
+        if (addHotelTypeBtn) {
+            addHotelTypeBtn.addEventListener('click', showAddHotelTypeModal);
+        }
+        
+        // エリア追加ボタン
+        const addAreaBtn = document.getElementById('add-area-btn');
+        if (addAreaBtn) {
+            addAreaBtn.addEventListener('click', showAddAreaModal);
+        }
+        
+        // ホテル登録フォーム
+        const hotelForm = document.getElementById('hotel-form');
+        if (hotelForm) {
+            hotelForm.addEventListener('submit', saveHotel);
+        }
+    }
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // メッセージ表示
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function showMessage(message, type = 'success') {
+        const messageDiv = document.getElementById('saveMessage');
+        messageDiv.textContent = message;
+        messageDiv.className = `hotel-message hotel-message-${type}`;
+        messageDiv.style.display = 'block';
+        
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 3000);
+    }
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ホテル管理種別
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function loadHotelTypes() {
+        fetch(`/${storeId}/hotel-management/hotel_types`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayHotelTypes(data.data);
+                    updateHotelTypeSelects(data.data);
+                } else {
+                    console.error('Failed to load hotel types');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading hotel types:', error);
+            });
+    }
+    
+    function displayHotelTypes(types) {
+        const tbody = document.getElementById('hotel-types-tbody');
+        
+        if (!types || types.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="hotel-table-empty">登録されているホテル管理種別はありません</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = types.map(type => `
+            <tr>
+                <td>${escapeHtml(type.type_name)}</td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-edit-icon" 
+                            onclick="window.editHotelType(${type.hotel_type_id}, '${escapeHtml(type.type_name)}')">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-delete-icon" 
+                            onclick="window.deleteHotelType(${type.hotel_type_id}, '${escapeHtml(type.type_name)}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function updateHotelTypeSelects(types) {
+        const selects = [
+            document.getElementById('hotel-type'),
+            document.getElementById('edit-hotel-type')
+        ];
+        
+        selects.forEach(select => {
+            if (!select) return;
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">選択してください</option>' +
+                types.map(type => 
+                    `<option value="${type.hotel_type_id}">${escapeHtml(type.type_name)}</option>`
+                ).join('');
+            if (currentValue) select.value = currentValue;
+        });
+    }
+    
+    function showAddHotelTypeModal() {
+        document.getElementById('hotel-type-modal-title').textContent = 'ホテル管理種別を追加';
+        document.getElementById('hotel-type-id').value = '';
+        document.getElementById('hotel-type-name').value = '';
+        document.getElementById('hotel-type-modal').classList.add('show');
+        document.getElementById('hotel-type-modal').style.display = 'flex';
+    }
+    
+    window.editHotelType = function(id, name) {
+        document.getElementById('hotel-type-modal-title').textContent = 'ホテル管理種別を編集';
+        document.getElementById('hotel-type-id').value = id;
+        document.getElementById('hotel-type-name').value = name;
+        document.getElementById('hotel-type-modal').classList.add('show');
+        document.getElementById('hotel-type-modal').style.display = 'flex';
+    };
+    
+    window.closeHotelTypeModal = function() {
+        document.getElementById('hotel-type-modal').classList.remove('show');
+        document.getElementById('hotel-type-modal').style.display = 'none';
+    };
+    
+    window.saveHotelType = function(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('hotel-type-id').value;
+        const name = document.getElementById('hotel-type-name').value;
+        
+        if (!name.trim()) {
+            showMessage('種別名を入力してください', 'error');
+            return;
+        }
+        
+        const url = id 
+            ? `/${storeId}/hotel-management/hotel_types/${id}`
+            : `/${storeId}/hotel-management/hotel_types`;
+        
+        const method = id ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ type_name: name })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                closeHotelTypeModal();
+                loadHotelTypes();
+            } else {
+                showMessage(data.message || '保存に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving hotel type:', error);
+            showMessage('保存中にエラーが発生しました', 'error');
+        });
+    };
+    
+    window.deleteHotelType = function(id, name) {
+        if (!confirm(`「${name}」を削除してもよろしいですか？\n\n※ この種別が使用されているホテルがある場合は削除できません。`)) {
+            return;
+        }
+        
+        fetch(`/${storeId}/hotel-management/hotel_types/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                loadHotelTypes();
+            } else {
+                showMessage(data.message || '削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting hotel type:', error);
+            showMessage('削除中にエラーが発生しました', 'error');
+        });
+    };
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // エリア管理
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function loadAreas() {
+        fetch(`/${storeId}/hotel-management/areas`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayAreas(data.data);
+                    updateAreaSelects(data.data);
+                } else {
+                    console.error('Failed to load areas');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading areas:', error);
+            });
+    }
+    
+    function displayAreas(areas) {
+        const tbody = document.getElementById('areas-tbody');
+        
+        if (!areas || areas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="hotel-table-empty">登録されているエリアはありません</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = areas.map((area, index) => `
+            <tr>
+                <td>
+                    <button type="button" 
+                            class="hotel-sort-btn ${index === 0 ? 'hotel-sort-btn-disabled' : ''}" 
+                            ${index === 0 ? 'disabled' : ''}
+                            onclick="${index === 0 ? 'return false;' : `window.moveAreaUp(${area.area_id})`}"
+                            title="上に移動">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button type="button" 
+                            class="hotel-sort-btn ${index === areas.length - 1 ? 'hotel-sort-btn-disabled' : ''}" 
+                            ${index === areas.length - 1 ? 'disabled' : ''}
+                            onclick="${index === areas.length - 1 ? 'return false;' : `window.moveAreaDown(${area.area_id})`}"
+                            title="下に移動">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </td>
+                <td>${escapeHtml(area.area_name)}</td>
+                <td>${area.transportation_fee ? area.transportation_fee + '円' : '-'}</td>
+                <td>${area.travel_time ? area.travel_time + '分' : '-'}</td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-edit-icon" 
+                            onclick="window.editArea(${area.area_id}, '${escapeHtml(area.area_name)}', ${area.transportation_fee || 0}, ${area.travel_time || 0})">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-delete-icon" 
+                            onclick="window.deleteArea(${area.area_id}, '${escapeHtml(area.area_name)}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function updateAreaSelects(areas) {
+        const selects = [
+            document.getElementById('hotel-area'),
+            document.getElementById('edit-hotel-area')
+        ];
+        
+        selects.forEach(select => {
+            if (!select) return;
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">選択してください</option>' +
+                areas.map(area => 
+                    `<option value="${area.area_id}">${escapeHtml(area.area_name)}</option>`
+                ).join('');
+            if (currentValue) select.value = currentValue;
+        });
+    }
+    
+    function showAddAreaModal() {
+        document.getElementById('area-modal-title').textContent = 'エリアを追加';
+        document.getElementById('area-id').value = '';
+        document.getElementById('area-name').value = '';
+        document.getElementById('area-fee').value = '';
+        document.getElementById('area-time').value = '';
+        document.getElementById('area-modal').classList.add('show');
+        document.getElementById('area-modal').style.display = 'flex';
+    }
+    
+    window.editArea = function(id, name, fee, time) {
+        document.getElementById('area-modal-title').textContent = 'エリアを編集';
+        document.getElementById('area-id').value = id;
+        document.getElementById('area-name').value = name;
+        document.getElementById('area-fee').value = fee || '';
+        document.getElementById('area-time').value = time || '';
+        document.getElementById('area-modal').classList.add('show');
+        document.getElementById('area-modal').style.display = 'flex';
+    };
+    
+    window.closeAreaModal = function() {
+        document.getElementById('area-modal').classList.remove('show');
+        document.getElementById('area-modal').style.display = 'none';
+    };
+    
+    window.saveArea = function(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('area-id').value;
+        const name = document.getElementById('area-name').value;
+        const fee = document.getElementById('area-fee').value;
+        const time = document.getElementById('area-time').value;
+        
+        if (!name.trim()) {
+            showMessage('エリア名を入力してください', 'error');
+            return;
+        }
+        
+        const url = id 
+            ? `/${storeId}/hotel-management/areas/${id}`
+            : `/${storeId}/hotel-management/areas`;
+        
+        const method = id ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                area_name: name,
+                transportation_fee: fee ? parseInt(fee) : 0,
+                travel_time: time ? parseInt(time) : 0
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                closeAreaModal();
+                loadAreas();
+            } else {
+                showMessage(data.message || '保存に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving area:', error);
+            showMessage('保存中にエラーが発生しました', 'error');
+        });
+    };
+    
+    window.deleteArea = function(id, name) {
+        if (!confirm(`「${name}」を削除してもよろしいですか？\n\n※ このエリアが使用されているホテルがある場合は削除できません。`)) {
+            return;
+        }
+        
+        fetch(`/${storeId}/hotel-management/areas/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                loadAreas();
+            } else {
+                showMessage(data.message || '削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting area:', error);
+            showMessage('削除中にエラーが発生しました', 'error');
+        });
+    };
+    
+    // エリア並び替え関数
+    window.moveAreaUp = function(id) {
+        fetch(`/${storeId}/hotel-management/areas/${id}/move-up`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadAreas();
+            } else {
+                showMessage(data.message || '並び替えに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error moving area up:', error);
+            showMessage('並び替え中にエラーが発生しました', 'error');
+        });
+    };
+    
+    window.moveAreaDown = function(id) {
+        fetch(`/${storeId}/hotel-management/areas/${id}/move-down`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadAreas();
+            } else {
+                showMessage(data.message || '並び替えに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error moving area down:', error);
+            showMessage('並び替え中にエラーが発生しました', 'error');
+        });
+    };
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ホテル管理
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function loadHotels() {
+        fetch(`/${storeId}/hotel-management/hotels`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayHotels(data.data);
+                } else {
+                    console.error('Failed to load hotels');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading hotels:', error);
+            });
+    }
+    
+    function displayHotels(hotels) {
+        const tbody = document.getElementById('hotels-tbody');
+        
+        if (!hotels || hotels.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="hotel-table-empty">登録されているホテルはありません</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = hotels.map((hotel, index) => `
+            <tr>
+                <td>
+                    <button type="button" 
+                            class="hotel-sort-btn ${index === 0 ? 'hotel-sort-btn-disabled' : ''}" 
+                            ${index === 0 ? 'disabled' : ''}
+                            onclick="${index === 0 ? 'return false;' : `window.moveHotelUp(${hotel.hotel_id})`}"
+                            title="上に移動">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button type="button" 
+                            class="hotel-sort-btn ${index === hotels.length - 1 ? 'hotel-sort-btn-disabled' : ''}" 
+                            ${index === hotels.length - 1 ? 'disabled' : ''}
+                            onclick="${index === hotels.length - 1 ? 'return false;' : `window.moveHotelDown(${hotel.hotel_id})`}"
+                            title="下に移動">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </td>
+                <td>${escapeHtml(hotel.hotel_name)}</td>
+                <td>${escapeHtml(hotel.type_name || '-')}</td>
+                <td>${escapeHtml(hotel.area_name || '-')}</td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-edit-icon" 
+                            onclick="window.editHotel(${hotel.hotel_id})">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="hotel-action-btn hotel-delete-icon" 
+                            onclick="window.deleteHotel(${hotel.hotel_id}, '${escapeHtml(hotel.hotel_name)}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function saveHotel(event) {
+        event.preventDefault();
+        
+        const name = document.getElementById('hotel-name').value;
+        const typeId = document.getElementById('hotel-type').value;
+        const areaId = document.getElementById('hotel-area').value;
+        
+        if (!name.trim()) {
+            showMessage('ホテル名を入力してください', 'error');
+            return;
+        }
+        
+        if (!typeId) {
+            showMessage('種別を選択してください', 'error');
+            return;
+        }
+        
+        if (!areaId) {
+            showMessage('エリアを選択してください', 'error');
+            return;
+        }
+        
+        fetch(`/${storeId}/hotel-management/hotels`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                hotel_name: name,
+                hotel_type_id: parseInt(typeId),
+                area_id: parseInt(areaId)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                resetHotelForm();
+                loadHotels();
+            } else {
+                showMessage(data.message || '登録に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving hotel:', error);
+            showMessage('登録中にエラーが発生しました', 'error');
+        });
+    }
+    
+    window.resetHotelForm = function() {
+        document.getElementById('hotel-form').reset();
+    };
+    
+    window.editHotel = function(id) {
+        fetch(`/${storeId}/hotel-management/hotels/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const hotel = data.data;
+                    document.getElementById('edit-hotel-id').value = hotel.hotel_id;
+                    document.getElementById('edit-hotel-name').value = hotel.hotel_name;
+                    document.getElementById('edit-hotel-type').value = hotel.hotel_type_id;
+                    document.getElementById('edit-hotel-area').value = hotel.area_id;
+                    document.getElementById('hotel-edit-modal').classList.add('show');
+                    document.getElementById('hotel-edit-modal').style.display = 'flex';
+                } else {
+                    showMessage('ホテル情報の取得に失敗しました', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading hotel:', error);
+                showMessage('ホテル情報の取得中にエラーが発生しました', 'error');
+            });
+    };
+    
+    window.closeHotelEditModal = function() {
+        document.getElementById('hotel-edit-modal').classList.remove('show');
+        document.getElementById('hotel-edit-modal').style.display = 'none';
+    };
+    
+    window.updateHotel = function(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('edit-hotel-id').value;
+        const name = document.getElementById('edit-hotel-name').value;
+        const typeId = document.getElementById('edit-hotel-type').value;
+        const areaId = document.getElementById('edit-hotel-area').value;
+        
+        if (!name.trim()) {
+            showMessage('ホテル名を入力してください', 'error');
+            return;
+        }
+        
+        if (!typeId) {
+            showMessage('種別を選択してください', 'error');
+            return;
+        }
+        
+        if (!areaId) {
+            showMessage('エリアを選択してください', 'error');
+            return;
+        }
+        
+        fetch(`/${storeId}/hotel-management/hotels/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                hotel_name: name,
+                hotel_type_id: parseInt(typeId),
+                area_id: parseInt(areaId)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                closeHotelEditModal();
+                loadHotels();
+            } else {
+                showMessage(data.message || '更新に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating hotel:', error);
+            showMessage('更新中にエラーが発生しました', 'error');
+        });
+    };
+    
+    window.deleteHotel = function(id, name) {
+        if (!confirm(`「${name}」を削除してもよろしいですか？`)) {
+            return;
+        }
+        
+        fetch(`/${storeId}/hotel-management/hotels/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                loadHotels();
+            } else {
+                showMessage(data.message || '削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting hotel:', error);
+            showMessage('削除中にエラーが発生しました', 'error');
+        });
+    };
+    
+    // ホテル並び替え関数
+    window.moveHotelUp = function(id) {
+        fetch(`/${storeId}/hotel-management/hotels/${id}/move-up`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadHotels();
+            } else {
+                showMessage(data.message || '並び替えに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error moving hotel up:', error);
+            showMessage('並び替え中にエラーが発生しました', 'error');
+        });
+    };
+    
+    window.moveHotelDown = function(id) {
+        fetch(`/${storeId}/hotel-management/hotels/${id}/move-down`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadHotels();
+            } else {
+                showMessage(data.message || '並び替えに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error moving hotel down:', error);
+            showMessage('並び替え中にエラーが発生しました', 'error');
+        });
+    };
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ユーティリティ関数
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+})();

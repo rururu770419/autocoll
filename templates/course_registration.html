@@ -231,7 +231,7 @@
                             </td>
                             <td class="course-td-center">{{ course['category_name'] or '未分類' }}</td>
                             <td class="course-td-center">{{ course['name'] }}</td>
-                            <td class="course-td-right">¥{{ "{:,}".format(course['price']) }}</td>
+                            <td class="course-td-center">¥{{ "{:,}".format(course['price']) }}</td>
                             <td class="course-td-center">{{ course['time_minutes'] }}分</td>
                             <td class="course-td-center">
                                 {% if course['is_active'] %}

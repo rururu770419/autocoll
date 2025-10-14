@@ -24,7 +24,36 @@ from .course import (
     move_category_up,
     move_category_down
 )
-from .hotel import register_hotel, edit_hotel, delete_hotel, register_category, register_area, move_hotel_up_route, move_hotel_down_route
+from .hotel import (
+    register_hotel, 
+    edit_hotel, 
+    delete_hotel, 
+    register_category, 
+    register_area, 
+    move_hotel_up_route, 
+    move_hotel_down_route,
+    # ホテル管理種別API
+    get_hotel_types_api,
+    add_hotel_type_api,
+    update_hotel_type_api,
+    delete_hotel_type_api,
+    # エリア管理API
+    get_areas_api,
+    add_area_api,
+    update_area_api,
+    delete_area_api,
+    # ホテル管理API
+    get_hotels_api,
+    get_hotel_api,
+    add_hotel_api,
+    update_hotel_api,
+    delete_hotel_api,
+    # 並び替えAPI（追加）
+    move_area_up_api,
+    move_area_down_api,
+    move_hotel_up_api,
+    move_hotel_down_api
+)
 from .pickup import pickup_register
 # ★ dashboard関連のインポートを修正（get_record_dates, get_course_dataを追加）
 from .dashboard import (
@@ -152,6 +181,43 @@ main_routes.add_url_rule('/<store>/edit_hotel/<int:hotel_id>', 'edit_hotel', edi
 main_routes.add_url_rule('/<store>/delete_hotel/<int:hotel_id>', 'delete_hotel', delete_hotel, methods=['POST'])
 main_routes.add_url_rule('/<store>/move_hotel_up/<int:hotel_id>', 'move_hotel_up', move_hotel_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/move_hotel_down/<int:hotel_id>', 'move_hotel_down', move_hotel_down_route, methods=['GET'])
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ホテル管理API（新規追加）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ホテル管理種別API
+main_routes.add_url_rule('/<store>/hotel-management/hotel_types', 'get_hotel_types_api', get_hotel_types_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/hotel-management/hotel_types', 'add_hotel_type_api', add_hotel_type_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/hotel-management/hotel_types/<int:id>', 'update_hotel_type_api', update_hotel_type_api, methods=['PUT'])
+main_routes.add_url_rule('/<store>/hotel-management/hotel_types/<int:id>', 'delete_hotel_type_api', delete_hotel_type_api, methods=['DELETE'])
+
+# エリア管理API
+main_routes.add_url_rule('/<store>/hotel-management/areas', 'get_areas_api', get_areas_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/hotel-management/areas', 'add_area_api', add_area_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/hotel-management/areas/<int:id>', 'update_area_api', update_area_api, methods=['PUT'])
+main_routes.add_url_rule('/<store>/hotel-management/areas/<int:id>', 'delete_area_api', delete_area_api, methods=['DELETE'])
+
+# ホテル管理API
+main_routes.add_url_rule('/<store>/hotel-management/hotels', 'get_hotels_api', get_hotels_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/hotel-management/hotels/<int:id>', 'get_hotel_api', get_hotel_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/hotel-management/hotels', 'add_hotel_api', add_hotel_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/hotel-management/hotels/<int:id>', 'update_hotel_api', update_hotel_api, methods=['PUT'])
+main_routes.add_url_rule('/<store>/hotel-management/hotels/<int:id>', 'delete_hotel_api', delete_hotel_api, methods=['DELETE'])
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 並び替えAPI（追加）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# エリア並び替え
+main_routes.add_url_rule('/<store>/hotel-management/areas/<int:id>/move-up', 
+                        'move_area_up_api', move_area_up_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/hotel-management/areas/<int:id>/move-down', 
+                        'move_area_down_api', move_area_down_api, methods=['POST'])
+
+# ホテル並び替え
+main_routes.add_url_rule('/<store>/hotel-management/hotels/<int:id>/move-up', 
+                        'move_hotel_up_api', move_hotel_up_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/hotel-management/hotels/<int:id>/move-down', 
+                        'move_hotel_down_api', move_hotel_down_api, methods=['POST'])
 
 # 送迎管理
 main_routes.add_url_rule('/<store>/pickup_register', 'pickup_register', pickup_register, methods=['GET', 'POST'])

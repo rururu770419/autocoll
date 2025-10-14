@@ -1,249 +1,315 @@
 {% extends "base.html" %}
 
-{% block title %}
-  ホテル管理 | {{ display_name }}
+{% block title %}ホテル管理{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hotel_management.css') }}">
 {% endblock %}
 
 {% block content %}
-
-<div class="container">
-  <h1>ホテル管理</h1>
-
-  {% if success %}
-    <div class="alert alert-success">{{ success }}</div>
-  {% endif %}
-  {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-  {% endif %}
-
-  <!-- ホテル種別・エリア管理ボタン -->
-  <div style="margin-bottom: 20px;">
-    <button type="button" class="btn btn-info" onclick="openModal('categoryModal')">
-      ホテル種別管理
-    </button>
-    <button type="button" class="btn btn-info" onclick="openModal('areaModal')">
-      エリア管理
-    </button>
+<div class="hotel-container">
+  
+  <h1 class="hotel-title">ホテル管理</h1>
+  
+  <div id="message-container"></div>
+  
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- 上部：2カラムレイアウト（種別管理 + エリア管理） -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="hotel-settings-grid">
+    
+    <!-- 左列：ホテル管理種別 -->
+    <div class="hotel-settings-section">
+      <div class="hotel-section-header">
+        <h2 class="hotel-section-title">ホテル管理種別</h2>
+        <button type="button" class="hotel-btn hotel-btn-primary" id="add-hotel-type-btn">
+          新規追加
+        </button>
+      </div>
+      
+      <div class="hotel-table-wrapper">
+        <table class="hotel-table">
+          <thead>
+            <tr>
+              <th style="width: 60%;">種別名</th>
+              <th style="width: 20%;">編集</th>
+              <th style="width: 20%;">削除</th>
+            </tr>
+          </thead>
+          <tbody id="hotel-types-tbody">
+            <tr>
+              <td colspan="3" class="hotel-table-loading">読み込み中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 右列：エリア管理 -->
+    <div class="hotel-settings-section">
+      <div class="hotel-section-header">
+        <h2 class="hotel-section-title">エリア管理</h2>
+        <button type="button" class="hotel-btn hotel-btn-primary" id="add-area-btn">
+          新規追加
+        </button>
+      </div>
+      
+      <div class="hotel-table-wrapper">
+        <table class="hotel-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">並び順</th>
+              <th style="width: 30%;">エリア名</th>
+              <th style="width: 20%;">交通費</th>
+              <th style="width: 20%;">所要時間</th>
+              <th style="width: 7.5%;">編集</th>
+              <th style="width: 7.5%;">削除</th>
+            </tr>
+          </thead>
+          <tbody id="areas-tbody">
+            <tr>
+              <td colspan="6" class="hotel-table-loading">読み込み中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
   </div>
-
-  <div class="page-layout">
-    <!-- ホテル登録フォーム -->
-    <div class="form-div-left">
-      <h2>ホテル登録フォーム</h2>
-      <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}">
-        <div class="form-group">
-          <label for="name" class="form-label">ホテル名 (必須):</label>
-          <input type="text" class="form-control" id="name" name="name" required placeholder="例）○○ホテル">
+  
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- ホテル登録フォーム -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="hotel-form-section">
+    <h2 class="hotel-section-title">ホテル登録</h2>
+    
+    <div class="hotel-form-card">
+      <form id="hotel-form">
+        <div class="hotel-form-grid">
+          <div class="hotel-form-group">
+            <label class="hotel-form-label">
+              ホテル名 <span class="hotel-required">*</span>
+            </label>
+            <input type="text" id="hotel-name" class="hotel-form-input" 
+                   placeholder="例: グランドホテル東京" required>
+          </div>
+          
+          <div class="hotel-form-group">
+            <label class="hotel-form-label">
+              種別 <span class="hotel-required">*</span>
+            </label>
+            <select id="hotel-type" class="hotel-form-input" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="hotel-form-group">
+            <label class="hotel-form-label">
+              エリア <span class="hotel-required">*</span>
+            </label>
+            <select id="hotel-area" class="hotel-form-input" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="category_id" class="form-label">ホテル種別 (必須):</label>
-          <select class="form-control" id="category_id" name="category_id" required>
-            <option value="">ホテル種別を選択してください</option>
-            {% for category in categories %}
-              <option value="{{ category.category_id }}">{{ category.name }}</option>
-            {% endfor %}
-          </select>
+        
+        <div class="hotel-form-buttons">
+          <button type="button" class="hotel-btn-reset" onclick="resetHotelForm()">
+            クリア
+          </button>
+          <button type="submit" class="hotel-btn-submit">
+            登録
+          </button>
         </div>
-        <div class="form-group">
-          <label for="area_id" class="form-label">エリア (必須):</label>
-          <select class="form-control" id="area_id" name="area_id" required>
-            <option value="">エリアを選択してください</option>
-            {% for area in areas %}
-              <option value="{{ area.area_id }}">{{ area.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <button type="submit" class="btn-register">登録</button>
       </form>
     </div>
-
-    <!-- ホテル一覧 -->
-    <div class="table-div-right">
-      <h2>ホテル一覧</h2>
-      <div class="table-responsive">
-        {% if hotels %}
-          <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ホテル名</th>
-                    <th>ホテル種別</th>
-                    <th>エリア</th>
-                    <th>交通費</th>
-                    <th>所要時間</th>
-                    <th>状態</th>
-                    <th>並び順</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for hotel in hotels %}
-                <tr>
-                    <td>{{ hotel.hotel_name if hotel.hotel_name else '' }}</td>
-                    <td>{{ hotel.category_name if hotel.category_name else '' }}</td>
-                    <td>{{ hotel.area_name if hotel.area_name else '' }}</td>
-                    <td>{{ (hotel.transportation_fee if hotel.transportation_fee is not none else 0) }}円</td>
-                    <td>{{ (hotel.travel_time_minutes if hotel.travel_time_minutes is not none else 0) }}分</td>
-                    <td>
-                        {% if hotel.is_active %}
-                            <span style="color: green;">有効</span>
-                        {% else %}
-                            <span style="color: red;">無効</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('main_routes.move_hotel_up', store=store, hotel_id=hotel.hotel_id) }}" 
-                           class="btn btn-success btn-sm" style="margin-right: 2px; font-size: 12px; padding: 2px 6px;">↑</a>
-                        <a href="{{ url_for('main_routes.move_hotel_down', store=store, hotel_id=hotel.hotel_id) }}" 
-                           class="btn btn-success btn-sm" style="font-size: 12px; padding: 2px 6px;">↓</a>
-                    </td>
-                    <td>
-                        <a href="{{ url_for('main_routes.edit_hotel', store=store, hotel_id=hotel.hotel_id) }}" class="btn btn-edit">編集</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+  </div>
+  
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- ホテル一覧 -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="hotel-list-section">
+    <h2 class="hotel-section-title">登録済みホテル一覧</h2>
+    
+    <div class="hotel-list-card">
+      <div class="hotel-table-wrapper">
+        <table class="hotel-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">並び順</th>
+              <th style="width: 30%;">ホテル名</th>
+              <th style="width: 20%;">種別</th>
+              <th style="width: 20%;">エリア</th>
+              <th style="width: 7.5%;">編集</th>
+              <th style="width: 7.5%;">削除</th>
+            </tr>
+          </thead>
+          <tbody id="hotels-tbody">
+            <tr>
+              <td colspan="6" class="hotel-table-loading">読み込み中...</td>
+            </tr>
+          </tbody>
         </table>
-        {% else %}
-          <p>登録されているホテルはありません。</p>
-        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- メッセージ表示エリア -->
+  <div id="saveMessage" class="hotel-message"></div>
+  
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- モーダル1: ホテル管理種別追加・編集 -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="hotel-type-modal" class="hotel-modal">
+  <div class="hotel-modal-dialog">
+    <div class="hotel-modal-content">
+      <div class="hotel-modal-header">
+        <h3 class="hotel-modal-title" id="hotel-type-modal-title">ホテル管理種別を追加</h3>
+        <span class="hotel-modal-close" onclick="closeHotelTypeModal()">&times;</span>
+      </div>
+      <div class="hotel-modal-body">
+        <form id="hotel-type-form" onsubmit="saveHotelType(event)">
+          <input type="hidden" id="hotel-type-id">
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              種別名 <span class="hotel-required">*</span>
+            </label>
+            <input type="text" id="hotel-type-name" class="hotel-modal-input" 
+                   placeholder="例: ビジネスホテル" required>
+          </div>
+          
+          <div class="hotel-modal-footer">
+            <button type="button" class="hotel-modal-btn-cancel" onclick="closeHotelTypeModal()">
+              キャンセル
+            </button>
+            <button type="submit" class="hotel-modal-btn-save">
+              保存
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ホテル種別管理モーダル -->
-<div class="modal" id="categoryModal">
-  <div class="modal-dialog modal-dialog-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">ホテル種別管理</h5>
-        <button type="button" class="btn-close" onclick="closeModal('categoryModal')"></button>
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- モーダル2: エリア追加・編集 -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="area-modal" class="hotel-modal">
+  <div class="hotel-modal-dialog">
+    <div class="hotel-modal-content">
+      <div class="hotel-modal-header">
+        <h3 class="hotel-modal-title" id="area-modal-title">エリアを追加</h3>
+        <span class="hotel-modal-close" onclick="closeAreaModal()">&times;</span>
       </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-left">
-            <h5 style="margin-bottom: 10px;">新しいホテル種別追加</h5>
-            <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}">
-              <input type="hidden" name="action" value="add_category">
-              <div class="input-group" style="margin-bottom: 10px;">
-                <input type="text" class="form-control" name="name" placeholder="ホテル種別名" required>
-                <button type="submit" class="btn btn-success">追加</button>
-              </div>
-            </form>
+      <div class="hotel-modal-body">
+        <form id="area-form" onsubmit="saveArea(event)">
+          <input type="hidden" id="area-id">
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              エリア名 <span class="hotel-required">*</span>
+            </label>
+            <input type="text" id="area-name" class="hotel-modal-input" 
+                   placeholder="例: 新宿区" required>
           </div>
-          <div class="col-right">
-            <h5 style="margin-bottom: 10px;">登録済みホテル種別</h5>
-            {% if categories %}
-              <ul class="list-group">
-                {% for category in categories %}
-                  <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                      <span id="category-name-{{ category.category_id }}">{{ category.name }}</span>
-                      <input type="text" class="form-control hidden" id="category-edit-{{ category.category_id }}" value="{{ category.name }}">
-                    </div>
-                    <div>
-                      <button class="btn btn-edit" id="category-edit-btn-{{ category.category_id }}" onclick="editCategory({{ category.category_id }})">編集</button>
-                      <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}" style="display: none;" id="category-form-{{ category.category_id }}">
-                        <input type="hidden" name="action" value="edit_category">
-                        <input type="hidden" name="category_id" value="{{ category.category_id }}">
-                        <input type="hidden" name="name" id="category-name-input-{{ category.category_id }}">
-                      </form>
-                      <button class="btn btn-success hidden" id="category-save-btn-{{ category.category_id }}" onclick="saveCategory({{ category.category_id }})">保存</button>
-                      <button class="btn btn-secondary hidden" id="category-cancel-btn-{{ category.category_id }}" onclick="cancelEditCategory({{ category.category_id }})">キャンセル</button>
-                      <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}" style="display: inline;">
-                        <input type="hidden" name="action" value="delete_category">
-                        <input type="hidden" name="category_id" value="{{ category.category_id }}">
-                        <button type="submit" class="btn btn-delete" onclick="return confirm('本当にこのホテル種別を削除しますか？')">削除</button>
-                      </form>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p>登録されているホテル種別はありません。</p>
-            {% endif %}
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              交通費（円）
+            </label>
+            <input type="number" id="area-fee" class="hotel-modal-input" 
+                   placeholder="例: 500" min="0">
           </div>
-        </div>
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              所要時間（分）
+            </label>
+            <input type="number" id="area-time" class="hotel-modal-input" 
+                   placeholder="例: 30" min="0">
+          </div>
+          
+          <div class="hotel-modal-footer">
+            <button type="button" class="hotel-modal-btn-cancel" onclick="closeAreaModal()">
+              キャンセル
+            </button>
+            <button type="submit" class="hotel-modal-btn-save">
+              保存
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- エリア管理モーダル -->
-<div class="modal" id="areaModal">
-  <div class="modal-dialog modal-dialog-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">エリア管理</h5>
-        <button type="button" class="btn-close" onclick="closeModal('areaModal')"></button>
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- モーダル3: ホテル編集 -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="hotel-edit-modal" class="hotel-modal">
+  <div class="hotel-modal-dialog">
+    <div class="hotel-modal-content">
+      <div class="hotel-modal-header">
+        <h3 class="hotel-modal-title">ホテル情報を編集</h3>
+        <span class="hotel-modal-close" onclick="closeHotelEditModal()">&times;</span>
       </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-left">
-            <h5 style="margin-bottom: 10px;">新しいエリア追加</h5>
-            <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}">
-              <input type="hidden" name="action" value="add_area">
-              <div class="form-group" style="margin-bottom: 10px;">
-                <label class="form-label">エリア名</label>
-                <input type="text" class="form-control" name="name" placeholder="エリア名" required>
-              </div>
-              <div class="form-group" style="margin-bottom: 10px;">
-                <label class="form-label">交通費</label>
-                <input type="number" class="form-control" name="transportation_fee" placeholder="交通費 (円)" min="0" value="0">
-              </div>
-              <div class="form-group" style="margin-bottom: 15px;">
-                <label class="form-label">所要時間</label>
-                <input type="number" class="form-control" name="travel_time" placeholder="所要時間 (分)" min="0" value="0">
-              </div>
-              <button type="submit" class="btn btn-success">追加</button>
-            </form>
+      <div class="hotel-modal-body">
+        <form id="hotel-edit-form" onsubmit="updateHotel(event)">
+          <input type="hidden" id="edit-hotel-id">
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              ホテル名 <span class="hotel-required">*</span>
+            </label>
+            <input type="text" id="edit-hotel-name" class="hotel-modal-input" required>
           </div>
-          <div class="col-right">
-            <h5 style="margin-bottom: 10px;">登録済みエリア</h5>
-            {% if areas %}
-              <ul class="list-group">
-                {% for area in areas %}
-                  <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <div>
-                      <span id="area-name-{{ area.area_id }}">{{ area.name }}</span>
-                      <small class="text-muted" id="area-fee-display-{{ area.area_id }}">({{ area.transportation_fee|default(0) }}円：{{ area.travel_time_minutes|default(0) }}分)</small>
-                      <div class="hidden" id="area-edit-fields-{{ area.area_id }}">
-                        <input type="text" class="form-control mb-2" id="area-edit-name-{{ area.area_id }}" value="{{ area.name }}" style="margin-bottom: 5px;">
-                        <input type="number" class="form-control mb-1" id="area-edit-fee-{{ area.area_id }}" value="{{ area.transportation_fee|default(0) }}" min="0" placeholder="交通費" style="margin-bottom: 5px;">
-                        <input type="number" class="form-control" id="area-edit-time-{{ area.area_id }}" value="{{ area.travel_time_minutes|default(0) }}" min="0" placeholder="所要時間">
-                      </div>
-                    </div>
-                    <div>
-                      <button class="btn btn-edit" id="area-edit-btn-{{ area.area_id }}" onclick="editArea({{ area.area_id }})">編集</button>
-                      <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}" style="display: none;" id="area-form-{{ area.area_id }}">
-                        <input type="hidden" name="action" value="edit_area">
-                        <input type="hidden" name="area_id" value="{{ area.area_id }}">
-                        <input type="hidden" name="name" id="area-name-input-{{ area.area_id }}">
-                        <input type="hidden" name="transportation_fee" id="area-fee-input-{{ area.area_id }}">
-                        <input type="hidden" name="travel_time" id="area-time-input-{{ area.area_id }}">
-                      </form>
-                      <button class="btn btn-success hidden" id="area-save-btn-{{ area.area_id }}" onclick="saveArea({{ area.area_id }})">保存</button>
-                      <button class="btn btn-secondary hidden" id="area-cancel-btn-{{ area.area_id }}" onclick="cancelEditArea({{ area.area_id }})">キャンセル</button>
-                      <form method="post" action="{{ url_for('main_routes.register_hotel', store=store) }}" style="display: inline;">
-                        <input type="hidden" name="action" value="delete_area">
-                        <input type="hidden" name="area_id" value="{{ area.area_id }}">
-                        <button type="submit" class="btn btn-delete" onclick="return confirm('本当にこのエリアを削除しますか？')">削除</button>
-                      </form>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p>登録されているエリアはありません。</p>
-            {% endif %}
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              種別 <span class="hotel-required">*</span>
+            </label>
+            <select id="edit-hotel-type" class="hotel-modal-input" required>
+              <option value="">選択してください</option>
+            </select>
           </div>
-        </div>
+          
+          <div class="hotel-modal-group">
+            <label class="hotel-modal-label">
+              エリア <span class="hotel-required">*</span>
+            </label>
+            <select id="edit-hotel-area" class="hotel-modal-input" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          
+          <div class="hotel-modal-footer">
+            <button type="button" class="hotel-modal-btn-cancel" onclick="closeHotelEditModal()">
+              キャンセル
+            </button>
+            <button type="submit" class="hotel-modal-btn-save">
+              更新
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- JavaScriptファイルを読み込み -->
-<script src="{{ url_for('static', filename='js/hotel_management.js') }}" defer></script>
+<script>
+// URLを設定
+window.hotelManagementUrls = {
+  store: "/{{ store }}",
+  hotelTypes: "/{{ store }}/hotel-management/hotel_types",
+  areas: "/{{ store }}/hotel-management/areas",
+  hotels: "/{{ store }}/hotel-management/hotels"
+};
+</script>
+<script src="{{ url_for('static', filename='js/hotel_management.js') }}"></script>
 
 {% endblock %}
