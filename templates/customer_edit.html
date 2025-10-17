@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
 <script src="{{ url_for('static', filename='js/address.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/customer_edit.js') }}" defer></script>
@@ -11,18 +12,16 @@
 <div class="customer-container">
     <!-- ヘッダー -->
     <div class="customer-header">
-        <div class="customer-title-area">
-            <h1>顧客編集</h1>
+        <h1>顧客編集</h1>
+        <div class="customer-header-buttons">
+            <a href="{{ url_for('reservation.new_reservation', store=store, customer_id=customer_id) }}"
+               class="customer-btn-register">
+                <i class="fas fa-plus"></i> 新規予約登録
+            </a>
             <a href="{{ url_for('main_routes.customer_management', store=store) }}" class="customer-back-btn">
                 ← 一覧に戻る
             </a>
         </div>
-        
-        <!-- 新規予約登録ボタン -->
-        <a href="{{ url_for('reservation.new_reservation', store=store, customer_id=customer_id) }}" 
-           class="customer-new-reservation-btn">
-            ➕ 新規予約登録
-        </a>
     </div>
 
     <!-- メッセージエリア -->
@@ -95,12 +94,12 @@
                 </div>
             </div>
 
-            <!-- 3行目：住所（3列分）、顧客番号（1列分） -->
+            <!-- 3行目：住所、番地等、建物・マンション名、顧客番号 -->
             <div class="customer-form-grid-4">
-                <div class="customer-form-group customer-form-group-span3">
+                <div class="customer-form-group">
                     <label class="customer-label customer-label-address">住所</label>
-                    <div>
-                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 80px; border-radius: 4px;">
+                    <div style="display: flex; gap: 6px; flex: 1;">
+                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 80px;">
                             <option value="">都道府県</option>
                             <option value="北海道">北海道</option>
                             <option value="青森県">青森県</option>
@@ -150,20 +149,27 @@
                             <option value="鹿児島県">鹿児島県</option>
                             <option value="沖縄県">沖縄県</option>
                         </select>
-                        
-                        <select name="city" id="city" class="customer-select" style="width: 140px; border-radius: 4px;">
+
+                        <select name="city" id="city" class="customer-select" style="width: 140px;">
                             <option value="">市区町村</option>
                         </select>
-                        
-                        <input type="text" name="address_detail" id="address_detail" class="customer-input" 
-                               placeholder="番地・建物名等" style="flex: 1; border-radius: 4px; width: 300px;">
                     </div>
                 </div>
-                
+
+                <div class="customer-form-group customer-form-group-no-label">
+                    <input type="text" name="street_address" id="street_address" class="customer-input"
+                           placeholder="番地等">
+                </div>
+
+                <div class="customer-form-group customer-form-group-no-label">
+                    <input type="text" name="building_name" id="building_name" class="customer-input"
+                           placeholder="建物、マンション名">
+                </div>
+
                 <div class="customer-form-group">
                     <label class="customer-label customer-label-customer-id">顧客番号</label>
-                    <input type="text" name="customer_number" id="customer_number" 
-                           class="customer-input customer-input-readonly" readonly>
+                    <input type="text" name="customer_number" id="customer_number"
+                           class="customer-input customer-input-readonly customer-input-fit" readonly>
                 </div>
             </div>
 
@@ -209,14 +215,9 @@
             <!-- 保存・削除ボタン -->
             <div class="customer-form-actions">
                 <button type="submit" class="customer-submit-btn">
-                    更新する
+                    更新
                 </button>
-                <a href="{{ url_for('main_routes.customer_management', store=store) }}" 
-                   class="customer-cancel-btn">
-                    キャンセル
-                </a>
-                <button type="button" onclick="deleteCustomer()" class="customer-btn customer-btn-danger" 
-                        style="margin-left: auto;">
+                <button type="button" onclick="deleteCustomer()" class="customer-delete-btn">
                     削除
                 </button>
             </div>

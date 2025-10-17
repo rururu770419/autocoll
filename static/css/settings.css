@@ -16,26 +16,71 @@
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   アラート
+   フラッシュメッセージ（edit_castと同じスタイル）
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-.settings-alert {
-    padding: 12px 20px;
-    margin-bottom: 20px;
+.settings-flash {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 400px;
+    max-width: 600px;
+    padding: 16px 24px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.3s ease-out;
 }
 
-.settings-alert-success {
+/* 成功メッセージ（緑色） */
+.settings-flash-success {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
 }
 
-.settings-alert-error {
+/* エラーメッセージ（赤色） */
+.settings-flash-error {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+/* 閉じるボタン */
+.settings-flash-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.settings-flash-close:hover {
+    opacity: 1;
+}
+
+/* スライドダウンアニメーション */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -45,31 +90,29 @@
 .settings-tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .settings-tab-btn {
     padding: 12px 24px;
-    background: transparent;
+    background-color: transparent;
+    color: #666;
     border: none;
     border-bottom: 3px solid transparent;
-    cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
-    color: #666;
-    transition: all 0.3s;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .settings-tab-btn:hover {
-    color: #333;
-    background: #f5f5f5;
+    color: #00BCD4;
 }
 
 .settings-tab-btn.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
-    background: transparent;
+    color: #00BCD4;
+    border-bottom-color: #00BCD4;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -78,10 +121,7 @@
 
 .settings-tab-content {
     display: none;
-    padding: 30px;
     background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .settings-tab-content.active {
@@ -99,6 +139,131 @@
     margin-bottom: 30px;
 }
 
+/* ============================================
+   テーブルスタイル（edit_castと同じ）
+   ============================================ */
+.settings-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.settings-info-table th {
+    width: 18%;
+    padding: 15px 20px;
+    background-color: #5a5a5a;
+    border: 1px solid #dee2e6;
+    font-weight: 600;
+    text-align: left;
+    color: #ffffff;
+    vertical-align: middle;
+}
+
+.settings-info-table td {
+    width: 75%;
+    padding: 15px 20px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+/* LINE通知設定テーブル */
+.settings-notification-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.settings-notification-table th {
+    width: 18%;
+    padding: 15px 20px;
+    background-color: #5a5a5a;
+    border: 1px solid #dee2e6;
+    font-weight: 600;
+    text-align: left;
+    color: #ffffff;
+    vertical-align: middle;
+}
+
+.settings-notification-table td {
+    width: 75%;
+    padding: 15px 20px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+/* セクション見出し */
+.settings-section-header {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 700;
+    text-align: center;
+    padding: 12px 20px;
+}
+
+/* ============================================
+   トグルスイッチ（optionsページと同じ）
+   ============================================ */
+.settings-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-toggle-label {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.settings-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.settings-toggle-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.settings-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.settings-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.settings-toggle-checkbox:checked + .settings-toggle-slider {
+    background-color: #00BCD4;
+}
+
+.settings-toggle-checkbox:checked + .settings-toggle-slider:before {
+    transform: translateX(26px);
+}
+
 .settings-subsection-header {
     display: flex;
     justify-content: space-between;
@@ -111,8 +276,6 @@
     font-weight: bold;
     margin-bottom: 15px;
     color: #555;
-    border-left: 4px solid #007bff;
-    padding-left: 12px;
 }
 
 .settings-divider {
@@ -149,30 +312,59 @@
 .settings-label {
     display: block;
     font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 6px;
+    font-weight: 600;
+    margin-bottom: 8px;
     color: #333;
 }
 
 .settings-input {
-    width: 100%;
-    padding: 10px 12px;
+    padding: 6px 12px;
     font-size: 14px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0;
     box-sizing: border-box;
-    transition: border-color 0.3s;
+    transition: border-color 0.15s ease-in-out;
 }
 
 .settings-input:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #00BCD4;
+    background-color: #fff;
+}
+
+.settings-input::placeholder {
+    color: #999;
+    opacity: 0.6;
 }
 
 .settings-textarea {
     resize: vertical;
     min-height: 80px;
     font-family: inherit;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.settings-textarea:focus {
+    outline: none;
+    border-color: #00BCD4;
+    background-color: #fff;
+}
+
+.settings-textarea-full {
+    width: 100%;
+}
+
+.settings-input-full {
+    width: 100%;
 }
 
 .settings-input-number {
@@ -196,9 +388,9 @@
 }
 
 .settings-input-suffix {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: #666;
 }
 
 .settings-unit {
@@ -273,7 +465,7 @@
 }
 
 .settings-show-btn {
-    padding: 10px 16px;
+    padding: 6px 12px;
     background: #f0f0f0;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -287,42 +479,128 @@
     background: #e0e0e0;
 }
 
+/* 入力欄とボタンを横並びにする */
+.settings-input-with-button {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.settings-input-with-button .settings-input {
+    flex: 1;
+}
+
+.settings-show-button {
+    padding: 6px 12px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background 0.3s;
+    color: #333;
+}
+
+.settings-show-button:hover {
+    background: #e0e0e0;
+}
+
+/* テスト発信のレイアウト */
+.settings-test-call-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-test-call-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.settings-test-call-info .settings-help-text {
+    flex: 1;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ボタン
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 .settings-button-group {
     display: flex;
+    justify-content: flex-end;
     gap: 10px;
     margin-top: 30px;
 }
 
 .settings-btn {
-    padding: 12px 24px;
-    font-size: 16px;
+    padding: 10px 24px;
+    font-size: 14px;
     font-weight: 500;
     border: none;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background-color 0.2s ease;
 }
 
 .settings-btn-primary {
-    background: #007bff;
-    color: white;
+    background-color: #00BCD4;
+    color: #fff;
 }
 
 .settings-btn-primary:hover {
-    background: #0056b3;
+    background-color: #00a8b8;
 }
 
 .settings-btn-secondary {
-    background: #6c757d;
-    color: white;
+    background-color: #6c757d;
+    color: #fff;
 }
 
 .settings-btn-secondary:hover {
-    background: #545b62;
+    background-color: #5a6268;
+}
+
+.settings-primary-button {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background-color: #00BCD4;
+    color: #fff;
+}
+
+.settings-primary-button:hover {
+    background-color: #00a8b8;
+}
+
+/* アクションボタン（編集・削除アイコン） */
+.settings-action-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+    background: none;
+    border: none;
+}
+
+.settings-action-btn:hover {
+    opacity: 0.7;
+    text-decoration: none;
+}
+
+.settings-edit-icon {
+    color: #00BCD4;
+}
+
+.settings-delete-icon {
+    color: #dc3545;
 }
 
 .settings-btn-small {
@@ -483,6 +761,10 @@
     max-width: 500px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .modal-header {
@@ -553,8 +835,13 @@
 }
 
 .shift-type-item:hover {
-    border-color: #2196F3;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+    border-color: #00BCD4;
+    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.1);
+}
+
+.shift-type-item:focus {
+    border-color: #00BCD4;
+    outline: none;
 }
 
 .shift-type-info {
@@ -625,7 +912,7 @@
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   顧客情報設定タブ用スタイル
+   顧客情報設定タブ用スタイル（シフト種別と統一）
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 .customer-fields-container {
@@ -650,8 +937,8 @@
     border-bottom: 2px solid #f0f0f0;
 }
 
-.customer-field-title {
-    font-size: 18px;
+.customer-field-category-title {
+    font-size: 16px;
     font-weight: bold;
     color: #333;
     margin: 0;
@@ -660,135 +947,105 @@
 .customer-field-options-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
-.customer-field-option-item {
+/* 各項目のスタイル */
+.customer-field-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: #f9f9f9;
+    padding: 15px;
+    background: #ffffff;
     border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    transition: background 0.2s;
-}
-
-.customer-field-option-item:hover {
-    background: #f0f0f0;
-}
-
-.customer-field-option-item.option-hidden {
-    background: #f5f5f5;
-    border: 1px solid #d0d0d0;
-}
-
-.option-visibility-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 4px;
-    background: #e8f5e9;
-    border: 1px solid #4CAF50;
+    border-radius: 8px;
     transition: all 0.2s;
-    white-space: nowrap;
-    min-width: 90px;
+    gap: 15px;
 }
 
-.option-visibility-checkbox input[type="checkbox"] {
+.customer-field-item:hover {
+    border-color: #00BCD4;
+    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.1);
+}
+
+/* チェックボックス */
+.customer-field-checkbox {
+    flex-shrink: 0;
+}
+
+.customer-field-checkbox-input {
     width: 18px;
     height: 18px;
     cursor: pointer;
     margin: 0;
 }
 
-.option-visibility-checkbox input[type="checkbox"]:not(:checked) {
-    opacity: 0.5;
+/* 色ボックス（小さい四角、クリック不可） */
+.customer-field-color-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
-.option-visibility-checkbox .checkbox-label {
-    font-size: 13px;
+/* 項目名（テキスト表示、編集不可） */
+.customer-field-name {
+    font-size: 16px;
     font-weight: 500;
-    color: #2e7d32;
-}
-
-.option-visibility-checkbox:has(input[type="checkbox"]:not(:checked)) {
-    background: #f5f5f5;
-    border: 1px solid #bdbdbd;
-}
-
-.option-visibility-checkbox:has(input[type="checkbox"]:not(:checked)) .checkbox-label {
-    color: #757575;
-}
-
-.option-visibility-checkbox:hover {
-    opacity: 0.8;
-}
-
-.option-name-input {
+    color: #333;
     flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
 }
 
-.option-name-input:disabled {
-    background: #f5f5f5;
-    cursor: not-allowed;
-    color: #999;
-}
-
-.option-order-buttons {
+/* 上下移動ボタン（optionsページと完全に統一） */
+.customer-field-sort-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
-.settings-btn-order {
-    background: #2196F3;
-    color: white;
-    padding: 4px 8px;
+.customer-field-sort-btn {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #00BCD4;
+    color: #fff;
     border: none;
-    border-radius: 3px;
-    cursor: pointer;
+    border-radius: 0;
     font-size: 14px;
-    font-weight: bold;
-    min-width: 30px;
-    line-height: 1;
+    cursor: pointer;
+    margin: 0 2px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
 }
 
-.settings-btn-order:hover {
-    background: #1976D2;
+.customer-field-sort-btn:hover {
+    background-color: #00a8b8;
+    color: #fff;
+    text-decoration: none;
 }
 
-.settings-btn-order:active {
-    background: #0D47A1;
+.customer-field-sort-btn-disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
-.color-picker-group {
+.customer-field-sort-btn-disabled:hover {
+    background-color: #cccccc;
+}
+
+/* 編集・削除ボタン */
+.customer-field-actions {
     display: flex;
-    align-items: center;
     gap: 8px;
-}
-
-.color-preview {
-    padding: 6px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: monospace;
-    min-width: 70px;
-    text-align: center;
+    flex-shrink: 0;
 }
 
 .settings-btn-link {
     background: none;
     border: none;
-    color: #2196F3;
+    color: #00BCD4;
     text-decoration: underline;
     cursor: pointer;
     padding: 4px 8px;
@@ -796,21 +1053,7 @@
 }
 
 .settings-btn-link:hover {
-    color: #1976D2;
-}
-
-.settings-btn-warning {
-    background: #ff9800;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.settings-btn-warning:hover {
-    background: #f57c00;
+    color: #00a8b8;
 }
 
 .settings-btn-danger {

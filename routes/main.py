@@ -4,8 +4,9 @@ from flask import Blueprint
 from .auth import index, login, logout
 # スタッフ関連に新しい関数を追加（get_line_bot_idを追加）
 from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id
-# キャスト関連にsave_cast_ng_settingsを追加
-from .cast import register_cast, edit_cast, delete_cast, cast_management, save_cast_ng_settings
+# キャスト関連（save_cast_ng_settingsを削除）
+from .cast import register_cast, cast_management
+from .cast import edit_cast, delete_cast
 # コース関連（move_course_up, move_course_down + カテゴリ管理関数を追加）
 from .course import (
     course_registration, 
@@ -69,6 +70,24 @@ from .dashboard import (
 )
 from .money import money_management, delete_money_record, register_change, check_change_registration
 from .option import options, register_option, edit_option, update_option_route, delete_option_route, move_option_up_route, move_option_down_route
+# 延長管理を追加
+from .extension import (
+    extension_management,
+    register_extension_route,
+    update_extension_route,
+    delete_extension_route,
+    move_extension_up_route,
+    move_extension_down_route
+)
+# 指名管理を追加
+from .nominate import (
+    nominate_management,
+    register_nomination_type,
+    update_nomination_type_route,
+    delete_nomination_type_route,
+    move_nomination_type_up_route,
+    move_nomination_type_down_route
+)
 # 割引管理を追加
 from .discount import (
     discount_management, 
@@ -138,9 +157,7 @@ main_routes.add_url_rule('/<store>/api/line/info', 'get_line_bot_info', get_line
 main_routes.add_url_rule('/<store>/cast_management', 'cast_management', cast_management, methods=['GET'])
 main_routes.add_url_rule('/<store>/register_cast', 'register_cast', register_cast, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/edit_cast/<int:cast_id>', 'edit_cast', edit_cast, methods=['GET', 'POST'])
-main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', delete_cast, methods=['GET', 'POST'])
-# キャストNG設定保存（新規追加）
-main_routes.add_url_rule('/<store>/cast/<int:cast_id>/ng-settings', 'save_cast_ng_settings', save_cast_ng_settings, methods=['POST'])
+main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', delete_cast, methods=['GET'])
 
 # コース管理（既存のルート + 並び順変更を追加）
 main_routes.add_url_rule('/<store>/course_registration', 'course_registration', course_registration, methods=['GET', 'POST'])
@@ -249,6 +266,22 @@ main_routes.add_url_rule('/<store>/options/<int:option_id>/update', 'update_opti
 main_routes.add_url_rule('/<store>/options/<int:option_id>/delete', 'delete_option_route', delete_option_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_up', 'move_option_up_route', move_option_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_down', 'move_option_down_route', move_option_down_route, methods=['GET'])
+
+# 延長管理
+main_routes.add_url_rule('/<store>/extension', 'extension_management', extension_management, methods=['GET'])
+main_routes.add_url_rule('/<store>/extension/register', 'register_extension', register_extension_route, methods=['POST'])
+main_routes.add_url_rule('/<store>/extension/<int:extension_id>/update', 'update_extension', update_extension_route, methods=['POST'])
+main_routes.add_url_rule('/<store>/extension/<int:extension_id>/delete', 'delete_extension', delete_extension_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/extension/<int:extension_id>/move_up', 'move_extension_up', move_extension_up_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/extension/<int:extension_id>/move_down', 'move_extension_down', move_extension_down_route, methods=['GET'])
+
+# 指名管理
+main_routes.add_url_rule('/<store>/nominate', 'nominate_management', nominate_management, methods=['GET'])
+main_routes.add_url_rule('/<store>/nominate/register', 'register_nomination_type', register_nomination_type, methods=['POST'])
+main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/update', 'update_nomination_type', update_nomination_type_route, methods=['POST'])
+main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/delete', 'delete_nomination_type', delete_nomination_type_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/move_up', 'move_nomination_type_up', move_nomination_type_up_route, methods=['GET'])
+main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/move_down', 'move_nomination_type_down', move_nomination_type_down_route, methods=['GET'])
 
 # 割引管理（画面）
 main_routes.add_url_rule('/<store>/discount_management', 'discount_management', discount_management, methods=['GET'])

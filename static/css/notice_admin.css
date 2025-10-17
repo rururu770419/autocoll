@@ -17,8 +17,6 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e0f2fe;
 }
 
 .na-title {
@@ -33,7 +31,7 @@
 .na-card {
     background-color: #fff;
     border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border-radius: 0;
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -48,26 +46,25 @@
 .na-btn {
     display: inline-block;
     padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 400;
+    font-size: 14px;
+    font-weight: 500;
     text-align: center;
     text-decoration: none;
-    border-radius: 6px;
-    border: 1px solid transparent;
+    border-radius: 0;
+    border: none;
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    transition: background-color 0.2s ease;
 }
 
-/* 新規作成ボタン - 淡い水色 */
+/* 新規作成ボタン - cast_managementと同じスタイル */
 .na-btn-primary {
-    background-color: #e0f2fe;
-    color: #0369a1;
-    border: 1px solid #bae6fd;
+    background-color: #00BCD4;
+    color: #fff;
 }
 
 .na-btn-primary:hover {
-    background-color: #bae6fd;
-    color: #0369a1;
+    background-color: #00ACC1;
+    color: #fff;
     text-decoration: none;
 }
 
@@ -75,12 +72,11 @@
 .na-btn-success {
     background-color: #28a745;
     color: #fff;
-    border-color: #28a745;
+    border: none;
 }
 
 .na-btn-success:hover {
     background-color: #218838;
-    border-color: #1e7e34;
     color: #fff;
     text-decoration: none;
 }
@@ -89,44 +85,27 @@
 .na-btn-secondary {
     background-color: #6c757d;
     color: #fff;
-    border-color: #6c757d;
+    border: none;
 }
 
 .na-btn-secondary:hover {
     background-color: #5a6268;
-    border-color: #545b62;
     color: #fff;
     text-decoration: none;
 }
 
-/* 編集ボタン - 小さめ緑 */
-.na-btn-edit {
-    padding: 6px 12px;
-    font-size: 14px;
-    background-color: #28a745;
-    color: #fff;
-    border-color: #28a745;
-}
-
-.na-btn-edit:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-    color: #fff;
-    text-decoration: none;
-}
-
-/* 削除ボタン - 小さめ赤 */
+/* 削除ボタン（モーダル用） */
 .na-btn-delete {
     padding: 6px 12px;
     font-size: 14px;
     background-color: #dc3545;
     color: #fff;
-    border-color: #dc3545;
+    border: none;
+    border-radius: 0;
 }
 
 .na-btn-delete:hover {
     background-color: #c82333;
-    border-color: #bd2130;
     color: #fff;
     text-decoration: none;
 }
@@ -134,14 +113,14 @@
 /* 戻るボタン */
 .na-btn-back {
     padding: 8px 16px;
-    background-color: #e0f2fe;
-    color: #0369a1;
-    border: 1px solid #bae6fd;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
 }
 
 .na-btn-back:hover {
-    background-color: #bae6fd;
-    color: #0369a1;
+    background-color: #5a6268;
+    color: #fff;
     text-decoration: none;
 }
 
@@ -157,7 +136,7 @@
 .na-list-item {
     background-color: #fff;
     border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border-radius: 0;
     padding: 20px;
     margin-bottom: 15px;
     transition: box-shadow 0.2s ease;
@@ -209,6 +188,36 @@
     gap: 10px;
 }
 
+/* 編集ボタン - メインカラー */
+.na-btn-edit {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #00BCD4;
+    color: #fff;
+    border: none;
+}
+
+.na-btn-edit:hover {
+    background-color: #00ACC1;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 削除ボタン（一覧用） - 赤 */
+.na-btn-delete-action {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+}
+
+.na-btn-delete-action:hover {
+    background-color: #c82333;
+    color: #fff;
+    text-decoration: none;
+}
+
 /* ==========================
    バッジ
    ========================== */
@@ -217,7 +226,7 @@
     padding: 4px 12px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: 0;
     white-space: nowrap;
 }
 
@@ -271,7 +280,7 @@
     color: #495057;
     background-color: #fff;
     border: 1px solid #ced4da;
-    border-radius: 6px;
+    border-radius: 0;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -365,7 +374,7 @@
     padding: 12px 20px;
     margin-bottom: 20px;
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: 0;
 }
 
 .na-alert-success {
@@ -402,7 +411,7 @@
 
 .na-modal-content {
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 0;
     max-width: 500px;
     width: 90%;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);

@@ -12,7 +12,7 @@
     <div class="na-header">
         <h1 class="na-title">
             {% if notice %}
-            ✏️ お知らせ編集
+            お知らせ編集
             {% else %}
             ➕ お知らせ新規作成
             {% endif %}
@@ -118,8 +118,8 @@
 
                 <!-- アクションボタン -->
                 <div class="na-form-actions">
-                    <button type="submit" class="na-btn na-btn-success">
-                        💾 保存する
+                    <button type="submit" class="na-btn na-btn-primary">
+                        保存する
                     </button>
                     <a href="{{ url_for('notice_admin.list_notices', store=store) }}" class="na-btn na-btn-secondary">
                         キャンセル

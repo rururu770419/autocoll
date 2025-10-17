@@ -1,30 +1,28 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
 {% endblock %}
 
-{% block title %}キャスト管理 - {{ display_name }}{% endblock %}
+{% block title %}キャスト管理 | {{ display_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2>キャスト管理</h2>
+<div class="cast-container">
+    <h1 class="cast-title">キャスト管理</h1>
     
     <!-- 新規登録ボタン -->
-    <div class="mb-3">
-        <a href="{{ url_for('main_routes.register_cast', store=store) }}" class="btn btn-primary cast-btn-registration">
-            新規登録
+    <div class="cast-header">
+        <a href="{{ url_for('main_routes.register_cast', store=store) }}" class="cast-btn-register">
+            <i class="fas fa-plus"></i> 新規登録
         </a>
     </div>
     
     <!-- キャスト一覧テーブル -->
-    <div class="card">
-        <div class="card-header">
-        
-        </div>
-        <div class="card-body">
-            {% if casts %}
-                <table class="table table-striped table-hover">
+    <div class="cast-list-card">
+        {% if casts %}
+            <div class="cast-table-wrapper">
+                <table class="cast-table">
                     <thead>
                         <tr>
                             <th>キャスト名</th>
@@ -35,7 +33,7 @@
                             <th>対応コース</th>
                             <th>交通費</th>
                             <th>コメント</th>
-                            <th>操作</th>
+                            <th style="width: 60px;">編集</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,19 +47,21 @@
                                 {% if cast.age %}
                                     {{ cast.age }}歳
                                 {% else %}
-                                    <span class="text-muted">-</span>
+                                    -
                                 {% endif %}
                             </td>
                             
                             <!-- ステータス -->
                             <td>
-                                <span class="badge 
-                                    {% if cast.status == '在籍' %}badge-success
-                                    {% elif cast.status == '休職' %}badge-warning
-                                    {% elif cast.status == '退職' %}badge-secondary
-                                    {% else %}badge-secondary{% endif %}">
-                                    {{ cast.status or '未設定' }}
-                                </span>
+                                {% if cast.status == '在籍' %}
+                                    <span class="cast-status-active">在籍</span>
+                                {% elif cast.status == '休職' %}
+                                    <span class="cast-status-suspended">休職</span>
+                                {% elif cast.status == '退職' %}
+                                    <span class="cast-status-retired">退職</span>
+                                {% else %}
+                                    <span class="cast-status-unknown">未設定</span>
+                                {% endif %}
                             </td>
                             
                             <!-- ログインID -->
@@ -70,11 +70,11 @@
                             <!-- オートコール -->
                             <td>
                                 {% if cast.auto_call_enabled is defined and cast.auto_call_enabled %}
-                                    <span class="badge badge-success">有効</span>
+                                    <span class="cast-auto-call-enabled">有効</span>
                                 {% elif cast.auto_call_enabled is defined and not cast.auto_call_enabled %}
-                                    <span class="badge badge-secondary">無効</span>
+                                    <span class="cast-auto-call-disabled">無効</span>
                                 {% else %}
-                                    <span class="badge badge-success">有効</span>
+                                    <span class="cast-auto-call-enabled">有効</span>
                                 {% endif %}
                             </td>
                             
@@ -85,19 +85,19 @@
                                     {% if courses %}
                                         {{ courses | join(', ') }}
                                     {% else %}
-                                        <span class="text-muted">未設定</span>
+                                        未設定
                                     {% endif %}
                                 {% else %}
-                                    <span class="text-muted">未設定</span>
+                                    未設定
                                 {% endif %}
                             </td>
                             
                             <!-- 交通費 -->
                             <td>
                                 {% if cast.transportation_fee %}
-                                    {{ cast.transportation_fee }}円
+                                    {{ "{:,}".format(cast.transportation_fee) }}円
                                 {% else %}
-                                    <span class="text-muted">0円</span>
+                                    0円
                                 {% endif %}
                             </td>
                             
@@ -105,35 +105,32 @@
                             <td>
                                 {% if cast.comments %}
                                     {% if cast.comments | length > 20 %}
-                                        {{ cast.comments[:20] }}...
+                                        <span title="{{ cast.comments }}">{{ cast.comments[:20] }}...</span>
                                     {% else %}
                                         {{ cast.comments }}
                                     {% endif %}
                                 {% else %}
-                                    <span class="text-muted">-</span>
+                                    -
                                 {% endif %}
                             </td>
                             
-                            <!-- 操作 -->
+                            <!-- 編集 -->
                             <td>
                                 <a href="{{ url_for('main_routes.edit_cast', store=store, cast_id=cast.cast_id) }}" 
-                                   class="btn btn-sm btn-outline-primary btn-edit">
-                                    編集
+                                   class="cast-action-btn" title="編集">
+                                    <i class="fas fa-pencil-alt cast-edit-icon"></i>
                                 </a>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            {% else %}
-                <div class="alert alert-info" role="alert">
-                    <i class="fas fa-info-circle"></i>
-                    キャストが登録されていません。「新規登録」ボタンから最初のキャストを登録してください。
-                </div>
-            {% endif %}
-        </div>
+            </div>
+        {% else %}
+            <div class="cast-table-empty">
+                キャストが登録されていません。「新規登録」ボタンから最初のキャストを登録してください。
+            </div>
+        {% endif %}
     </div>
 </div>
-
-
 {% endblock %}

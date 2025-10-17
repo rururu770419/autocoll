@@ -182,8 +182,10 @@ function displayCustomersWithPagination() {
         <tr class="customer-table-row">
             <td class="customer-table-cell">
                 <div class="customer-table-actions">
-                    <a href="/${store}/customer_edit/${customer.customer_id}" 
-                       class="customer-btn customer-btn-primary">詳細</a>
+                    <a href="/${store}/customer_edit/${customer.customer_id}"
+                       class="customer-action-btn" title="詳細">
+                        <i class="fas fa-file-alt customer-detail-icon"></i>
+                    </a>
                 </div>
             </td>
             <td class="customer-table-cell">${customer.customer_id}</td>

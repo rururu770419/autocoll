@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/extension.css') }}">
+{% endblock %}
+
+{% block title %}延長管理 | {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="extension-container">
+    <h1 class="extension-title">延長管理</h1>
+
+    {% if success %}
+    <div class="extension-alert extension-alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="extension-alert extension-alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <!-- 登録フォーム -->
+    <h2 class="extension-section-title">延長登録</h2>
+    <div class="extension-form-card">
+        <form method="post" action="{{ url_for('main_routes.register_extension', store=store) }}" id="extensionForm">
+            <div class="extension-form-grid">
+                <!-- 左列：延長名 -->
+                <div class="extension-form-group">
+                    <label for="extension_name" class="extension-form-label">延長名 <span style="color: #dc3545;">*</span></label>
+                    <input type="text" class="extension-form-input" id="extension_name" name="extension_name" required placeholder="例）30分延長">
+                </div>
+
+                <!-- 右列：有効/無効トグル -->
+                <div class="extension-form-group">
+                    <label class="extension-form-label">状態</label>
+                    <div class="extension-toggle-wrapper">
+                        <span class="extension-toggle-label">無効</span>
+                        <label class="extension-toggle-switch">
+                            <input type="checkbox" class="extension-toggle-checkbox" id="is_active" name="is_active" checked>
+                            <span class="extension-toggle-slider"></span>
+                        </label>
+                        <span class="extension-toggle-label">有効</span>
+                    </div>
+                </div>
+
+                <!-- 左列：金額 -->
+                <div class="extension-form-group">
+                    <label for="extension_fee" class="extension-form-label">金額 <span style="color: #dc3545;">*</span></label>
+                    <input type="number" class="extension-form-input" id="extension_fee" name="extension_fee" required min="0" placeholder="例）3000" step="1">
+                    <small class="extension-form-hint">金額は円単位で入力してください</small>
+                </div>
+
+                <!-- 右列：バック金額 -->
+                <div class="extension-form-group">
+                    <label for="back_amount" class="extension-form-label">バック金額 <span style="color: #dc3545;">*</span></label>
+                    <input type="number" class="extension-form-input" id="back_amount" name="back_amount" required min="0" placeholder="例）1500" step="1">
+                    <small class="extension-form-hint">キャストへのバック金額を円単位で入力してください</small>
+                </div>
+
+                <!-- 左列：時間 -->
+                <div class="extension-form-group">
+                    <label for="extension_minutes" class="extension-form-label">時間 <span style="color: #dc3545;">*</span></label>
+                    <input type="number" class="extension-form-input" id="extension_minutes" name="extension_minutes" required min="0" placeholder="例）30" step="1">
+                    <small class="extension-form-hint">延長時間を分単位で入力してください</small>
+                </div>
+
+                <!-- 右列：空欄 -->
+                <div class="extension-form-group">
+                </div>
+            </div>
+
+            <div class="extension-form-buttons">
+                <button type="button" class="extension-btn-reset" onclick="resetForm()">リセット</button>
+                <button type="submit" class="extension-btn-submit">登録</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 一覧テーブル -->
+    <h2 class="extension-section-title">延長一覧</h2>
+    <div class="extension-list-card">
+        <div class="extension-table-wrapper">
+            {% if extensions and extensions|length > 0 %}
+            <table class="extension-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">並び順</th>
+                        <th>延長名</th>
+                        <th style="width: 120px;">金額</th>
+                        <th style="width: 120px;">バック金額</th>
+                        <th style="width: 100px;">時間</th>
+                        <th style="width: 80px;">状態</th>
+                        <th style="width: 80px;">編集</th>
+                        <th style="width: 80px;">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ext in extensions %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('main_routes.move_extension_up', store=store, extension_id=ext.extension_id) }}"
+                               class="extension-sort-btn {% if loop.first %}extension-sort-btn-disabled{% endif %}"
+                               {% if loop.first %}onclick="return false;" style="pointer-events: none;"{% endif %}
+                               title="上に移動">
+                                <i class="fas fa-chevron-up"></i>
+                            </a>
+                            <a href="{{ url_for('main_routes.move_extension_down', store=store, extension_id=ext.extension_id) }}"
+                               class="extension-sort-btn {% if loop.last %}extension-sort-btn-disabled{% endif %}"
+                               {% if loop.last %}onclick="return false;" style="pointer-events: none;"{% endif %}
+                               title="下に移動">
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                        </td>
+                        <td>{{ ext.extension_name }}</td>
+                        <td>{{ "{:,}".format(ext.extension_fee) }}円</td>
+                        <td>{{ "{:,}".format(ext.back_amount) }}円</td>
+                        <td>{{ ext.extension_minutes }}分</td>
+                        <td>
+                            {% if ext.is_active %}
+                                <span class="extension-status-active">有効</span>
+                            {% else %}
+                                <span class="extension-status-inactive">無効</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="javascript:void(0);" class="extension-action-btn" onclick="openEditModal({{ ext.extension_id }}, '{{ ext.extension_name }}', {{ ext.extension_fee }}, {{ ext.back_amount }}, {{ ext.extension_minutes }}, {{ 'true' if ext.is_active else 'false' }})" title="編集">
+                                <i class="fas fa-pencil-alt extension-edit-icon"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('main_routes.delete_extension', store=store, extension_id=ext.extension_id) }}" class="extension-action-btn" onclick="return confirm('本当にこの延長を削除しますか？');" title="削除">
+                                <i class="fas fa-trash-alt extension-delete-icon"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 30px; text-align: center; color: #6c757d;">
+                登録されている延長はありません。
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 編集モーダル -->
+<div id="editModal" class="extension-modal">
+    <div class="extension-modal-dialog">
+        <div class="extension-modal-content">
+            <div class="extension-modal-header">
+                <h3 class="extension-modal-title">延長編集</h3>
+                <button type="button" class="extension-modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form method="post" id="editForm" action="">
+                <div class="extension-modal-body">
+                    <div class="extension-modal-group">
+                        <label for="edit_extension_name" class="extension-modal-label">延長名 <span style="color: #dc3545;">*</span></label>
+                        <input type="text" class="extension-modal-input" id="edit_extension_name" name="extension_name" required>
+                    </div>
+
+                    <div class="extension-modal-group">
+                        <label for="edit_extension_fee" class="extension-modal-label">金額 <span style="color: #dc3545;">*</span></label>
+                        <input type="number" class="extension-modal-input" id="edit_extension_fee" name="extension_fee" required min="0" step="1">
+                    </div>
+
+                    <div class="extension-modal-group">
+                        <label for="edit_back_amount" class="extension-modal-label">バック金額 <span style="color: #dc3545;">*</span></label>
+                        <input type="number" class="extension-modal-input" id="edit_back_amount" name="back_amount" required min="0" step="1">
+                    </div>
+
+                    <div class="extension-modal-group">
+                        <label for="edit_extension_minutes" class="extension-modal-label">時間（分） <span style="color: #dc3545;">*</span></label>
+                        <input type="number" class="extension-modal-input" id="edit_extension_minutes" name="extension_minutes" required min="0" step="1">
+                    </div>
+
+                    <div class="extension-modal-group">
+                        <label class="extension-modal-label">状態</label>
+                        <div class="extension-toggle-wrapper">
+                            <span class="extension-toggle-label">無効</span>
+                            <label class="extension-toggle-switch">
+                                <input type="checkbox" class="extension-toggle-checkbox" id="edit_is_active" name="is_active_display">
+                                <span class="extension-toggle-slider"></span>
+                            </label>
+                            <span class="extension-toggle-label">有効</span>
+                        </div>
+                        <input type="hidden" id="edit_is_active_hidden" name="is_active" value="true">
+                    </div>
+                </div>
+                <div class="extension-modal-footer">
+                    <button type="button" class="extension-modal-btn-cancel" onclick="closeEditModal()">キャンセル</button>
+                    <button type="submit" class="extension-modal-btn-save">更新</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/extension.js') }}"></script>
+<script>
+// フラッシュメッセージの自動非表示（3秒後）
+document.addEventListener('DOMContentLoaded', function() {
+    const successAlert = document.querySelector('.extension-alert-success');
+    const dangerAlert = document.querySelector('.extension-alert-danger');
+
+    if (successAlert) {
+        setTimeout(function() {
+            successAlert.style.transition = 'opacity 0.3s ease';
+            successAlert.style.opacity = '0';
+            setTimeout(function() {
+                successAlert.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+
+    if (dangerAlert) {
+        setTimeout(function() {
+            dangerAlert.style.transition = 'opacity 0.3s ease';
+            dangerAlert.style.opacity = '0';
+            setTimeout(function() {
+                dangerAlert.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

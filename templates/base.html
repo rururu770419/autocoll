@@ -45,7 +45,7 @@
                 
                 <!-- 項目登録の階層メニュー -->
                 <li class="nav-parent">
-                    <a href="#" class="nav-parent-link" onclick="toggleSubmenu(event, 'item-register')">
+                    <a href="#" class="nav-parent-link">
                         <span><i class="fas fa-cog"></i>項目登録</span>
                         <span class="nav-arrow">▶</span>
                     </a>
@@ -56,6 +56,8 @@
                         <li><a href="{{ url_for('main_routes.cast_management', store=session.get('store', 'nagano')) }}">キャスト</a></li>
                         <li><a href="{{ url_for('main_routes.course_registration', store=session.get('store', 'nagano')) }}">コース</a></li>
                         <li><a href="{{ url_for('main_routes.options', store=session.get('store', 'nagano')) }}">オプション</a></li>
+                        <li><a href="{{ url_for('main_routes.extension_management', store=session.get('store', 'nagano')) }}">延長項目</a></li>
+                        <li><a href="{{ url_for('main_routes.nominate_management', store=session.get('store', 'nagano')) }}">指名</a></li>
                         <li><a href="{{ url_for('main_routes.discount_management', store=session.get('store', 'nagano')) }}">割引</a></li>
                         <li><a href="{{ url_for('main_routes.rating_items_management', store=session.get('store', 'nagano')) }}">評価項目</a></li>
                         <li><a href="{{ url_for('main_routes.register_hotel', store=session.get('store', 'nagano')) }}">ホテル</a></li>
@@ -120,23 +122,85 @@
         }
     }
 
-    // サブメニュー切り替え関数
-    function toggleSubmenu(event, submenuId) {
-        event.preventDefault();
-        
-        const submenu = document.getElementById(submenuId);
-        const arrow = event.currentTarget.querySelector('.nav-arrow');
-        
-        if (submenu.classList.contains('nav-submenu-open')) {
-            // 閉じる
-            submenu.classList.remove('nav-submenu-open');
-            arrow.textContent = '▶';
-        } else {
-            // 開く
-            submenu.classList.add('nav-submenu-open');
-            arrow.textContent = '▼';
+    // スマホ版：タップでサブメニューを開閉
+    // PC版：ホバーでサブメニューの位置を動的に調整
+    document.addEventListener('DOMContentLoaded', function() {
+        // スマホ判定（768px以下）
+        function isMobile() {
+            return window.innerWidth <= 768;
         }
-    }
+
+        const navParent = document.querySelector('.nav-parent');
+        const navParentLink = document.querySelector('.nav-parent-link');
+        const navSubmenu = document.querySelector('.nav-submenu');
+
+        // スマホ版：タップで開閉
+        if (navParentLink && isMobile()) {
+            navParentLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                navParent.classList.toggle('open');
+            });
+        }
+
+        // PC版：ホバーでサブメニューの位置を動的に設定
+        if (navParent && navSubmenu && !isMobile()) {
+            function adjustSubmenuPosition() {
+                const parentRect = navParentLink.getBoundingClientRect();
+                const submenuHeight = navSubmenu.offsetHeight;
+                const viewportHeight = window.innerHeight;
+
+                // デフォルトは親要素の上端に合わせる
+                let topPosition = parentRect.top;
+
+                // 画面下部にはみ出す場合
+                if (topPosition + submenuHeight > viewportHeight) {
+                    // 画面下部からの余裕（20px）を持たせて配置
+                    topPosition = viewportHeight - submenuHeight - 20;
+
+                    // 画面上部にもはみ出す場合（サブメニューが非常に長い場合）
+                    if (topPosition < 60) { // ヘッダーの高さ（60px）を考慮
+                        topPosition = 60;
+                    }
+                }
+
+                navSubmenu.style.top = topPosition + 'px';
+            }
+
+            navParent.addEventListener('mouseenter', function() {
+                // 表示してから高さを取得するため、少し遅延
+                setTimeout(adjustSubmenuPosition, 10);
+            });
+
+            // スクロール時も位置を更新
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu) {
+                navMenu.addEventListener('scroll', function() {
+                    if (navParent.matches(':hover')) {
+                        adjustSubmenuPosition();
+                    }
+                });
+            }
+
+            // ウィンドウリサイズ時も位置を更新
+            window.addEventListener('resize', function() {
+                if (navParent.matches(':hover') && !isMobile()) {
+                    adjustSubmenuPosition();
+                }
+            });
+        }
+
+        // 画面サイズ変更時の対応
+        window.addEventListener('resize', function() {
+            if (!isMobile() && navParent) {
+                navParent.classList.remove('open');
+                // PC版に切り替わったら位置を再設定
+                if (navSubmenu) {
+                    const rect = navParentLink.getBoundingClientRect();
+                    navSubmenu.style.top = rect.top + 'px';
+                }
+            }
+        });
+    });
 
     // メニューオーバーレイ機能（スマホ版のみ）
     document.addEventListener('DOMContentLoaded', function() {

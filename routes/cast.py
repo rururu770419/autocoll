@@ -5,19 +5,19 @@ from datetime import datetime
 from flask import Blueprint
 from werkzeug.utils import secure_filename
 from flask import render_template, request, redirect, url_for
-from database.connection import get_db, get_display_name, get_store_id  # ← get_store_id を追加
+from database.connection import get_db, get_display_name, get_store_id
+from datetime import datetime, date
 from database.cast_db import (
     register_cast as db_register_cast,
     get_all_casts, find_cast_by_name, find_cast_by_phone_number, find_cast_by_id,
     get_all_casts_with_details, update_cast, delete_cast as db_delete_cast,
     get_cast_with_age,
-    # NG設定用の関数を追加
     get_all_hotels, get_all_courses, get_all_options, get_all_areas,
-    get_all_ng_areas, get_all_ng_age_patterns,  # ← 追加
+    get_all_ng_areas, get_all_ng_age_patterns,
     get_cast_ng_hotels, get_cast_ng_courses, get_cast_ng_options, get_cast_ng_areas,
-    get_cast_ng_custom_areas, get_cast_ng_age_patterns,  # ← 追加
+    get_cast_ng_custom_areas, get_cast_ng_age_patterns,
     update_cast_ng_items,
-    update_cast_ng_custom_areas, update_cast_ng_age_patterns  # ← 追加
+    update_cast_ng_custom_areas, update_cast_ng_age_patterns
 )
 
 
@@ -104,12 +104,11 @@ def register_cast(store):
     if display_name is None:
         return "店舗が見つかりません。", 404
     
-    # ✅ store_id を動的取得
     store_id = get_store_id(store)
     
     db = get_db()
     
-    # ✅ コースカテゴリ一覧を取得（動的 store_id 使用）
+    # コースカテゴリ一覧を取得
     cursor = db.cursor()
     cursor.execute("""
         SELECT category_id, category_name
@@ -262,7 +261,8 @@ def register_cast(store):
         # 詳細情報を更新
         update_cast(db, cast_id, cast_data)
         
-        return redirect(url_for('main_routes.cast_management', store=store, success="キャストを登録しました。"))
+        # ✅ 登録成功後は一覧画面にリダイレクト（これはOK）
+        return redirect(url_for('main_routes.cast_management', store=store))
         
     # GETリクエストの場合、登録フォームを表示
     success_msg = request.args.get('success')
@@ -278,20 +278,53 @@ def register_cast(store):
     )
 
 def edit_cast(store, cast_id):
-    """キャスト編集ページ（詳細情報対応 + ファイルアップロード + オートコール設定 + 働き方区分 + NGエリア・年齢NG + コースカテゴリ対応）"""
+    """キャスト編集ページ（hotel_management統一版 - flash削除済み）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
 
-    # ✅ store_id を動的取得
     store_id = get_store_id(store)
 
     db = get_db()
     # 年齢計算込みのキャスト情報を取得
     cast = get_cast_with_age(db, cast_id)
-    
+
     if cast is None:
-        return redirect(url_for('main_routes.cast_management', store=store, error="キャストが見つかりません。"))
+        return redirect(url_for('main_routes.cast_management', store=store))
+
+    # 住所を都道府県・市区町村・詳細に分割
+    address = cast.get('address', '')
+    prefecture = ''
+    city = ''
+    address_detail = ''
+
+    if address:
+        # 都道府県リスト
+        prefectures = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+                      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+                      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+                      '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+                      '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+                      '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+                      '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+
+        for pref in prefectures:
+            if address.startswith(pref):
+                prefecture = pref
+                rest = address[len(pref):].strip()
+
+                # 市区町村と詳細住所を分割（最初の空白まで）
+                parts = rest.split(' ', 1)
+                if len(parts) > 0:
+                    city = parts[0]
+                if len(parts) > 1:
+                    address_detail = parts[1]
+                break
+
+    # castにprefecture、city、address_detailを追加
+    cast['prefecture'] = prefecture
+    cast['city'] = city
+    cast['address_detail'] = address_detail
 
     if request.method == "POST":
         # 基本情報の取得
@@ -313,7 +346,7 @@ def edit_cast(store, cast_id):
         # Boolean変換
         auto_call_enabled_bool = (auto_call_enabled == "true")
         
-        # 【追加】働き方区分の取得
+        # 働き方区分の取得
         work_type = request.form.get("work_type", "")
         
         cast_data = {
@@ -326,7 +359,7 @@ def edit_cast(store, cast_id):
             'status': request.form.get("status", '在籍'),
             'recruitment_source': request.form.get("recruitment_source"),
             'transportation_fee': int(request.form.get("transportation_fee", 0)),
-            'work_type': work_type,  # 【追加】
+            'work_type': work_type,
             'comments': request.form.get("comments"),
             'login_id': new_login_id,
             'notification_minutes_before': int(notification_minutes_before),
@@ -345,19 +378,19 @@ def edit_cast(store, cast_id):
         if password:
             cast_data['password'] = password
         
+        # コースカテゴリ一覧を取得（エラー時の再表示用）
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT category_id, category_name
+            FROM course_categories
+            WHERE store_id = %s
+            AND is_active = TRUE
+            ORDER BY category_id
+        """, (store_id,))
+        course_categories = cursor.fetchall()
+        
         # バリデーション
         if not cast_data['name']:
-            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-            cursor = db.cursor()
-            cursor.execute("""
-                SELECT category_id, category_name
-                FROM course_categories
-                WHERE store_id = %s
-                AND is_active = TRUE
-                ORDER BY category_id
-            """, (store_id,))
-            course_categories = cursor.fetchall()
-            
             return render_template(
                 "cast_edit.html",
                 store=store,
@@ -370,17 +403,6 @@ def edit_cast(store, cast_id):
         # 名前の重複チェック（編集中のキャスト自身は除く）
         existing_cast_by_name = find_cast_by_name(db, cast_data['name'])
         if existing_cast_by_name and existing_cast_by_name['cast_id'] != cast_id:
-            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-            cursor = db.cursor()
-            cursor.execute("""
-                SELECT category_id, category_name
-                FROM course_categories
-                WHERE store_id = %s
-                AND is_active = TRUE
-                ORDER BY category_id
-            """, (store_id,))
-            course_categories = cursor.fetchall()
-            
             return render_template(
                 "cast_edit.html",
                 store=store,
@@ -394,17 +416,6 @@ def edit_cast(store, cast_id):
         if cast_data['phone_number']:
             existing_cast_by_phone = find_cast_by_phone_number(db, cast_data['phone_number'])
             if existing_cast_by_phone and existing_cast_by_phone['cast_id'] != cast_id:
-                # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                cursor = db.cursor()
-                cursor.execute("""
-                    SELECT category_id, category_name
-                    FROM course_categories
-                    WHERE store_id = %s
-                    AND is_active = TRUE
-                    ORDER BY category_id
-                """, (store_id,))
-                course_categories = cursor.fetchall()
-                
                 return render_template(
                     "cast_edit.html",
                     store=store,
@@ -420,17 +431,6 @@ def edit_cast(store, cast_id):
             existing_cast_by_login = find_cast_by_login_id(db, cast_data['login_id'])
             # 編集中のキャスト自身のログインIDは除外
             if existing_cast_by_login and existing_cast_by_login['cast_id'] != cast_id:
-                # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                cursor = db.cursor()
-                cursor.execute("""
-                    SELECT category_id, category_name
-                    FROM course_categories
-                    WHERE store_id = %s
-                    AND is_active = TRUE
-                    ORDER BY category_id
-                """, (store_id,))
-                course_categories = cursor.fetchall()
-                
                 return render_template(
                     "cast_edit.html",
                     store=store,
@@ -471,17 +471,6 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
-                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                    cursor = db.cursor()
-                    cursor.execute("""
-                        SELECT category_id, category_name
-                        FROM course_categories
-                        WHERE store_id = %s
-                        AND is_active = TRUE
-                        ORDER BY category_id
-                    """, (store_id,))
-                    course_categories = cursor.fetchall()
-                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
@@ -493,17 +482,6 @@ def edit_cast(store, cast_id):
                 
                 # 最大2枚まで
                 if len(existing_id_docs) >= 2:
-                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                    cursor = db.cursor()
-                    cursor.execute("""
-                        SELECT category_id, category_name
-                        FROM course_categories
-                        WHERE store_id = %s
-                        AND is_active = TRUE
-                        ORDER BY category_id
-                    """, (store_id,))
-                    course_categories = cursor.fetchall()
-                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
@@ -527,17 +505,6 @@ def edit_cast(store, cast_id):
                 file.seek(0)
                 
                 if file_size > MAX_FILE_SIZE:
-                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                    cursor = db.cursor()
-                    cursor.execute("""
-                        SELECT category_id, category_name
-                        FROM course_categories
-                        WHERE store_id = %s
-                        AND is_active = TRUE
-                        ORDER BY category_id
-                    """, (store_id,))
-                    course_categories = cursor.fetchall()
-                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
@@ -549,17 +516,6 @@ def edit_cast(store, cast_id):
                 
                 # 最大5枚まで
                 if len(existing_contract_docs) >= 5:
-                    # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-                    cursor = db.cursor()
-                    cursor.execute("""
-                        SELECT category_id, category_name
-                        FROM course_categories
-                        WHERE store_id = %s
-                        AND is_active = TRUE
-                        ORDER BY category_id
-                    """, (store_id,))
-                    course_categories = cursor.fetchall()
-                    
                     return render_template(
                         "cast_edit.html",
                         store=store,
@@ -580,32 +536,135 @@ def edit_cast(store, cast_id):
         # データベースを更新
         success = update_cast(db, cast_id, cast_data)
         
-        if success:
-            return redirect(url_for('main_routes.cast_management', store=store, success="キャスト情報を更新しました。"))
-        else:
-            # ✅ course_categoriesを取得してエラー時にも渡す（動的 store_id）
-            cursor = db.cursor()
-            cursor.execute("""
-                SELECT category_id, category_name
-                FROM course_categories
-                WHERE store_id = %s
-                AND is_active = TRUE
-                ORDER BY category_id
-            """, (store_id,))
-            course_categories = cursor.fetchall()
+        print(f"✅ キャスト更新{'成功' if success else '失敗'}: cast_id {cast_id}")
+        
+        # NG設定の更新処理
+        try:
+            # NGホテルの保存
+            ng_hotels = request.form.getlist('ng_hotels')
+            ng_hotels = [int(h) for h in ng_hotels if h]
             
-            return render_template(
-                "cast_edit.html",
-                store=store,
-                cast=cast,
-                display_name=display_name,
-                course_categories=course_categories,
-                error="更新に失敗しました。"
-            )
+            # NGコースの保存
+            ng_courses = request.form.getlist('ng_courses')
+            ng_courses = [int(c) for c in ng_courses if c]
+            
+            # NGオプションの保存
+            ng_options = request.form.getlist('ng_options')
+            ng_options = [int(o) for o in ng_options if o]
+            
+            # NGエリア（カスタム）の保存
+            ng_custom_areas = request.form.getlist('ng_custom_areas')
+            ng_custom_areas = [int(a) for a in ng_custom_areas if a]
+            
+            # 年齢NGの保存
+            ng_age_patterns = request.form.getlist('ng_age_patterns')
+            ng_age_patterns = [int(p) for p in ng_age_patterns if p]
+            
+            # データベース更新
+            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels)
+            update_cast_ng_items(db, cast_id, 'courses', ng_courses)
+            update_cast_ng_items(db, cast_id, 'options', ng_options)
+            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)
+            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)
+            
+        except Exception as e:
+            print(f"❌ NG設定更新エラー: {e}")
+            success = False
+        
+        # ✅ 更新後、最新のキャスト情報を取得して再表示（flash削除、redirect削除）
+        cast = get_cast_with_age(db, cast_id)
+
+        # 住所を都道府県・市区町村・詳細に分割
+        address = cast.get('address', '')
+        prefecture = ''
+        city = ''
+        address_detail = ''
+
+        if address:
+            # 都道府県リスト
+            prefectures_list = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+                          '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+                          '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+                          '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+                          '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+                          '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+                          '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+
+            for pref in prefectures_list:
+                if address.startswith(pref):
+                    prefecture = pref
+                    rest = address[len(pref):].strip()
+
+                    # 市区町村と詳細住所を分割（最初の空白まで）
+                    parts = rest.split(' ', 1)
+                    if len(parts) > 0:
+                        city = parts[0]
+                    if len(parts) > 1:
+                        address_detail = parts[1]
+                    break
+
+        # castにprefecture、city、address_detailを追加
+        cast['prefecture'] = prefecture
+        cast['city'] = city
+        cast['address_detail'] = address_detail
+
+        # コースカテゴリ一覧を取得
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT category_id, category_name
+            FROM course_categories
+            WHERE store_id = %s
+            AND is_active = TRUE
+            ORDER BY category_id
+        """, (store_id,))
+        course_categories = cursor.fetchall()
+        
+        # NG設定タブ用のデータを取得
+        all_hotels = get_all_hotels(db, store_id)
+        all_courses = get_all_courses(db, store_id)
+        all_options = get_all_options(db, store_id)
+        all_ng_areas = get_all_ng_areas(db)
+        all_ng_age_patterns = get_all_ng_age_patterns(db)
+        
+        # キャストのNG設定を取得
+        ng_hotels = get_cast_ng_hotels(db, cast_id)
+        ng_courses = get_cast_ng_courses(db, cast_id)
+        ng_options = get_cast_ng_options(db, cast_id)
+        ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)
+        ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)
+        
+        # NGのIDリストを作成
+        ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
+        ng_course_ids = [c['course_id'] for c in ng_courses]
+        ng_option_ids = [o['option_id'] for o in ng_options]
+        ng_custom_area_ids = [a['ng_area_id'] for a in ng_custom_areas]
+        ng_age_pattern_ids = [p['ng_age_id'] for p in ng_age_patterns]
+        
+        # ✅ flash()とredirect()を使わず、successまたはerrorメッセージを渡して再レンダリング
+        return render_template(
+            "cast_edit.html",
+            store=store,
+            cast=cast,
+            display_name=display_name,
+            today=date.today(),
+            course_categories=course_categories,
+            all_hotels=all_hotels,
+            all_courses=all_courses,
+            all_options=all_options,
+            all_ng_areas=all_ng_areas,
+            all_ng_age_patterns=all_ng_age_patterns,
+            ng_hotel_ids=ng_hotel_ids,
+            ng_course_ids=ng_course_ids,
+            ng_option_ids=ng_option_ids,
+            ng_custom_area_ids=ng_custom_area_ids,
+            ng_age_pattern_ids=ng_age_pattern_ids,
+            success="更新できました。" if success else None,
+            error="更新に失敗しました。" if not success else None
+        )
 
     # GETリクエスト：編集画面を表示
     
-    # ✅ コースカテゴリ一覧を取得（動的 store_id）
+    # コースカテゴリ一覧を取得
     cursor = db.cursor()
     cursor.execute("""
         SELECT category_id, category_name
@@ -617,18 +676,18 @@ def edit_cast(store, cast_id):
     course_categories = cursor.fetchall()
     
     # NG設定タブ用のデータを取得
-    all_hotels = get_all_hotels(db)
-    all_courses = get_all_courses(db)
-    all_options = get_all_options(db)
-    all_ng_areas = get_all_ng_areas(db)  # settingsで登録したNGエリア
-    all_ng_age_patterns = get_all_ng_age_patterns(db)  # settingsで登録した年齢NG
+    all_hotels = get_all_hotels(db, store_id)
+    all_courses = get_all_courses(db, store_id)
+    all_options = get_all_options(db, store_id)
+    all_ng_areas = get_all_ng_areas(db)
+    all_ng_age_patterns = get_all_ng_age_patterns(db)
     
     # キャストのNG設定を取得
     ng_hotels = get_cast_ng_hotels(db, cast_id)
     ng_courses = get_cast_ng_courses(db, cast_id)
     ng_options = get_cast_ng_options(db, cast_id)
-    ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)  # NGエリア（カスタム）
-    ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)  # 年齢NG
+    ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)
+    ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)
     
     # NGのIDリストを作成
     ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
@@ -642,6 +701,7 @@ def edit_cast(store, cast_id):
         store=store,
         cast=cast,
         display_name=display_name,
+        today=date.today(),
         course_categories=course_categories,
         all_hotels=all_hotels,
         all_courses=all_courses,
@@ -666,7 +726,7 @@ def save_cast_ng_settings(store, cast_id):
     cast = get_cast_with_age(db, cast_id)
     
     if cast is None:
-        return redirect(url_for('main_routes.cast_management', store=store, error="キャストが見つかりません。"))
+        return redirect(url_for('main_routes.cast_management', store=store))
 
     if request.method == "POST":
         try:
@@ -694,16 +754,17 @@ def save_cast_ng_settings(store, cast_id):
             update_cast_ng_items(db, cast_id, 'hotels', ng_hotels)
             update_cast_ng_items(db, cast_id, 'courses', ng_courses)
             update_cast_ng_items(db, cast_id, 'options', ng_options)
-            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)  # NGエリア（カスタム）
-            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)  # 年齢NG
+            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)
+            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)
             
-            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id, success="NG設定を保存しました。"))
+            # ✅ 保存後は編集画面にリダイレクト（これはOK - 別ページへの遷移）
+            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id))
             
         except Exception as e:
             print(f"NG設定保存エラー: {e}")
             import traceback
             traceback.print_exc()
-            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id, error="NG設定の保存に失敗しました。"))
+            return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id))
     
     return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id))
 
@@ -719,7 +780,5 @@ def delete_cast(store, cast_id):
     # 論理削除を実行
     success = db_delete_cast(db, cast_id)
     
-    if success:
-        return redirect(url_for('main_routes.cast_management', store=store, success="キャストを削除しました。"))
-    else:
-        return redirect(url_for('main_routes.cast_management', store=store, error="削除に失敗しました。"))
+    # ✅ 削除後は一覧画面にリダイレクト（これはOK - 別ページへの遷移）
+    return redirect(url_for('main_routes.cast_management', store=store))

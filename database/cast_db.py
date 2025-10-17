@@ -405,35 +405,88 @@ def delete_cast(db, cast_id):
         return False
 
 # ==== マスターデータ取得関数 ====
-def get_all_hotels(db):
-    """全ホテル一覧を取得"""
+def get_all_hotels(db, store_id=None):
+    """全ホテル一覧を取得（キャストNG設定用）"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT hotel_id, name 
-        FROM hotels 
-        ORDER BY name
-    """)
-    return cursor.fetchall()
+    try:
+        cursor.execute("""
+            SELECT hotel_id, name AS hotel_name
+            FROM hotels
+            WHERE is_active = TRUE
+            ORDER BY sort_order, name
+        """)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"ホテル一覧取得エラー: {e}")
+        return []
 
-def get_all_courses(db):
-    """全コース一覧を取得"""
+def get_all_courses(db, store_id=None):
+    """全コース一覧を取得（キャストNG設定用）"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT course_id, name 
-        FROM courses 
-        ORDER BY name
-    """)
-    return cursor.fetchall()
+    try:
+        # store_idでフィルタリングを試みる
+        if store_id is not None:
+            cursor.execute("""
+                SELECT course_id, name AS course_name
+                FROM courses
+                WHERE store_id = %s AND is_active = TRUE
+                ORDER BY sort_order, name
+            """, (store_id,))
+        else:
+            cursor.execute("""
+                SELECT course_id, name AS course_name
+                FROM courses
+                WHERE is_active = TRUE
+                ORDER BY sort_order, name
+            """)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"コース一覧取得エラー: {e}")
+        # store_idカラムがない場合のフォールバック
+        try:
+            cursor.execute("""
+                SELECT course_id, name AS course_name
+                FROM courses
+                WHERE is_active = TRUE
+                ORDER BY sort_order, name
+            """)
+            return cursor.fetchall()
+        except:
+            return []
 
-def get_all_options(db):
-    """全オプション一覧を取得"""
+def get_all_options(db, store_id=None):
+    """全オプション一覧を取得（キャストNG設定用）"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT option_id, name 
-        FROM options 
-        ORDER BY name
-    """)
-    return cursor.fetchall()
+    try:
+        # store_idでフィルタリングを試みる
+        if store_id is not None:
+            cursor.execute("""
+                SELECT option_id, name AS option_name
+                FROM options
+                WHERE store_id = %s AND is_active = TRUE
+                ORDER BY sort_order, name
+            """, (store_id,))
+        else:
+            cursor.execute("""
+                SELECT option_id, name AS option_name
+                FROM options
+                WHERE is_active = TRUE
+                ORDER BY sort_order, name
+            """)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"オプション一覧取得エラー: {e}")
+        # store_idカラムがない場合のフォールバック
+        try:
+            cursor.execute("""
+                SELECT option_id, name AS option_name
+                FROM options
+                WHERE is_active = TRUE
+                ORDER BY sort_order, name
+            """)
+            return cursor.fetchall()
+        except:
+            return []
 
 def get_all_areas(db):
     """全エリア一覧を取得"""

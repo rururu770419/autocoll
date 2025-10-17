@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nominate.css') }}">
+{% endblock %}
+
+{% block title %}指名管理 | {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="nominate-container">
+    <h1 class="nominate-title">指名管理</h1>
+
+    {% if success %}
+    <div class="nominate-alert nominate-alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="nominate-alert nominate-alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <!-- 登録フォーム -->
+    <h2 class="nominate-section-title">指名種類登録</h2>
+    <div class="nominate-form-card">
+        <form method="post" action="{{ url_for('main_routes.register_nomination_type', store=store) }}" id="nominateForm">
+            <div class="nominate-form-grid">
+                <!-- 左列：種類名 -->
+                <div class="nominate-form-group">
+                    <label for="type_name" class="nominate-form-label">種類名 <span style="color: #dc3545;">*</span></label>
+                    <input type="text" class="nominate-form-input" id="type_name" name="type_name" required placeholder="例）本指名">
+                </div>
+
+                <!-- 右列：有効/無効トグル -->
+                <div class="nominate-form-group">
+                    <label class="nominate-form-label">状態</label>
+                    <div class="nominate-toggle-wrapper">
+                        <span class="nominate-toggle-label">無効</span>
+                        <label class="nominate-toggle-switch">
+                            <input type="checkbox" class="nominate-toggle-checkbox" id="is_active" name="is_active" checked>
+                            <span class="nominate-toggle-slider"></span>
+                        </label>
+                        <span class="nominate-toggle-label">有効</span>
+                    </div>
+                </div>
+
+                <!-- 左列：金額 -->
+                <div class="nominate-form-group">
+                    <label for="additional_fee" class="nominate-form-label">金額 <span style="color: #dc3545;">*</span></label>
+                    <input type="number" class="nominate-form-input" id="additional_fee" name="additional_fee" required min="0" placeholder="例）3000" step="1">
+                    <small class="nominate-form-hint">金額は円単位で入力してください</small>
+                </div>
+
+                <!-- 右列：バック金額 -->
+                <div class="nominate-form-group">
+                    <label for="back_amount" class="nominate-form-label">バック金額 <span style="color: #dc3545;">*</span></label>
+                    <input type="number" class="nominate-form-input" id="back_amount" name="back_amount" required min="0" placeholder="例）1500" step="1">
+                    <small class="nominate-form-hint">キャストへのバック金額を円単位で入力してください</small>
+                </div>
+            </div>
+
+            <div class="nominate-form-buttons">
+                <button type="button" class="nominate-btn-reset" onclick="resetForm()">リセット</button>
+                <button type="submit" class="nominate-btn-submit">登録</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 一覧テーブル -->
+    <h2 class="nominate-section-title">指名種類一覧</h2>
+    <div class="nominate-list-card">
+        <div class="nominate-table-wrapper">
+            {% if nomination_types and nomination_types|length > 0 %}
+            <table class="nominate-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">並び順</th>
+                        <th>種類名</th>
+                        <th style="width: 120px;">金額</th>
+                        <th style="width: 120px;">バック金額</th>
+                        <th style="width: 80px;">状態</th>
+                        <th style="width: 80px;">編集</th>
+                        <th style="width: 80px;">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nom in nomination_types %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('main_routes.move_nomination_type_up', store=store, nomination_type_id=nom.nomination_type_id) }}"
+                               class="nominate-sort-btn {% if loop.first %}nominate-sort-btn-disabled{% endif %}"
+                               {% if loop.first %}onclick="return false;" style="pointer-events: none;"{% endif %}
+                               title="上に移動">
+                                <i class="fas fa-chevron-up"></i>
+                            </a>
+                            <a href="{{ url_for('main_routes.move_nomination_type_down', store=store, nomination_type_id=nom.nomination_type_id) }}"
+                               class="nominate-sort-btn {% if loop.last %}nominate-sort-btn-disabled{% endif %}"
+                               {% if loop.last %}onclick="return false;" style="pointer-events: none;"{% endif %}
+                               title="下に移動">
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                        </td>
+                        <td>{{ nom.type_name }}</td>
+                        <td>{{ "{:,}".format(nom.additional_fee) }}円</td>
+                        <td>{{ "{:,}".format(nom.back_amount) }}円</td>
+                        <td>
+                            {% if nom.is_active %}
+                                <span class="nominate-status-active">有効</span>
+                            {% else %}
+                                <span class="nominate-status-inactive">無効</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="javascript:void(0);" class="nominate-action-btn" onclick="openEditModal({{ nom.nomination_type_id }}, '{{ nom.type_name }}', {{ nom.additional_fee }}, {{ nom.back_amount }}, {{ 'true' if nom.is_active else 'false' }})" title="編集">
+                                <i class="fas fa-pencil-alt nominate-edit-icon"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('main_routes.delete_nomination_type', store=store, nomination_type_id=nom.nomination_type_id) }}" class="nominate-action-btn" onclick="return confirm('本当にこの指名種類を削除しますか？');" title="削除">
+                                <i class="fas fa-trash-alt nominate-delete-icon"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 30px; text-align: center; color: #6c757d;">
+                登録されている指名種類はありません。
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 編集モーダル -->
+<div id="editModal" class="nominate-modal">
+    <div class="nominate-modal-dialog">
+        <div class="nominate-modal-content">
+            <div class="nominate-modal-header">
+                <h3 class="nominate-modal-title">指名種類編集</h3>
+                <button type="button" class="nominate-modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form method="post" id="editForm" action="">
+                <div class="nominate-modal-body">
+                    <div class="nominate-modal-group">
+                        <label for="edit_type_name" class="nominate-modal-label">種類名 <span style="color: #dc3545;">*</span></label>
+                        <input type="text" class="nominate-modal-input" id="edit_type_name" name="type_name" required>
+                    </div>
+
+                    <div class="nominate-modal-group">
+                        <label for="edit_additional_fee" class="nominate-modal-label">金額 <span style="color: #dc3545;">*</span></label>
+                        <input type="number" class="nominate-modal-input" id="edit_additional_fee" name="additional_fee" required min="0" step="1">
+                    </div>
+
+                    <div class="nominate-modal-group">
+                        <label for="edit_back_amount" class="nominate-modal-label">バック金額 <span style="color: #dc3545;">*</span></label>
+                        <input type="number" class="nominate-modal-input" id="edit_back_amount" name="back_amount" required min="0" step="1">
+                    </div>
+
+                    <div class="nominate-modal-group">
+                        <label class="nominate-modal-label">状態</label>
+                        <div class="nominate-toggle-wrapper">
+                            <span class="nominate-toggle-label">無効</span>
+                            <label class="nominate-toggle-switch">
+                                <input type="checkbox" class="nominate-toggle-checkbox" id="edit_is_active" name="is_active_display">
+                                <span class="nominate-toggle-slider"></span>
+                            </label>
+                            <span class="nominate-toggle-label">有効</span>
+                        </div>
+                        <input type="hidden" id="edit_is_active_hidden" name="is_active" value="true">
+                    </div>
+                </div>
+                <div class="nominate-modal-footer">
+                    <button type="button" class="nominate-modal-btn-cancel" onclick="closeEditModal()">キャンセル</button>
+                    <button type="submit" class="nominate-modal-btn-save">更新</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/nominate.js') }}"></script>
+<script>
+// フラッシュメッセージの自動非表示（3秒後）
+document.addEventListener('DOMContentLoaded', function() {
+    const successAlert = document.querySelector('.nominate-alert-success');
+    const dangerAlert = document.querySelector('.nominate-alert-danger');
+
+    if (successAlert) {
+        setTimeout(function() {
+            successAlert.style.transition = 'opacity 0.3s ease';
+            successAlert.style.opacity = '0';
+            setTimeout(function() {
+                successAlert.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+
+    if (dangerAlert) {
+        setTimeout(function() {
+            dangerAlert.style.transition = 'opacity 0.3s ease';
+            dangerAlert.style.opacity = '0';
+            setTimeout(function() {
+                dangerAlert.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

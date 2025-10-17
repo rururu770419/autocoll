@@ -8,24 +8,27 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Customer registration page initialized');
-    
+
     // 選択肢を読み込む
     loadCustomerFieldOptions();
-    
+
     // フォーム送信イベント
     document.getElementById('customerForm').addEventListener('submit', handleFormSubmit);
-    
+
     // 年齢自動計算
     const birthdayInput = document.getElementById('birthday');
     if (birthdayInput) {
         birthdayInput.addEventListener('change', calculateAge);
     }
-    
+
     // 入力制限を設定
     setupInputRestrictions();
-    
+
     // セレクトボックスの変更イベント（色を反映）
     setupSelectChangeEvents();
+
+    // 🆕 コメント欄の自動リサイズ機能
+    setupTextareaAutoResize();
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -155,19 +158,52 @@ function setupSelectChangeEvents() {
 function calculateAge() {
     const birthdayInput = document.getElementById('birthday');
     const ageInput = document.getElementById('age');
-    
+
     if (!birthdayInput || !birthdayInput.value || !ageInput) return;
-    
+
     const birthday = new Date(birthdayInput.value);
     const today = new Date();
     let age = today.getFullYear() - birthday.getFullYear();
     const monthDiff = today.getMonth() - birthday.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
         age--;
     }
-    
+
     ageInput.value = age >= 0 ? age : '';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🆕 コメント欄の自動リサイズ機能
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function setupTextareaAutoResize() {
+    const textarea = document.getElementById('comment');
+    if (!textarea) return;
+
+    // 初期スタイルを設定
+    textarea.style.overflow = 'hidden';
+    textarea.style.resize = 'none';
+    textarea.style.minHeight = '36px';
+
+    // 自動リサイズ関数
+    function autoResize() {
+        // 一旦リセット
+        this.style.height = '36px';
+
+        // 内容に合わせて高さを調整
+        const newHeight = Math.max(36, this.scrollHeight);
+        this.style.height = newHeight + 'px';
+    }
+
+    // イベントリスナーを追加
+    textarea.addEventListener('input', autoResize);
+    textarea.addEventListener('change', autoResize);
+
+    // 初期サイズを設定
+    setTimeout(() => {
+        textarea.style.height = '36px';
+    }, 100);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -197,7 +233,10 @@ async function handleFormSubmit(e) {
         age: ageValue ? parseInt(ageValue) : null,  // 空文字列の場合はnull
         prefecture: getValue('prefecture'),
         city: getValue('city'),
-        address_detail: getValue('address_detail'),
+        street_address: getValue('street_address'),
+        building_name: getValue('building_name'),
+        // 互換性のため、address_detailも送信（street_address + building_nameを結合）
+        address_detail: [getValue('street_address'), getValue('building_name')].filter(v => v).join(' '),
         member_type: getValue('member_type'),
         status: getValue('status'),
         web_member: getValue('web_member'),

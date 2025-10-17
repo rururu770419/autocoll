@@ -78,7 +78,7 @@ body {
     padding-top: 60px;
     transition: left 0.3s ease;
     z-index: 999;
-    overflow-y: auto; /* スクロール対応 */
+    overflow: visible; /* フライアウト表示のため変更 */
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -86,10 +86,13 @@ body {
     left: 0;
 }
 
-.nav-menu ul {
+.nav-menu > ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    overflow-y: auto; /* スクロール対応 */
+    overflow-x: visible; /* フライアウト表示のため */
+    height: calc(100vh - 60px); /* ヘッダー分を引いた高さ */
 }
 
 .nav-menu li a {
@@ -144,12 +147,13 @@ body {
 }
 
 /* ============================================
-   階層メニュー専用CSS
+   階層メニュー専用CSS（フライアウト式）
    ============================================ */
 
 /* 親メニューアイテム */
 .nav-parent {
     position: relative;
+    overflow: visible; /* フライアウト表示のため */
 }
 
 .nav-parent-link {
@@ -168,25 +172,30 @@ body {
     color: #00BCD4;
 }
 
-/* 矢印アイコン */
+/* 矢印アイコン（常に右向き） */
 .nav-arrow {
     font-size: 12px;
-    transition: transform 0.3s ease;
 }
 
-/* サブメニュー */
+/* サブメニュー（フライアウト） */
 .nav-submenu {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 0;
-    overflow: hidden;
-    background-color: #f8f9fa;
-    transition: max-height 0.3s ease;
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    background-color: #ffffff;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    z-index: 10000; /* 非常に高いz-indexで確実に表示 */
 }
 
-.nav-submenu.nav-submenu-open {
-    max-height: 400px;
+/* ホバーで表示 */
+.nav-parent:hover .nav-submenu {
+    display: block !important;
 }
 
 .nav-submenu li {
@@ -195,16 +204,17 @@ body {
 
 .nav-submenu li a {
     display: block;
-    padding: 10px 15px 10px 40px;
-    color: #666;
+    padding: 12px 20px;
+    color: #333;
     text-decoration: none;
     border-bottom: 1px solid #e9ecef;
     font-size: 14px;
     transition: background-color 0.2s ease;
+    white-space: nowrap;
 }
 
 .nav-submenu li a:hover {
-    background-color: #e9ecef;
+    background-color: #f8f9fa;
     color: #00BCD4;
 }
 
@@ -221,21 +231,37 @@ body {
     .hamburger-menu {
         display: none;
     }
-    
+
     /* サイドナビを常時表示 */
     .nav-menu {
         left: 0;
         position: fixed;
         width: 200px;
+        overflow-y: auto; /* スクロール対応 */
+        overflow-x: visible; /* フライアウト表示のため */
     }
-    
+
+    /* スクロールは親要素で処理 */
+    .nav-menu > ul {
+        overflow: visible; /* フライアウト表示のため */
+    }
+
+    /* PC版：サブメニューをposition:fixedで表示 */
+    .nav-submenu {
+        position: fixed !important; /* overflowの影響を受けないように */
+        left: 200px !important; /* サイドメニューの幅分右に */
+        top: auto; /* JavaScriptで動的に設定 */
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
     /* コンテンツエリアをサイドナビ分右に移動 */
     .content {
         margin-left: 200px;
         margin-top: 60px;
         padding: 20px;
     }
-    
+
     /* オーバーレイはPC版では不要 */
     .nav-overlay {
         display: none !important;
@@ -253,46 +279,71 @@ body {
         height: 25px;
         margin-right: 10px;
     }
-    
+
     .nav-menu {
         left: -300px;
         width: 220px;
         padding-top: 50px;
     }
-    
+
     .nav-menu.active {
         left: 0;
     }
-    
+
     /* ヘッダー調整 */
     .header {
         height: 50px;
         padding: 0 10px;
     }
-    
+
     .user-info {
         font-size: 0.9rem;
         padding-right: 10px;
     }
-    
+
     .content {
         margin-top: 50px;
         margin-left: 0;
         padding: 15px 10px;
     }
-    
+
     .nav-menu li a {
         padding: 12px 15px;
         font-size: 16px;
     }
-    
+
     .nav-parent-link {
         padding: 12px 15px;
         font-size: 16px;
     }
-    
+
+    /* スマホ版：サブメニューは縦展開式 */
+    .nav-submenu {
+        position: static;
+        left: auto;
+        top: auto;
+        min-width: auto;
+        box-shadow: none;
+        background-color: #f8f9fa;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    /* タップで開く（ホバーは使用しない） */
+    .nav-parent.open .nav-submenu {
+        display: block;
+        max-height: 500px;
+    }
+
     .nav-submenu li a {
         padding: 10px 15px 10px 35px;
         font-size: 15px;
+        color: #666;
+        background-color: transparent;
+    }
+
+    .nav-submenu li a:hover {
+        background-color: #e9ecef;
     }
 }

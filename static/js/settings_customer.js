@@ -73,89 +73,85 @@ async function loadCustomerFieldSettings() {
 function renderCustomerFields() {
     const container = document.getElementById('customerFieldsContainer');
     if (!container) return;
-    
+
     let html = '';
-    
+
     customerFieldData.categories.forEach(category => {
         const options = customerFieldData.options[category.field_key] || [];
-        
+
         html += `
             <div class="customer-field-section">
                 <div class="customer-field-header">
-                    <h3 class="customer-field-title">【${escapeHtml(category.field_label)}】</h3>
-                    <button type="button" class="settings-btn settings-btn-link" 
+                    <h4 class="customer-field-category-title">【${escapeHtml(category.field_label)}】</h4>
+                    <button type="button" class="settings-btn settings-btn-link"
                             onclick="showCategoryEditModal('${category.field_key}', '${escapeHtml(category.field_label)}')">
                         名前を変更
                     </button>
                 </div>
-                
+
                 <div class="customer-field-options-list">
-                    ${options.map(option => renderOptionItem(category.field_key, option)).join('')}
+                    ${options.map((option, index) => renderOptionItem(category.field_key, option, index, options.length)).join('')}
                 </div>
-                
-                <button type="button" class="settings-btn settings-btn-secondary" 
+
+                <button type="button" class="settings-btn settings-btn-secondary"
                         onclick="showAddOptionModal('${category.field_key}')">
-                    ➕ 項目を追加
+                    項目を追加
                 </button>
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 
-function renderOptionItem(fieldKey, option) {
-    const textColor = getContrastColor(option.display_color);
-    const hiddenClass = option.is_hidden ? 'option-hidden' : '';
+function renderOptionItem(fieldKey, option, index, totalCount) {
     const isVisible = !option.is_hidden;
-    
+    const isFirst = index === 0;
+    const isLast = index === totalCount - 1;
+
     return `
-        <div class="customer-field-option-item ${hiddenClass}">
-            <label class="option-visibility-checkbox">
-                <input type="checkbox" 
+        <div class="customer-field-item">
+            <div class="customer-field-checkbox">
+                <input type="checkbox"
+                       class="customer-field-checkbox-input"
                        ${isVisible ? 'checked' : ''}
-                       onchange="toggleOptionVisibility(${option.id}, ${isVisible})">
-                <span class="checkbox-label">${isVisible ? '表示中' : '非表示'}</span>
-            </label>
-            
-            <input type="text" 
-                   class="option-name-input" 
-                   value="${escapeHtml(option.option_value)}"
-                   onchange="updateOptionValue(${option.id}, this.value)"
-                   ${option.is_hidden ? 'disabled' : ''}>
-            
-            <div class="color-picker-group">
-                <input type="color" 
-                       class="color-input" 
-                       value="${option.display_color}"
-                       onchange="updateOptionColor(${option.id}, this.value)"
-                       ${option.is_hidden ? 'disabled' : ''}>
-                <span class="color-preview" 
-                      style="background-color: ${option.display_color}; color: ${textColor};">
-                    ${option.display_color}
-                </span>
+                       onchange="toggleOptionVisibility(${option.id}, ${!isVisible})"
+                       title="チェックON=表示、OFF=非表示">
             </div>
-            
-            <div class="option-order-buttons">
-                <button type="button" 
-                        class="settings-btn settings-btn-order" 
+
+            <div class="customer-field-color-box" style="background-color: ${option.display_color}"></div>
+
+            <span class="customer-field-name">${escapeHtml(option.option_value)}</span>
+
+            <div class="customer-field-sort-buttons">
+                <button type="button"
+                        class="customer-field-sort-btn ${isFirst ? 'customer-field-sort-btn-disabled' : ''}"
                         onclick="moveOptionUp('${fieldKey}', ${option.id})"
-                        title="上へ移動">
-                    ↑
+                        ${isFirst ? 'disabled' : ''}
+                        title="上に移動">
+                    <i class="fas fa-chevron-up"></i>
                 </button>
-                <button type="button" 
-                        class="settings-btn settings-btn-order" 
+                <button type="button"
+                        class="customer-field-sort-btn ${isLast ? 'customer-field-sort-btn-disabled' : ''}"
                         onclick="moveOptionDown('${fieldKey}', ${option.id})"
-                        title="下へ移動">
-                    ↓
+                        ${isLast ? 'disabled' : ''}
+                        title="下に移動">
+                    <i class="fas fa-chevron-down"></i>
                 </button>
             </div>
-            
-            <button type="button" 
-                    class="settings-btn settings-btn-danger" 
-                    onclick="deleteOption(${option.id})">
-                削除
-            </button>
+
+            <div class="customer-field-actions">
+                <button type="button" class="settings-action-btn"
+                        onclick="showEditOptionModal(${option.id}, '${escapeHtml(option.option_value)}', '${option.display_color}')"
+                        title="編集">
+                    <i class="fas fa-pencil-alt settings-edit-icon"></i>
+                </button>
+                <button type="button" class="settings-action-btn"
+                        onclick="deleteOption(${option.id})"
+                        title="削除">
+                    <i class="fas fa-trash-alt settings-delete-icon"></i>
+                </button>
+            </div>
         </div>
     `;
 }
@@ -273,59 +269,88 @@ function closeOptionAddModal() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 選択肢更新
+// 項目編集モーダル
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async function updateOptionValue(optionId, newValue) {
-    if (!newValue.trim()) {
+function showEditOptionModal(optionId, optionValue, displayColor) {
+    editingOptionId = optionId;
+
+    const modal = document.getElementById('customerFieldEditModal');
+    const nameInput = document.getElementById('customerFieldNameInput');
+    const colorInput = document.getElementById('customerFieldColorInput');
+    const colorText = document.getElementById('customerFieldColorText');
+
+    nameInput.value = optionValue;
+    colorInput.value = displayColor;
+    colorText.value = displayColor;
+
+    modal.style.display = 'block';
+
+    // 色ピッカーの連動を設定
+    initCustomerFieldColorPicker();
+}
+
+function closeCustomerFieldEditModal() {
+    document.getElementById('customerFieldEditModal').style.display = 'none';
+    editingOptionId = null;
+}
+
+async function saveCustomerFieldEdit() {
+    const optionValue = document.getElementById('customerFieldNameInput').value.trim();
+    const displayColor = document.getElementById('customerFieldColorInput').value;
+
+    if (!optionValue) {
         alert('項目名を入力してください');
-        loadCustomerFieldSettings();
         return;
     }
-    
+
     try {
         const store = getStoreCode();
-        const response = await fetch(`/${store}/api/customer_fields/option/${optionId}`, {
+        const response = await fetch(`/${store}/api/customer_fields/option/${editingOptionId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ option_value: newValue })
+            body: JSON.stringify({
+                option_value: optionValue,
+                display_color: displayColor
+            })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
-            showMessage('項目名を更新しました', 'success');
+            showMessage('項目を更新しました', 'success');
+            closeCustomerFieldEditModal();
+            loadCustomerFieldSettings();
         } else {
             alert(result.message || '更新に失敗しました');
-            loadCustomerFieldSettings();
         }
     } catch (error) {
-        console.error('Error updating option value:', error);
+        console.error('Error updating option:', error);
         alert('エラーが発生しました');
-        loadCustomerFieldSettings();
     }
 }
 
-async function updateOptionColor(optionId, newColor) {
-    try {
-        const store = getStoreCode();
-        const response = await fetch(`/${store}/api/customer_fields/option/${optionId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ display_color: newColor })
+// 色ピッカーの連動を初期化
+function initCustomerFieldColorPicker() {
+    const colorInput = document.getElementById('customerFieldColorInput');
+    const colorText = document.getElementById('customerFieldColorText');
+
+    if (colorInput && colorText) {
+        // イベントリスナーを削除してから追加（重複防止）
+        const newColorInput = colorInput.cloneNode(true);
+        const newColorText = colorText.cloneNode(true);
+        colorInput.parentNode.replaceChild(newColorInput, colorInput);
+        colorText.parentNode.replaceChild(newColorText, colorText);
+
+        newColorInput.addEventListener('change', function() {
+            newColorText.value = this.value;
         });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('色を更新しました', 'success');
-            loadCustomerFieldSettings();
-        } else {
-            alert(result.message || '更新に失敗しました');
-        }
-    } catch (error) {
-        console.error('Error updating option color:', error);
-        alert('エラーが発生しました');
+
+        newColorText.addEventListener('input', function() {
+            if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                newColorInput.value = this.value;
+            }
+        });
     }
 }
 
@@ -492,11 +517,15 @@ function showMessage(message, type) {
 window.onclick = function(event) {
     const categoryModal = document.getElementById('categoryEditModal');
     const optionModal = document.getElementById('optionAddModal');
-    
+    const editModal = document.getElementById('customerFieldEditModal');
+
     if (event.target === categoryModal) {
         closeCategoryEditModal();
     }
     if (event.target === optionModal) {
         closeOptionAddModal();
+    }
+    if (event.target === editModal) {
+        closeCustomerFieldEditModal();
     }
 }

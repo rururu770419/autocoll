@@ -1,166 +1,202 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_edit.css') }}">
 <script src="{{ url_for('static', filename='js/address.js') }}" defer></script>
-<script src="{{ url_for('static', filename='js/cast_edit.js') }}" defer></script>
 {% endblock %}
 
 {% block title %}キャスト新規登録 - {{ display_name }}{% endblock %}
 
 {% block content %}
 <div class="cast-edit-container">
+    <!-- フラッシュメッセージ -->
+    {% if success %}
+    <div class="cast-edit-flash cast-edit-flash-success">
+        {{ success }}
+        <button type="button" class="cast-edit-flash-close">&times;</button>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="cast-edit-flash cast-edit-flash-error">
+        {{ error }}
+        <button type="button" class="cast-edit-flash-close">&times;</button>
+    </div>
+    {% endif %}
+
     <!-- ヘッダー -->
     <div class="cast-edit-header">
-        <div class="cast-edit-title">
-            <h1>キャスト新規登録</h1>
-            <a href="{{ url_for('main_routes.cast_management', store=store) }}" class="cast-edit-back-btn">
-                ← 一覧に戻る
-            </a>
-        </div>
+        <h1 class="cast-edit-title">キャスト新規登録</h1>
+        <a href="{{ url_for('main_routes.cast_management', store=store) }}" class="cast-edit-back-btn">
+            <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
     </div>
 
-    <!-- メッセージエリア -->
-    {% if error %}
-        <div class="cast-edit-alert cast-edit-alert-error">{{ error }}</div>
-    {% endif %}
-    {% if success %}
-        <div class="cast-edit-alert cast-edit-alert-success">{{ success }}</div>
-    {% endif %}
+    <form method="POST" enctype="multipart/form-data">
+        <!-- タブナビゲーション（基本情報タブのみ） -->
+        <div class="cast-edit-tabs">
+            <button type="button" class="cast-edit-tab cast-edit-tab-active" data-tab="basic-info">基本情報</button>
+        </div>
 
-    <!-- メインコンテンツ -->
-    <div class="cast-edit-main">
-        <!-- 左側：フォームエリア -->
-        <div class="cast-edit-form-area">
-            <form method="POST" enctype="multipart/form-data" class="cast-edit-form">
-                <!-- 基本情報セクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">基本情報</h3>
-                    
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">
-                                キャスト名 <span class="cast-edit-required">*</span>
-                            </label>
-                            <input type="text" name="name" class="cast-edit-input cast-edit-input-short" 
-                                   value="" required placeholder="例）まい">
-                        </div>
-                        <div class="cast-edit-form-group cast-edit-form-group-empty">
-                            <!-- 空きスペース -->
-                        </div>
-                    </div>
+        <!-- タブコンテンツ -->
+        <div class="cast-edit-tab-contents">
+            <!-- 基本情報タブ -->
+            <div id="basic-info-tab" class="cast-edit-tab-content cast-edit-tab-content-active">
+                <table class="cast-edit-info-table">
+                    <!-- キャスト名・電話番号 -->
+                    <tr>
+                        <th>キャスト名<span class="cast-edit-required">*</span></th>
+                        <td>
+                            <input type="text" name="name" class="cast-edit-input" value="" required placeholder="例）まい">
+                        </td>
+                        <th>電話番号</th>
+                        <td>
+                            <input type="tel" name="phone_number" class="cast-edit-input"
+                                   pattern="\d{11}" maxlength="11"
+                                   placeholder="例）09012345678" value="">
+                        </td>
+                    </tr>
 
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">電話番号（任意）</label>
-                            <input type="tel" name="phone_number" class="cast-edit-input" 
-                                   value="" placeholder="090-1234-5678">
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">メールアドレス（任意）</label>
-                            <input type="email" name="email" class="cast-edit-input" 
-                                   value="" placeholder="example@email.com">
-                        </div>
-                    </div>
+                    <!-- 入店日・メールアドレス -->
+                    <tr>
+                        <th>入店日</th>
+                        <td>
+                            <input type="date" name="join_date" class="cast-edit-input" value="">
+                        </td>
+                        <th>メールアドレス</th>
+                        <td>
+                            <input type="email" name="email" class="cast-edit-input" value="" placeholder="example@email.com">
+                        </td>
+                    </tr>
 
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">生年月日</label>
-                            <input type="date" name="birth_date" id="birth_date" class="cast-edit-input" 
-                                   value="">
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">年齢</label>
-                            <input type="text" id="age" class="cast-edit-input cast-edit-input-readonly" 
-                                   value="未設定" readonly>
-                        </div>
-                    </div>
-
-                    <div class="cast-edit-form-group cast-edit-form-group-full">
-                        <label class="cast-edit-label">住所</label>
-                        <div class="cast-edit-address-row">
-                            <select name="prefecture" id="prefecture" class="cast-edit-select cast-edit-select-short">
-                                <option value="">都道府県</option>
-                                <option value="北海道">北海道</option>
-                                <option value="青森県">青森県</option>
-                                <option value="岩手県">岩手県</option>
-                                <option value="宮城県">宮城県</option>
-                                <option value="秋田県">秋田県</option>
-                                <option value="山形県">山形県</option>
-                                <option value="福島県">福島県</option>
-                                <option value="茨城県">茨城県</option>
-                                <option value="栃木県">栃木県</option>
-                                <option value="群馬県">群馬県</option>
-                                <option value="埼玉県">埼玉県</option>
-                                <option value="千葉県">千葉県</option>
-                                <option value="東京都">東京都</option>
-                                <option value="神奈川県">神奈川県</option>
-                                <option value="新潟県">新潟県</option>
-                                <option value="富山県">富山県</option>
-                                <option value="石川県">石川県</option>
-                                <option value="福井県">福井県</option>
-                                <option value="山梨県">山梨県</option>
-                                <option value="長野県">長野県</option>
-                                <option value="岐阜県">岐阜県</option>
-                                <option value="静岡県">静岡県</option>
-                                <option value="愛知県">愛知県</option>
-                                <option value="三重県">三重県</option>
-                                <option value="滋賀県">滋賀県</option>
-                                <option value="京都府">京都府</option>
-                                <option value="大阪府">大阪府</option>
-                                <option value="兵庫県">兵庫県</option>
-                                <option value="奈良県">奈良県</option>
-                                <option value="和歌山県">和歌山県</option>
-                                <option value="鳥取県">鳥取県</option>
-                                <option value="島根県">島根県</option>
-                                <option value="岡山県">岡山県</option>
-                                <option value="広島県">広島県</option>
-                                <option value="山口県">山口県</option>
-                                <option value="徳島県">徳島県</option>
-                                <option value="香川県">香川県</option>
-                                <option value="愛媛県">愛媛県</option>
-                                <option value="高知県">高知県</option>
-                                <option value="福岡県">福岡県</option>
-                                <option value="佐賀県">佐賀県</option>
-                                <option value="長崎県">長崎県</option>
-                                <option value="熊本県">熊本県</option>
-                                <option value="大分県">大分県</option>
-                                <option value="宮崎県">宮崎県</option>
-                                <option value="鹿児島県">鹿児島県</option>
-                                <option value="沖縄県">沖縄県</option>
-                            </select>
-                            <select name="city" id="city" class="cast-edit-select cast-edit-select-short">
-                                <option value="">市区町村</option>
-                            </select>
-                            <input type="text" name="address_detail" class="cast-edit-input cast-edit-input-address" 
-                                   value="" placeholder="番地・建物名等">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 勤務情報セクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">勤務情報</h3>
-                    
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">入店日</label>
-                            <input type="date" name="join_date" class="cast-edit-input" 
-                                   value="">
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">ステータス</label>
+                    <!-- ログインID・ステータス -->
+                    <tr>
+                        <th>ログインID</th>
+                        <td>
+                            <input type="text" name="login_id" class="cast-edit-input" value="" placeholder="ログインID（任意）" autocomplete="off">
+                        </td>
+                        <th>ステータス</th>
+                        <td>
                             <select name="status" class="cast-edit-select">
                                 <option value="在籍" selected>在籍</option>
                                 <option value="休職">休職</option>
                                 <option value="退職">退職</option>
                             </select>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
 
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">募集媒体</label>
+                    <!-- パスワード・働き方区分 -->
+                    <tr>
+                        <th>パスワード</th>
+                        <td>
+                            <input type="password" name="password" class="cast-edit-input" placeholder="パスワード（任意）" autocomplete="new-password">
+                        </td>
+                        <th>働き方区分</th>
+                        <td>
+                            <select name="work_type" class="cast-edit-select">
+                                <option value="">選択してください</option>
+                                <option value="出稼ぎ">出稼ぎ</option>
+                                <option value="地元">地元</option>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <!-- 住所 -->
+                    <tr>
+                        <th>住所</th>
+                        <td colspan="3">
+                            <div class="cast-edit-address-row">
+                                <select id="prefecture" name="prefecture" class="cast-edit-select cast-edit-address-select">
+                                    <option value="">都道府県</option>
+                                    <option value="北海道">北海道</option>
+                                    <option value="青森県">青森県</option>
+                                    <option value="岩手県">岩手県</option>
+                                    <option value="宮城県">宮城県</option>
+                                    <option value="秋田県">秋田県</option>
+                                    <option value="山形県">山形県</option>
+                                    <option value="福島県">福島県</option>
+                                    <option value="茨城県">茨城県</option>
+                                    <option value="栃木県">栃木県</option>
+                                    <option value="群馬県">群馬県</option>
+                                    <option value="埼玉県">埼玉県</option>
+                                    <option value="千葉県">千葉県</option>
+                                    <option value="東京都">東京都</option>
+                                    <option value="神奈川県">神奈川県</option>
+                                    <option value="新潟県">新潟県</option>
+                                    <option value="富山県">富山県</option>
+                                    <option value="石川県">石川県</option>
+                                    <option value="福井県">福井県</option>
+                                    <option value="山梨県">山梨県</option>
+                                    <option value="長野県">長野県</option>
+                                    <option value="岐阜県">岐阜県</option>
+                                    <option value="静岡県">静岡県</option>
+                                    <option value="愛知県">愛知県</option>
+                                    <option value="三重県">三重県</option>
+                                    <option value="滋賀県">滋賀県</option>
+                                    <option value="京都府">京都府</option>
+                                    <option value="大阪府">大阪府</option>
+                                    <option value="兵庫県">兵庫県</option>
+                                    <option value="奈良県">奈良県</option>
+                                    <option value="和歌山県">和歌山県</option>
+                                    <option value="鳥取県">鳥取県</option>
+                                    <option value="島根県">島根県</option>
+                                    <option value="岡山県">岡山県</option>
+                                    <option value="広島県">広島県</option>
+                                    <option value="山口県">山口県</option>
+                                    <option value="徳島県">徳島県</option>
+                                    <option value="香川県">香川県</option>
+                                    <option value="愛媛県">愛媛県</option>
+                                    <option value="高知県">高知県</option>
+                                    <option value="福岡県">福岡県</option>
+                                    <option value="佐賀県">佐賀県</option>
+                                    <option value="長崎県">長崎県</option>
+                                    <option value="熊本県">熊本県</option>
+                                    <option value="大分県">大分県</option>
+                                    <option value="宮崎県">宮崎県</option>
+                                    <option value="鹿児島県">鹿児島県</option>
+                                    <option value="沖縄県">沖縄県</option>
+                                </select>
+                                <select id="city" name="city" class="cast-edit-select cast-edit-address-select">
+                                    <option value="">市区町村</option>
+                                </select>
+                                <input type="text" name="address_detail" class="cast-edit-input cast-edit-address-detail"
+                                       placeholder="詳細住所" value="">
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 対応コース・交通費 -->
+                    <tr>
+                        <th>対応コース</th>
+                        <td>
+                            <select name="course_category_id" class="cast-edit-select">
+                                {% for category in course_categories %}
+                                    <option value="{{ category.category_id }}" {% if loop.first %}selected{% endif %}>
+                                        {{ category.category_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <th>交通費</th>
+                        <td>
+                            <div class="cast-edit-input-group">
+                                <input type="number" name="transportation_fee" class="cast-edit-input" value="0" min="0" step="100">
+                                <span class="cast-edit-input-suffix">円</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 生年月日・募集媒体 -->
+                    <tr>
+                        <th>生年月日</th>
+                        <td>
+                            <div class="cast-edit-birth-group">
+                                <input type="date" id="birthDate" name="birth_date" class="cast-edit-input" value="">
+                                <span id="ageDisplay" class="cast-edit-age-display"></span>
+                            </div>
+                        </td>
+                        <th>募集媒体</th>
+                        <td>
                             <select name="recruitment_source" class="cast-edit-select">
                                 <option value="">選択してください</option>
                                 <option value="求人サイト">求人サイト</option>
@@ -169,48 +205,13 @@
                                 <option value="直接応募">直接応募</option>
                                 <option value="その他">その他</option>
                             </select>
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">交通費</label>
-                            <div class="cast-edit-input-group">
-                                <input type="number" name="transportation_fee" class="cast-edit-input" 
-                                       value="0" min="0" step="100">
-                                <span class="cast-edit-input-suffix">円</span>
-                            </div>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
 
-                    <div class="cast-edit-form-row">
-                      <div class="cast-edit-form-group">
-                          <label class="cast-edit-label">対応コース</label>
-                          <select name="course_category_id" class="cast-edit-select">
-                              {% for category in course_categories %}
-                                  <option value="{{ category.category_id }}" 
-                                      {% if loop.first %}selected{% endif %}>
-                                      {{ category.category_name }}
-                                  </option>
-                              {% endfor %}
-                          </select>
-                          <small class="cast-edit-help">デフォルトで最初のカテゴリが選択されます</small>
-                      </div>
-                      <div class="cast-edit-form-group">
-                          <label class="cast-edit-label">働き方区分</label>
-                          <select name="work_type" class="cast-edit-select">
-                              <option value="">選択してください</option>
-                              <option value="出稼ぎ">出稼ぎ</option>
-                              <option value="地元">地元</option>
-                          </select>
-                      </div>
-                  </div>
-                </div>
-
-                <!-- オートコール設定セクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">オートコール設定</h3>
-                    
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">通知タイミング</label>
+                    <!-- オートコール通知タイミング・オートコール -->
+                    <tr>
+                        <th>オートコール通知タイミング</th>
+                        <td>
                             <select name="notification_minutes_before" class="cast-edit-select">
                                 <option value="5">5分前</option>
                                 <option value="10">10分前</option>
@@ -218,125 +219,103 @@
                                 <option value="20">20分前</option>
                                 <option value="30">30分前</option>
                             </select>
-                            <small class="cast-edit-help">退室時刻の何分前に電話するか</small>
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">オートコール</label>
+                        </td>
+                        <th>オートコール</th>
+                        <td>
                             <select name="auto_call_enabled" class="cast-edit-select">
                                 <option value="true" selected>有効</option>
                                 <option value="false">無効</option>
                             </select>
-                            <small class="cast-edit-help">自動電話通知の有効/無効</small>
-                        </div>
-                    </div>
-                </div>
+                        </td>
+                    </tr>
 
-                <!-- 認証設定セクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">マイページ認証</h3>
-                    
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">ログインID</label>
-                            <input type="text" name="login_id" class="cast-edit-input" 
-                                   value="" placeholder="ログインID（任意）" 
-                                   autocomplete="off">
-                            <small class="cast-edit-help">未設定の場合、マイページへのログインはできません</small>
-                        </div>
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">パスワード</label>
-                            <input type="password" name="password" class="cast-edit-input" 
-                                   placeholder="パスワード（任意）"
-                                   autocomplete="new-password">
-                            <small class="cast-edit-help">ログインIDと併せて設定してください</small>
-                        </div>
-                    </div>
-                </div>
+                    <!-- 契約書 -->
+                    <tr>
+                        <th>契約書</th>
+                        <td colspan="3">
+                            <input type="file" name="contract_documents" class="cast-edit-file-input" accept="image/*,.pdf" multiple>
+                        </td>
+                    </tr>
 
-                <!-- ファイル管理セクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">ファイル管理</h3>
-                    
-                    <div class="cast-edit-form-row">
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">身分証画像（1-2枚まで）</label>
-                            <input type="file" name="id_documents" class="cast-edit-file-input" 
-                                   multiple accept="image/jpeg,image/png" data-max-files="2">
-                            <small class="cast-edit-help">JPG, PNG形式　最大2枚まで（各5MB以下）</small>
-                            
-                            <div class="cast-edit-file-preview" id="id-document-preview"></div>
-                        </div>
-                        
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">契約書等画像（5枚まで）</label>
-                            <input type="file" name="contract_documents" class="cast-edit-file-input" 
-                                   multiple accept="image/jpeg,image/png" data-max-files="5">
-                            <small class="cast-edit-help">JPG, PNG形式　最大5枚まで（各5MB以下）</small>
-                            
-                            <div class="cast-edit-file-preview" id="contract-document-preview"></div>
-                        </div>
-                    </div>
-                </div>
+                    <!-- 身分証 -->
+                    <tr>
+                        <th>身分証</th>
+                        <td colspan="3">
+                            <input type="file" name="id_documents" class="cast-edit-file-input" accept="image/*,.pdf" multiple>
+                        </td>
+                    </tr>
 
-                <!-- 管理者メモセクション -->
-                <div class="cast-edit-section">
-                    <h3 class="cast-edit-section-title">管理者メモ</h3>
-                    
-                    <div class="cast-edit-form-group">
-                        <label class="cast-edit-label">コメント</label>
-                        <textarea name="comments" class="cast-edit-textarea" rows="4" 
-                                  placeholder="管理者向けのメモ・特記事項"></textarea>
-                    </div>
-                </div>
-
-                <!-- 保存ボタン -->
-                <div class="cast-edit-form-actions">
-                    <button type="submit" class="cast-edit-submit-btn">
-                        登録する
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- 右側：ガイドエリア -->
-        <div class="cast-edit-guide-area">
-            <div class="cast-edit-guide-card">
-                <h3 class="cast-edit-guide-title">新規登録について</h3>
-                <div class="cast-edit-guide-content">
-                    <div class="cast-edit-guide-item">
-                        <h4>必須項目</h4>
-                        <p>キャスト名のみ必須です。その他の項目は後から編集画面で追加できます。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>最小限の登録</h4>
-                        <p>まずは名前だけでも登録して、詳細情報は後から追加することをおすすめします。</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="cast-edit-guide-card">
-                <h3 class="cast-edit-guide-title">入力ガイド</h3>
-                <div class="cast-edit-guide-content">
-                    <div class="cast-edit-guide-item">
-                        <h4>基本情報</h4>
-                        <p>キャスト名は必須項目です。システム内で表示される名前になります。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>オートコール設定</h4>
-                        <p>退室時刻の指定分数前に自動で電話通知が送信されます。キャストごとに個別設定できます。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>認証設定</h4>
-                        <p>ログインIDとパスワードを設定すると、キャストがマイページにアクセスできます。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>ファイル添付</h4>
-                        <p>身分証や契約書の画像を添付できます。後から編集画面で追加することも可能です。</p>
-                    </div>
-                </div>
+                    <!-- 備考 -->
+                    <tr>
+                        <th>備考</th>
+                        <td colspan="3">
+                            <textarea name="comments" class="cast-edit-textarea cast-edit-textarea-full"
+                                      rows="4" placeholder="管理者向けのメモ・特記事項"></textarea>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
-    </div>
+
+        <!-- ボタン -->
+        <div class="cast-edit-buttons">
+            <button type="submit" class="cast-edit-submit-btn">登録</button>
+        </div>
+    </form>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// フラッシュメッセージの自動非表示
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.cast-edit-flash');
+    flashMessages.forEach(function(message) {
+        const closeBtn = message.querySelector('.cast-edit-flash-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                message.style.display = 'none';
+            });
+        }
+        // 5秒後に自動で非表示
+        setTimeout(function() {
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.style.display = 'none';
+            }, 300);
+        }, 5000);
+    });
+
+    // 生年月日から年齢を自動計算
+    const birthDateInput = document.getElementById('birthDate');
+    const ageDisplay = document.getElementById('ageDisplay');
+
+    function updateAge() {
+        if (!birthDateInput || !ageDisplay) return;
+
+        const birthDateValue = birthDateInput.value;
+        if (!birthDateValue) {
+            ageDisplay.textContent = '';
+            return;
+        }
+
+        const birthDate = new Date(birthDateValue);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        ageDisplay.textContent = `（${age}歳）`;
+    }
+
+    if (birthDateInput) {
+        updateAge();
+        birthDateInput.addEventListener('change', updateAge);
+    }
+});
+</script>
 {% endblock %}

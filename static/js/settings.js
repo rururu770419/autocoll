@@ -2,13 +2,34 @@
 // Settings.js - 設定管理メイン（デバッグ版）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// フラッシュメッセージの自動非表示と閉じるボタン
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.settings-flash').forEach(function(flash) {
+        // 閉じるボタンのクリックイベント
+        const closeBtn = flash.querySelector('.settings-flash-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                flash.style.display = 'none';
+            });
+        }
+
+        // 5秒後に自動的に非表示
+        setTimeout(function() {
+            flash.style.opacity = '0';
+            setTimeout(function() {
+                flash.style.display = 'none';
+            }, 300);
+        }, 5000);
+    });
+});
+
 (function() {
     'use strict';
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // グローバル変数（即時関数内のみ）
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
+
     let currentParkingId = null;
     let currentShiftTypeId = null;
     let parkingLotsData = [];
@@ -266,15 +287,37 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     function showMessage(message, type) {
-        const messageDiv = document.getElementById('saveMessage');
-        messageDiv.textContent = message;
-        messageDiv.className = `settings-message settings-message-${type} settings-message-show`;
-        
-        setTimeout(() => {
-            messageDiv.classList.remove('settings-message-show');
-        }, 3000);
+        // 既存のメッセージを削除
+        const existingMessages = document.querySelectorAll('.settings-flash-dynamic');
+        existingMessages.forEach(msg => msg.remove());
+
+        // 新しいメッセージ要素を作成
+        const flashDiv = document.createElement('div');
+        flashDiv.className = `settings-flash settings-flash-${type === 'success' ? 'success' : 'error'} settings-flash-dynamic`;
+        flashDiv.textContent = message;
+
+        // 閉じるボタンを追加
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'settings-flash-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = function() {
+            flashDiv.style.display = 'none';
+        };
+        flashDiv.appendChild(closeBtn);
+
+        // ページに追加
+        document.body.appendChild(flashDiv);
+
+        // 5秒後に自動的に非表示
+        setTimeout(function() {
+            flashDiv.style.opacity = '0';
+            setTimeout(function() {
+                flashDiv.remove();
+            }, 300);
+        }, 5000);
     }
-    
+
     // グローバルに公開
     window.showMessage = showMessage;
     
@@ -308,13 +351,15 @@
             <div class="parking-item">
                 <span class="parking-name">${escapeHtml(lot.parking_name)}</span>
                 <div class="parking-actions">
-                    <button type="button" class="settings-btn settings-btn-sm settings-btn-secondary" 
-                            onclick="editParkingLot(${lot.parking_id})">
-                        編集
+                    <button type="button" class="settings-action-btn"
+                            onclick="editParkingLot(${lot.parking_id})"
+                            title="編集">
+                        <i class="fas fa-pencil-alt settings-edit-icon"></i>
                     </button>
-                    <button type="button" class="settings-btn settings-btn-sm settings-btn-danger" 
-                            onclick="deleteParkingLot(${lot.parking_id})">
-                        削除
+                    <button type="button" class="settings-action-btn"
+                            onclick="deleteParkingLot(${lot.parking_id})"
+                            title="削除">
+                        <i class="fas fa-trash-alt settings-delete-icon"></i>
                     </button>
                 </div>
             </div>
@@ -474,13 +519,15 @@
                     ${type.is_work_day ? '出勤' : '休日'}
                 </span>
                 <div class="shift-type-actions">
-                    <button type="button" class="settings-btn settings-btn-sm settings-btn-secondary" 
-                            onclick="editShiftType(${type.shift_type_id})">
-                        編集
+                    <button type="button" class="settings-action-btn"
+                            onclick="editShiftType(${type.shift_type_id})"
+                            title="編集">
+                        <i class="fas fa-pencil-alt settings-edit-icon"></i>
                     </button>
-                    <button type="button" class="settings-btn settings-btn-sm settings-btn-danger" 
-                            onclick="deleteShiftType(${type.shift_type_id})">
-                        削除
+                    <button type="button" class="settings-action-btn"
+                            onclick="deleteShiftType(${type.shift_type_id})"
+                            title="削除">
+                        <i class="fas fa-trash-alt settings-delete-icon"></i>
                     </button>
                 </div>
             </div>

@@ -14,12 +14,18 @@
     margin-bottom: 30px;
 }
 
+.customer-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 15px 0;
+}
+
 .customer-title-area {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 15px;
-    border-bottom: 2px solid #e0e0e0;
 }
 
 .customer-title-area h1 {
@@ -34,7 +40,7 @@
     background-color: #6c757d;
     color: white;
     text-decoration: none;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
     transition: background-color 0.3s;
 }
@@ -46,7 +52,7 @@
 /* アラート */
 .customer-alert {
     padding: 15px;
-    border-radius: 1px;
+    border-radius: 0;
     margin-bottom: 20px;
     font-size: 14px;
 }
@@ -72,7 +78,7 @@
 /* フォームコンテナ（シンプル版） */
 .customer-form-container {
     background-color: #fff;
-    border-radius: 1px;
+    border-radius: 0;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -106,9 +112,9 @@
 
 /* ラベル（グレー背景・コンパクト） */
 .customer-label {
-    background-color: #a9a9a9;
+    background-color: #5a5a5a;
     padding: 6px 12px;
-    border-radius: 1px;
+    border-radius: 0;
     font-weight: 500;
     font-size: 13px;
     color: #ffffff;
@@ -144,7 +150,7 @@
 .customer-input {
     padding: 7px;
     border: 1px solid #ddd;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
     transition: border-color 0.3s;
     flex: 1;
@@ -164,7 +170,7 @@
 .customer-textarea {
     padding: 8px;
     border: 1px solid #ddd;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
     resize: vertical;
     min-height: 36px;
@@ -180,7 +186,7 @@
 .customer-select {
     padding: 7px;
     border: 1px solid #ddd;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
     background-color: white;
     cursor: pointer;
@@ -206,13 +212,16 @@
 }
 
 .customer-input-suffix {
-    padding: 8px 12px;
+    padding: 5px 12px;
     background-color: #f8f9fa;
     border: 1px solid #ddd;
     border-left: none;
-    border-radius: 0 1px 1px 0;
+    border-radius: 0;
     font-size: 14px;
     color: #6c757d;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
 }
 
 /* フォームアクション */
@@ -227,10 +236,10 @@
 
 .customer-submit-btn {
     padding: 10px 32px;
-    background-color: #007bff;
+    background-color: #00BCD4;
     color: white;
     border: none;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -238,7 +247,23 @@
 }
 
 .customer-submit-btn:hover {
-    background-color: #0056b3;
+    background-color: #00a8b8;
+}
+
+.customer-delete-btn {
+    padding: 10px 32px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.customer-delete-btn:hover {
+    background-color: #c82333;
 }
 
 .customer-cancel-btn {
@@ -246,7 +271,7 @@
     background-color: #6c757d;
     color: white;
     text-decoration: none;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 15px;
     font-weight: 600;
     transition: background-color 0.3s;
@@ -260,7 +285,7 @@
 /* テーブル用スタイル（一覧画面用） */
 .customer-table-wrapper {
     background-color: #fff;
-    border-radius: 1px;
+    border-radius: 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow-x: auto;
 }
@@ -272,15 +297,15 @@
 }
 
 .customer-table-header {
-    background-color: #f8f9fa;
+    background-color: #5a5a5a;
 }
 
 .customer-table-header-cell {
-    padding: 12px;
-    text-align: left;
+    padding: 14px 10px;
+    text-align: center;
     font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #dee2e6;
+    color: #ffffff;
+    border-bottom: none;
     font-size: 14px;
 }
 
@@ -297,18 +322,20 @@
     padding: 6px;
     font-size: 14px;
     color: #333;
+    text-align: center;
 }
 
 .customer-table-actions {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 /* ボタン */
 .customer-btn {
     padding: 4px 12px;
     border: none;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s;
@@ -343,13 +370,13 @@
     background-color: #c82333;
 }
 
-/* バッジ */
+/* バッジ（cast_managementのステータスバッジと同じスタイル） */
 .customer-badge {
     display: inline-block;
     padding: 4px 12px;
-    border-radius: 1px;
+    border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: bold;
 }
 
 .customer-badge-normal {
@@ -386,7 +413,7 @@
 .customer-search-area {
     background-color: #f8f9fa;
     padding: 20px;
-    border-radius: 1px;
+    border-radius: 0;
     margin-bottom: 20px;
 }
 
@@ -405,23 +432,23 @@
     flex: 1;
     padding: 10px 12px;
     border: 1px solid #ddd;
-    border-radius: 1px;
+    border-radius: 0;
     font-size: 14px;
 }
 
 .customer-search-btn {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #00BCD4;
     color: white;
     border: none;
-    border-radius: 1px;
+    border-radius: 0;
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s;
 }
 
 .customer-search-btn:hover {
-    background-color: #0056b3;
+    background-color: #00a8b8;
 }
 
 /* ページネーション */
@@ -431,7 +458,7 @@
     align-items: center;
     padding: 20px;
     background-color: #f8f9fa;
-    border-radius: 1px;
+    border-radius: 0;
     margin-top: 20px;
 }
 
@@ -451,7 +478,7 @@
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 1px;
+    border-radius: 0;
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s;
@@ -498,7 +525,7 @@
     padding: 12px 24px;
     background-color: #FF9B9B;
     color: white;
-    border-radius: 1px;
+    border-radius: 0;
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;
@@ -516,4 +543,68 @@
 .customer-new-reservation-btn:active {
     transform: translateY(0);
     background-color: #FF6B6B;
+}
+
+/* 新規登録ボタン（cast_managementと同じスタイル） */
+.customer-btn-register {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #00BCD4;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.customer-btn-register:hover {
+    background-color: #00ACC1;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 操作アイコン（optionsページと同じスタイル） */
+.customer-action-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.customer-action-btn:hover {
+    opacity: 0.7;
+    text-decoration: none;
+}
+
+.customer-detail-icon {
+    color: #00BCD4;
+}
+
+/* ヘッダーボタンエリア */
+.customer-header-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* ラベルなしのフォームグループ */
+.customer-form-group-no-label {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* 幅を調整したinput */
+.customer-input-fit {
+    max-width: 100%;
 }

@@ -1,567 +1,509 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_management.css') }}">
-<script src="{{ url_for('static', filename='js/address.js') }}" defer></script>
-<script src="{{ url_for('static', filename='js/cast_edit.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_edit.css') }}">
 {% endblock %}
 
-{% block title %}キャスト編集 - {{ cast.name }} - {{ display_name }}{% endblock %}
+{% block title %}キャスト編集{% endblock %}
 
 {% block content %}
 <div class="cast-edit-container">
-    <!-- ヘッダー -->
+    <!-- メッセージ表示（hotel_management統一版） -->
+{% if success %}
+<div class="cast-edit-flash cast-edit-flash-success">
+    {{ success }}
+    <button type="button" class="cast-edit-flash-close">&times;</button>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="cast-edit-flash cast-edit-flash-error">
+    {{ error }}
+    <button type="button" class="cast-edit-flash-close">&times;</button>
+</div>
+{% endif %}
+ 
+
     <div class="cast-edit-header">
-        <div class="cast-edit-title">
-            <h1>キャスト編集 - {{ cast.name }}</h1>
-            <a href="{{ url_for('main_routes.cast_management', store=store) }}" class="cast-edit-back-btn">
-                ← 一覧に戻る
-            </a>
-        </div>
+        <h1 class="cast-edit-title">キャスト編集</h1>
+        <a href="{{ url_for('main_routes.cast_management', store=store) }}" class="cast-edit-back-btn">
+            <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
     </div>
 
-    <!-- メッセージエリア -->
-    {% if error %}
-        <div class="cast-edit-alert cast-edit-alert-error">{{ error }}</div>
-    {% endif %}
-    {% if success %}
-        <div class="cast-edit-alert cast-edit-alert-success">{{ success }}</div>
-    {% endif %}
+    <form id="castEditForm" method="POST" action="{{ url_for('main_routes.edit_cast', store=store, cast_id=cast.cast_id) }}" enctype="multipart/form-data">
+        <!-- タブナビゲーション -->
+        <div class="cast-edit-tabs">
+            <button type="button" class="cast-edit-tab cast-edit-tab-active" data-tab="basic-info">基本情報</button>
+            <button type="button" class="cast-edit-tab" data-tab="ng-settings">NG設定</button>
+        </div>
 
-    <!-- メインコンテンツ -->
-    <div class="cast-edit-main">
-        <!-- 左側：フォームエリア -->
-        <div class="cast-edit-form-area">
-            <!-- タブナビゲーション -->
-            <div class="cast-edit-tabs">
-                <button class="cast-edit-tab cast-edit-tab-active" data-tab="basic">
-                    基本設定
-                </button>
-                <button class="cast-edit-tab" data-tab="ng">
-                    NG設定
-                </button>
-            </div>
+        <!-- タブコンテンツ -->
+        <div class="cast-edit-tab-contents">
+            <!-- 基本情報タブ -->
+            <div id="basic-info-tab" class="cast-edit-tab-content cast-edit-tab-content-active">
+                <table class="cast-edit-info-table">
+                    <!-- キャスト名・電話番号 -->
+                    <tr>
+                        <th>キャスト名<span class="cast-edit-required">*</span></th>
+                        <td>
+                            <input type="text" name="name" class="cast-edit-input" value="{{ cast.name }}" required>
+                        </td>
+                        <th>電話番号</th>
+                        <td>
+                            <input type="tel" name="phone_number" class="cast-edit-input"
+                                   pattern="\d{11}" maxlength="11"
+                                   placeholder="例）09012345678"
+                                   value="{{ cast.phone_number if cast.phone_number else '' }}">
+                        </td>
+                    </tr>
 
-            <!-- 基本設定タブ -->
-            <div class="cast-edit-tab-content cast-edit-tab-active" id="cast-edit-tab-basic">
-                <form method="POST" enctype="multipart/form-data" class="cast-edit-form">
-                    <!-- 基本情報セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">基本情報</h3>
-                        
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">
-                                    キャスト名 <span class="cast-edit-required">*</span>
-                                </label>
-                                <input type="text" name="name" class="cast-edit-input cast-edit-input-short" 
-                                       value="{{ cast.name }}" required>
-                            </div>
-                            <div class="cast-edit-form-group cast-edit-form-group-empty">
-                                <!-- 空きスペース -->
-                            </div>
-                        </div>
+                    <!-- 入店日・メールアドレス -->
+                    <tr>
+                        <th>入店日</th>
+                        <td>
+                            <input type="date" name="join_date" class="cast-edit-input" 
+                                   value="{{ cast.join_date.strftime('%Y-%m-%d') if cast.join_date else '' }}">
+                        </td>
+                        <th>メールアドレス</th>
+                        <td>
+                            <input type="email" name="email" class="cast-edit-input" 
+                                   value="{{ cast.email if cast.email else '' }}">
+                        </td>
+                    </tr>
 
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">電話番号</label>
-                                <input type="tel" name="phone_number" class="cast-edit-input" 
-                                       value="{{ cast.phone_number or '' }}" placeholder="090-1234-5678">
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">メールアドレス</label>
-                                <input type="email" name="email" class="cast-edit-input" 
-                                       value="{{ cast.email or '' }}" placeholder="example@email.com">
-                            </div>
-                        </div>
+                    <!-- ログインID・ステータス -->
+                    <tr>
+                        <th>ログインID</th>
+                        <td>
+                            <input type="text" name="login_id" class="cast-edit-input" 
+                                   value="{{ cast.login_id if cast.login_id else '' }}">
+                        </td>
+                        <th>ステータス</th>
+                        <td>
+                            <select name="status" class="cast-edit-select">
+                                <option value="在籍" {{ 'selected' if cast.status == '在籍' else '' }}>在籍</option>
+                                <option value="休職" {{ 'selected' if cast.status == '休職' else '' }}>休職</option>
+                                <option value="退職" {{ 'selected' if cast.status == '退職' else '' }}>退職</option>
+                            </select>
+                        </td>
+                    </tr>
 
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">生年月日</label>
-                                <input type="date" name="birth_date" id="birth_date" class="cast-edit-input" 
-                                       value="{{ cast.birth_date.strftime('%Y-%m-%d') if cast.birth_date else '' }}">
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">年齢</label>
-                                <input type="text" id="age" class="cast-edit-input cast-edit-input-readonly" 
-                                       value="{% if cast.birth_date %}{{ cast.age }}歳{% else %}未設定{% endif %}" readonly>
-                            </div>
-                        </div>
+                    <!-- パスワード・働き方区分 -->
+                    <tr>
+                        <th>パスワード</th>
+                        <td>
+                            <input type="text" name="password" class="cast-edit-input" 
+                                   placeholder="半角英数字" value="{{ cast.password if cast.password else '' }}">
+                        </td>
+                        <th>働き方区分</th>
+                        <td>
+                            <select name="work_type" class="cast-edit-select">
+                                <option value="">選択してください</option>
+                                <option value="出稼ぎ" {{ 'selected' if cast.work_type == '出稼ぎ' else '' }}>出稼ぎ</option>
+                                <option value="地元" {{ 'selected' if cast.work_type == '地元' else '' }}>地元</option>
+                            </select>
+                        </td>
+                    </tr>
 
-                        <div class="cast-edit-form-group cast-edit-form-group-full">
-                            <label class="cast-edit-label">住所</label>
+                    <!-- 住所 -->
+                    <tr>
+                        <th>住所</th>
+                        <td colspan="3">
                             <div class="cast-edit-address-row">
-                                {% set address_parts = cast.address.split(' ', 2) if cast.address else ['', '', ''] %}
-                                {% set current_prefecture = address_parts[0] if address_parts|length > 0 else '' %}
-                                {% set current_city = address_parts[1] if address_parts|length > 1 else '' %}
-                                {% set current_detail = address_parts[2] if address_parts|length > 2 else '' %}
-                                
-                                <select name="prefecture" id="prefecture" class="cast-edit-select cast-edit-select-short">
+                                <select id="prefecture" name="prefecture" class="cast-edit-select cast-edit-address-select">
                                     <option value="">都道府県</option>
-                                    <option value="北海道" {{ 'selected' if current_prefecture == '北海道' else '' }}>北海道</option>
-                                    <option value="青森県" {{ 'selected' if current_prefecture == '青森県' else '' }}>青森県</option>
-                                    <option value="岩手県" {{ 'selected' if current_prefecture == '岩手県' else '' }}>岩手県</option>
-                                    <option value="宮城県" {{ 'selected' if current_prefecture == '宮城県' else '' }}>宮城県</option>
-                                    <option value="秋田県" {{ 'selected' if current_prefecture == '秋田県' else '' }}>秋田県</option>
-                                    <option value="山形県" {{ 'selected' if current_prefecture == '山形県' else '' }}>山形県</option>
-                                    <option value="福島県" {{ 'selected' if current_prefecture == '福島県' else '' }}>福島県</option>
-                                    <option value="茨城県" {{ 'selected' if current_prefecture == '茨城県' else '' }}>茨城県</option>
-                                    <option value="栃木県" {{ 'selected' if current_prefecture == '栃木県' else '' }}>栃木県</option>
-                                    <option value="群馬県" {{ 'selected' if current_prefecture == '群馬県' else '' }}>群馬県</option>
-                                    <option value="埼玉県" {{ 'selected' if current_prefecture == '埼玉県' else '' }}>埼玉県</option>
-                                    <option value="千葉県" {{ 'selected' if current_prefecture == '千葉県' else '' }}>千葉県</option>
-                                    <option value="東京都" {{ 'selected' if current_prefecture == '東京都' else '' }}>東京都</option>
-                                    <option value="神奈川県" {{ 'selected' if current_prefecture == '神奈川県' else '' }}>神奈川県</option>
-                                    <option value="新潟県" {{ 'selected' if current_prefecture == '新潟県' else '' }}>新潟県</option>
-                                    <option value="富山県" {{ 'selected' if current_prefecture == '富山県' else '' }}>富山県</option>
-                                    <option value="石川県" {{ 'selected' if current_prefecture == '石川県' else '' }}>石川県</option>
-                                    <option value="福井県" {{ 'selected' if current_prefecture == '福井県' else '' }}>福井県</option>
-                                    <option value="山梨県" {{ 'selected' if current_prefecture == '山梨県' else '' }}>山梨県</option>
-                                    <option value="長野県" {{ 'selected' if current_prefecture == '長野県' else '' }}>長野県</option>
-                                    <option value="岐阜県" {{ 'selected' if current_prefecture == '岐阜県' else '' }}>岐阜県</option>
-                                    <option value="静岡県" {{ 'selected' if current_prefecture == '静岡県' else '' }}>静岡県</option>
-                                    <option value="愛知県" {{ 'selected' if current_prefecture == '愛知県' else '' }}>愛知県</option>
-                                    <option value="三重県" {{ 'selected' if current_prefecture == '三重県' else '' }}>三重県</option>
-                                    <option value="滋賀県" {{ 'selected' if current_prefecture == '滋賀県' else '' }}>滋賀県</option>
-                                    <option value="京都府" {{ 'selected' if current_prefecture == '京都府' else '' }}>京都府</option>
-                                    <option value="大阪府" {{ 'selected' if current_prefecture == '大阪府' else '' }}>大阪府</option>
-                                    <option value="兵庫県" {{ 'selected' if current_prefecture == '兵庫県' else '' }}>兵庫県</option>
-                                    <option value="奈良県" {{ 'selected' if current_prefecture == '奈良県' else '' }}>奈良県</option>
-                                    <option value="和歌山県" {{ 'selected' if current_prefecture == '和歌山県' else '' }}>和歌山県</option>
-                                    <option value="鳥取県" {{ 'selected' if current_prefecture == '鳥取県' else '' }}>鳥取県</option>
-                                    <option value="島根県" {{ 'selected' if current_prefecture == '島根県' else '' }}>島根県</option>
-                                    <option value="岡山県" {{ 'selected' if current_prefecture == '岡山県' else '' }}>岡山県</option>
-                                    <option value="広島県" {{ 'selected' if current_prefecture == '広島県' else '' }}>広島県</option>
-                                    <option value="山口県" {{ 'selected' if current_prefecture == '山口県' else '' }}>山口県</option>
-                                    <option value="徳島県" {{ 'selected' if current_prefecture == '徳島県' else '' }}>徳島県</option>
-                                    <option value="香川県" {{ 'selected' if current_prefecture == '香川県' else '' }}>香川県</option>
-                                    <option value="愛媛県" {{ 'selected' if current_prefecture == '愛媛県' else '' }}>愛媛県</option>
-                                    <option value="高知県" {{ 'selected' if current_prefecture == '高知県' else '' }}>高知県</option>
-                                    <option value="福岡県" {{ 'selected' if current_prefecture == '福岡県' else '' }}>福岡県</option>
-                                    <option value="佐賀県" {{ 'selected' if current_prefecture == '佐賀県' else '' }}>佐賀県</option>
-                                    <option value="長崎県" {{ 'selected' if current_prefecture == '長崎県' else '' }}>長崎県</option>
-                                    <option value="熊本県" {{ 'selected' if current_prefecture == '熊本県' else '' }}>熊本県</option>
-                                    <option value="大分県" {{ 'selected' if current_prefecture == '大分県' else '' }}>大分県</option>
-                                    <option value="宮崎県" {{ 'selected' if current_prefecture == '宮崎県' else '' }}>宮崎県</option>
-                                    <option value="鹿児島県" {{ 'selected' if current_prefecture == '鹿児島県' else '' }}>鹿児島県</option>
-                                    <option value="沖縄県" {{ 'selected' if current_prefecture == '沖縄県' else '' }}>沖縄県</option>
+                                    <option value="北海道" {% if cast.prefecture == '北海道' %}selected{% endif %}>北海道</option>
+                                    <option value="青森県" {% if cast.prefecture == '青森県' %}selected{% endif %}>青森県</option>
+                                    <option value="岩手県" {% if cast.prefecture == '岩手県' %}selected{% endif %}>岩手県</option>
+                                    <option value="宮城県" {% if cast.prefecture == '宮城県' %}selected{% endif %}>宮城県</option>
+                                    <option value="秋田県" {% if cast.prefecture == '秋田県' %}selected{% endif %}>秋田県</option>
+                                    <option value="山形県" {% if cast.prefecture == '山形県' %}selected{% endif %}>山形県</option>
+                                    <option value="福島県" {% if cast.prefecture == '福島県' %}selected{% endif %}>福島県</option>
+                                    <option value="茨城県" {% if cast.prefecture == '茨城県' %}selected{% endif %}>茨城県</option>
+                                    <option value="栃木県" {% if cast.prefecture == '栃木県' %}selected{% endif %}>栃木県</option>
+                                    <option value="群馬県" {% if cast.prefecture == '群馬県' %}selected{% endif %}>群馬県</option>
+                                    <option value="埼玉県" {% if cast.prefecture == '埼玉県' %}selected{% endif %}>埼玉県</option>
+                                    <option value="千葉県" {% if cast.prefecture == '千葉県' %}selected{% endif %}>千葉県</option>
+                                    <option value="東京都" {% if cast.prefecture == '東京都' %}selected{% endif %}>東京都</option>
+                                    <option value="神奈川県" {% if cast.prefecture == '神奈川県' %}selected{% endif %}>神奈川県</option>
+                                    <option value="新潟県" {% if cast.prefecture == '新潟県' %}selected{% endif %}>新潟県</option>
+                                    <option value="富山県" {% if cast.prefecture == '富山県' %}selected{% endif %}>富山県</option>
+                                    <option value="石川県" {% if cast.prefecture == '石川県' %}selected{% endif %}>石川県</option>
+                                    <option value="福井県" {% if cast.prefecture == '福井県' %}selected{% endif %}>福井県</option>
+                                    <option value="山梨県" {% if cast.prefecture == '山梨県' %}selected{% endif %}>山梨県</option>
+                                    <option value="長野県" {% if cast.prefecture == '長野県' %}selected{% endif %}>長野県</option>
+                                    <option value="岐阜県" {% if cast.prefecture == '岐阜県' %}selected{% endif %}>岐阜県</option>
+                                    <option value="静岡県" {% if cast.prefecture == '静岡県' %}selected{% endif %}>静岡県</option>
+                                    <option value="愛知県" {% if cast.prefecture == '愛知県' %}selected{% endif %}>愛知県</option>
+                                    <option value="三重県" {% if cast.prefecture == '三重県' %}selected{% endif %}>三重県</option>
+                                    <option value="滋賀県" {% if cast.prefecture == '滋賀県' %}selected{% endif %}>滋賀県</option>
+                                    <option value="京都府" {% if cast.prefecture == '京都府' %}selected{% endif %}>京都府</option>
+                                    <option value="大阪府" {% if cast.prefecture == '大阪府' %}selected{% endif %}>大阪府</option>
+                                    <option value="兵庫県" {% if cast.prefecture == '兵庫県' %}selected{% endif %}>兵庫県</option>
+                                    <option value="奈良県" {% if cast.prefecture == '奈良県' %}selected{% endif %}>奈良県</option>
+                                    <option value="和歌山県" {% if cast.prefecture == '和歌山県' %}selected{% endif %}>和歌山県</option>
+                                    <option value="鳥取県" {% if cast.prefecture == '鳥取県' %}selected{% endif %}>鳥取県</option>
+                                    <option value="島根県" {% if cast.prefecture == '島根県' %}selected{% endif %}>島根県</option>
+                                    <option value="岡山県" {% if cast.prefecture == '岡山県' %}selected{% endif %}>岡山県</option>
+                                    <option value="広島県" {% if cast.prefecture == '広島県' %}selected{% endif %}>広島県</option>
+                                    <option value="山口県" {% if cast.prefecture == '山口県' %}selected{% endif %}>山口県</option>
+                                    <option value="徳島県" {% if cast.prefecture == '徳島県' %}selected{% endif %}>徳島県</option>
+                                    <option value="香川県" {% if cast.prefecture == '香川県' %}selected{% endif %}>香川県</option>
+                                    <option value="愛媛県" {% if cast.prefecture == '愛媛県' %}selected{% endif %}>愛媛県</option>
+                                    <option value="高知県" {% if cast.prefecture == '高知県' %}selected{% endif %}>高知県</option>
+                                    <option value="福岡県" {% if cast.prefecture == '福岡県' %}selected{% endif %}>福岡県</option>
+                                    <option value="佐賀県" {% if cast.prefecture == '佐賀県' %}selected{% endif %}>佐賀県</option>
+                                    <option value="長崎県" {% if cast.prefecture == '長崎県' %}selected{% endif %}>長崎県</option>
+                                    <option value="熊本県" {% if cast.prefecture == '熊本県' %}selected{% endif %}>熊本県</option>
+                                    <option value="大分県" {% if cast.prefecture == '大分県' %}selected{% endif %}>大分県</option>
+                                    <option value="宮崎県" {% if cast.prefecture == '宮崎県' %}selected{% endif %}>宮崎県</option>
+                                    <option value="鹿児島県" {% if cast.prefecture == '鹿児島県' %}selected{% endif %}>鹿児島県</option>
+                                    <option value="沖縄県" {% if cast.prefecture == '沖縄県' %}selected{% endif %}>沖縄県</option>
                                 </select>
-                                <select name="city" id="city" class="cast-edit-select cast-edit-select-short" data-current-city="{{ current_city }}">
+                                <select id="city" name="city" class="cast-edit-select cast-edit-address-select"
+                                        data-current-city="{{ cast.city if cast.city else '' }}">
                                     <option value="">市区町村</option>
                                 </select>
-                                <input type="text" name="address_detail" class="cast-edit-input cast-edit-input-address" 
-                                       value="{{ current_detail }}" placeholder="番地・建物名等">
+                                <input type="text" name="address_detail" class="cast-edit-input cast-edit-address-detail"
+                                       placeholder="詳細住所" value="{{ cast.address_detail if cast.address_detail else '' }}">
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
 
-                    <!-- 勤務情報セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">勤務情報</h3>
-                        
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">入店日</label>
-                                <input type="date" name="join_date" class="cast-edit-input" 
-                                       value="{{ cast.join_date.strftime('%Y-%m-%d') if cast.join_date else '' }}">
+                    <!-- 対応コース・交通費 -->
+                    <tr>
+                        <th>対応コース</th>
+                        <td>
+                            <select name="course_category_id" class="cast-edit-select">
+                                <option value="">選択してください</option>
+                                {% for category in course_categories %}
+                                <option value="{{ category.category_id }}" 
+                                    {% set available_categories = cast.available_course_categories | parse_json if cast.available_course_categories else [] %}
+                                    {% set selected_category = available_categories[0] if available_categories else '' %}
+                                    {{ 'selected' if category.category_id == selected_category else '' }}>
+                                    {{ category.category_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <th>交通費</th>
+                        <td>
+                            <div class="cast-edit-input-group">
+                                <input type="number" name="transportation_fee" class="cast-edit-input" 
+                                       value="{{ cast.transportation_fee or 0 }}" min="0" step="100">
+                                <span class="cast-edit-input-suffix">円</span>
                             </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">ステータス</label>
-                                <select name="status" class="cast-edit-select">
-                                    <option value="在籍" {{ 'selected' if cast.status == '在籍' else '' }}>在籍</option>
-                                    <option value="休職" {{ 'selected' if cast.status == '休職' else '' }}>休職</option>
-                                    <option value="退職" {{ 'selected' if cast.status == '退職' else '' }}>退職</option>
-                                </select>
-                            </div>
-                        </div>
+                        </td>
+                    </tr>
 
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">募集媒体</label>
-                                <select name="recruitment_source" class="cast-edit-select">
-                                    <option value="">選択してください</option>
-                                    <option value="求人サイト" {{ 'selected' if cast.recruitment_source == '求人サイト' else '' }}>求人サイト</option>
-                                    <option value="紹介" {{ 'selected' if cast.recruitment_source == '紹介' else '' }}>紹介</option>
-                                    <option value="SNS" {{ 'selected' if cast.recruitment_source == 'SNS' else '' }}>SNS</option>
-                                    <option value="直接応募" {{ 'selected' if cast.recruitment_source == '直接応募' else '' }}>直接応募</option>
-                                    <option value="その他" {{ 'selected' if cast.recruitment_source == 'その他' else '' }}>その他</option>
-                                </select>
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">交通費</label>
-                                <div class="cast-edit-input-group">
-                                    <input type="number" name="transportation_fee" class="cast-edit-input" 
-                                           value="{{ cast.transportation_fee or 0 }}" min="0" step="100">
-                                    <span class="cast-edit-input-suffix">円</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">対応コースカテゴリ</label>
-                                {% set available_categories = cast.available_course_categories | parse_json if cast.available_course_categories else [] %}
-                                {% set selected_category = available_categories[0] if available_categories else '' %}
-                                <select name="course_category_id" class="cast-edit-select">
-                                    <option value="">選択してください</option>
-                                    {% for category in course_categories %}
-                                        <option value="{{ category.category_id }}" 
-                                            {{ 'selected' if category.category_id == selected_category else '' }}>
-                                            {{ category.category_name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <small class="cast-edit-help">このキャストが対応可能なコースカテゴリ</small>
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">働き方区分</label>
-                                <select name="work_type" class="cast-edit-select">
-                                    <option value="">選択してください</option>
-                                    <option value="出稼ぎ" {{ 'selected' if cast.work_type == '出稼ぎ' else '' }}>出稼ぎ</option>
-                                    <option value="地元" {{ 'selected' if cast.work_type == '地元' else '' }}>地元</option>
-                                </select>
-                            </div>
-                        </div>
-
-                    <!-- オートコール設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">オートコール設定</h3>
-                        
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">通知タイミング</label>
-                                <select name="notification_minutes_before" class="cast-edit-select">
-                                    <option value="5" {% if cast.notification_minutes_before == 5 %}selected{% endif %}>5分前</option>
-                                    <option value="10" {% if cast.notification_minutes_before == 10 %}selected{% endif %}>10分前</option>
-                                    <option value="15" {% if not cast.notification_minutes_before or cast.notification_minutes_before == 15 %}selected{% endif %}>15分前</option>
-                                    <option value="20" {% if cast.notification_minutes_before == 20 %}selected{% endif %}>20分前</option>
-                                    <option value="30" {% if cast.notification_minutes_before == 30 %}selected{% endif %}>30分前</option>
-                                </select>
-                                <small class="cast-edit-help">退室時刻の何分前に電話するか</small>
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">オートコール</label>
-                                <select name="auto_call_enabled" class="cast-edit-select">
-                                    <option value="true" {% if not cast.auto_call_enabled is defined or cast.auto_call_enabled %}selected{% endif %}>有効</option>
-                                    <option value="false" {% if cast.auto_call_enabled is defined and not cast.auto_call_enabled %}selected{% endif %}>無効</option>
-                                </select>
-                                <small class="cast-edit-help">自動電話通知の有効/無効</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 認証設定セクション（修正版） -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">マイページ認証</h3>
-                        
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">ログインID</label>
-                                <input type="text" name="login_id" class="cast-edit-input" 
-                                       value="{{ cast.login_id or '' }}" 
-                                       placeholder="ログインIDを入力" 
-                                       autocomplete="off">
-                                <small class="cast-edit-help">
-                                    {% if not cast.login_id %}未設定{% endif %}
-                                </small>
-                            </div>
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">パスワード</label>
-                                <input type="text" name="password" class="cast-edit-input" 
-                                       value="{{ cast.password_plain or '' }}" 
-                                       placeholder="パスワードを入力"
-                                       autocomplete="new-password">
-                                <small class="cast-edit-help">
-                                    {% if not cast.password_plain %}未設定{% endif %}
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ファイル管理セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">ファイル管理</h3>
-                        
-                        <div class="cast-edit-form-row">
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">身分証画像（1-2枚まで）</label>
-                                <input type="file" name="id_documents" class="cast-edit-file-input" 
-                                       multiple accept="image/jpeg,image/png" data-max-files="2">
-                                <small class="cast-edit-help">JPG, PNG形式　最大2枚まで（各5MB以下）</small>
-                                
-                                <!-- 現在の身分証画像表示 -->
-                                <div class="cast-edit-file-preview" id="id-document-preview">
-                                    {% if cast.id_document_paths %}
-                                        {% set id_docs = cast.id_document_paths | parse_json %}
-                                        {% for doc_path in id_docs if id_docs is iterable and id_docs is not string %}
-                                            <div class="cast-edit-file-item">
-                                                <img src="{{ url_for('static', filename=doc_path) }}" 
-                                                     alt="身分証" class="cast-edit-file-thumbnail">
-                                                <button type="button" class="cast-edit-file-remove" 
-                                                        data-file-path="{{ doc_path }}">×</button>
-                                                <input type="hidden" name="existing_id_documents" value="{{ doc_path }}">
-                                            </div>
-                                        {% endfor %}
+                    <!-- 生年月日・募集媒体 -->
+                    <tr>
+                        <th>生年月日</th>
+                        <td>
+                            <div class="cast-edit-birth-group">
+                                <input type="date" id="birthDate" name="birth_date" class="cast-edit-input" 
+                                       value="{{ cast.birth_date.strftime('%Y-%m-%d') if cast.birth_date else '' }}">
+                                <span id="ageDisplay" class="cast-edit-age-display">
+                                    {% if cast.birth_date %}
+                                    {{ ((today - cast.birth_date).days // 365) }}歳
                                     {% endif %}
-                                </div>
+                                </span>
                             </div>
-                            
-                            <div class="cast-edit-form-group">
-                                <label class="cast-edit-label">契約書等画像（5枚まで）</label>
-                                <input type="file" name="contract_documents" class="cast-edit-file-input" 
-                                       multiple accept="image/jpeg,image/png" data-max-files="5">
-                                <small class="cast-edit-help">JPG, PNG形式　最大5枚まで（各5MB以下）</small>
-                                
-                                <!-- 現在の契約書画像表示 -->
-                                <div class="cast-edit-file-preview" id="contract-document-preview">
-                                    {% if cast.contract_document_paths %}
-                                        {% set contract_docs = cast.contract_document_paths | parse_json %}
-                                        {% for doc_path in contract_docs if contract_docs is iterable and contract_docs is not string %}
-                                            <div class="cast-edit-file-item">
-                                                <img src="{{ url_for('static', filename=doc_path) }}" 
-                                                     alt="契約書" class="cast-edit-file-thumbnail">
-                                                <button type="button" class="cast-edit-file-remove" 
-                                                        data-file-path="{{ doc_path }}">×</button>
-                                                <input type="hidden" name="existing_contract_documents" value="{{ doc_path }}">
-                                            </div>
+                        </td>
+                        <th>募集媒体</th>
+                        <td>
+                            <select name="recruitment_source" class="cast-edit-select">
+                                <option value="">選択してください</option>
+                                <option value="求人サイト" {{ 'selected' if cast.recruitment_source == '求人サイト' else '' }}>求人サイト</option>
+                                <option value="紹介" {{ 'selected' if cast.recruitment_source == '紹介' else '' }}>紹介</option>
+                                <option value="SNS" {{ 'selected' if cast.recruitment_source == 'SNS' else '' }}>SNS</option>
+                                <option value="直接応募" {{ 'selected' if cast.recruitment_source == '直接応募' else '' }}>直接応募</option>
+                                <option value="その他" {{ 'selected' if cast.recruitment_source == 'その他' else '' }}>その他</option>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <!-- オートコール通知タイミング・オートコール -->
+                    <tr>
+                        <th>オートコール通知タイミング</th>
+                        <td>
+                            <select name="notification_minutes_before" class="cast-edit-select">
+                                <option value="5" {% if cast.notification_minutes_before == 5 %}selected{% endif %}>5分前</option>
+                                <option value="10" {% if cast.notification_minutes_before == 10 %}selected{% endif %}>10分前</option>
+                                <option value="15" {% if not cast.notification_minutes_before or cast.notification_minutes_before == 15 %}selected{% endif %}>15分前</option>
+                                <option value="20" {% if cast.notification_minutes_before == 20 %}selected{% endif %}>20分前</option>
+                                <option value="30" {% if cast.notification_minutes_before == 30 %}selected{% endif %}>30分前</option>
+                            </select>
+                        </td>
+                        <th>オートコール</th>
+                        <td>
+                            <select name="auto_call_enabled" class="cast-edit-select">
+                                <option value="true" {% if not cast.auto_call_enabled is defined or cast.auto_call_enabled %}selected{% endif %}>有効</option>
+                                <option value="false" {% if cast.auto_call_enabled is defined and not cast.auto_call_enabled %}selected{% endif %}>無効</option>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <!-- 契約書 -->
+                    <tr>
+                        <th>契約書</th>
+                        <td colspan="3">
+                            {% if cast.contract_document_paths %}
+                                {% set contract_paths = cast.contract_document_paths if cast.contract_document_paths is string else cast.contract_document_paths %}
+                                {% if contract_paths %}
+                                    {% set paths_list = contract_paths | parse_json if contract_paths is string else contract_paths %}
+                                    <div class="cast-edit-file-list">
+                                        {% for path in paths_list %}
+                                        <a href="/static/{{ path }}" target="_blank" class="cast-edit-file-link">契約書{{ loop.index }}</a>
                                         {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <input type="file" name="contract_documents" class="cast-edit-file-input" accept="image/*,.pdf" multiple>
+                        </td>
+                    </tr>
 
-                    <!-- 管理者メモセクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">管理者メモ</h3>
-                        
-                        <div class="cast-edit-form-group">
-                            <label class="cast-edit-label">コメント</label>
-                            <textarea name="comments" class="cast-edit-textarea" rows="4" 
-                                      placeholder="管理者向けのメモ・特記事項">{{ cast.comments or '' }}</textarea>
-                        </div>
-                    </div>
+                    <!-- 身分証 -->
+                    <tr>
+                        <th>身分証</th>
+                        <td colspan="3">
+                            {% if cast.id_document_paths %}
+                                {% set id_paths = cast.id_document_paths if cast.id_document_paths is string else cast.id_document_paths %}
+                                {% if id_paths %}
+                                    {% set paths_list = id_paths | parse_json if id_paths is string else id_paths %}
+                                    <div class="cast-edit-file-list">
+                                        {% for path in paths_list %}
+                                        <a href="/static/{{ path }}" target="_blank" class="cast-edit-file-link">身分証{{ loop.index }}</a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <input type="file" name="id_documents" class="cast-edit-file-input" accept="image/*,.pdf" multiple>
+                        </td>
+                    </tr>
 
-                    <!-- 保存ボタン -->
-                    <div class="cast-edit-form-actions">
-                        <button type="submit" class="cast-edit-submit-btn">
-                            基本設定を保存
-                        </button>
-                        <a href="{{ url_for('main_routes.delete_cast', store=store, cast_id=cast.cast_id) }}" 
-                           class="cast-edit-delete-btn"
-                           onclick="return confirm('本当にこのキャストを削除しますか？この操作は取り消せません。');">
-                            削除
-                        </a>
-                    </div>
-                </form>
+                    <!-- 備考 -->
+                    <tr>
+                        <th>備考</th>
+                        <td colspan="3">
+                            <textarea name="comments" class="cast-edit-textarea cast-edit-textarea-full" 
+                                      rows="4">{{ cast.comments if cast.comments else '' }}</textarea>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- NG設定タブ -->
-            <div class="cast-edit-tab-content" id="cast-edit-tab-ng">
-                <form method="POST" action="{{ url_for('main_routes.save_cast_ng_settings', store=store, cast_id=cast.cast_id) }}" class="cast-edit-form">
-                    
-                    <!-- NGホテル設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">NGホテル設定</h3>
-                        
-                        {% if all_hotels %}
-                            <div class="cast-edit-checkbox-grid">
-                                {% for hotel in all_hotels %}
-                                    <label class="cast-edit-checkbox-label">
-                                        <input type="checkbox" 
-                                               name="ng_hotels" 
-                                               value="{{ hotel.hotel_id }}"
-                                               {% if hotel.hotel_id in ng_hotel_ids %}checked{% endif %}
-                                               class="cast-edit-checkbox">
-                                        <span class="cast-edit-checkbox-text">{{ hotel.name }}</span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="cast-edit-no-data">登録されているホテルがありません。</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- NGコース設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">NGコース設定</h3>
-                        
-                        {% if all_courses %}
+            <div id="ng-settings-tab" class="cast-edit-tab-content">
+                <table class="cast-edit-info-table cast-edit-ng-table">
+                    <!-- コース -->
+                    <tr>
+                        <th>コース</th>
+                        <td>
+                            {% if all_courses %}
                             <div class="cast-edit-checkbox-grid">
                                 {% for course in all_courses %}
-                                    <label class="cast-edit-checkbox-label">
-                                        <input type="checkbox" 
-                                               name="ng_courses" 
-                                               value="{{ course.course_id }}"
-                                               {% if course.course_id in ng_course_ids %}checked{% endif %}
-                                               class="cast-edit-checkbox">
-                                        <span class="cast-edit-checkbox-text">{{ course.name }}</span>
-                                    </label>
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_courses" class="cast-edit-checkbox"
+                                           value="{{ course.course_id }}"
+                                           {% if course.course_id in ng_course_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">{{ course.course_name }}</span>
+                                </label>
                                 {% endfor %}
                             </div>
-                        {% else %}
-                            <p class="cast-edit-no-data">登録されているコースがありません。</p>
-                        {% endif %}
-                    </div>
+                            {% else %}
+                            <div class="cast-edit-no-data">
+                                <p>コースが登録されていません</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
 
-                    <!-- NGオプション設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">NGオプション設定</h3>
-                        
-                        {% if all_options %}
+                    <!-- ホテル -->
+                    <tr>
+                        <th>ホテル</th>
+                        <td>
+                            {% if all_hotels %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for hotel in all_hotels %}
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_hotels" class="cast-edit-checkbox"
+                                           value="{{ hotel.hotel_id }}"
+                                           {% if hotel.hotel_id in ng_hotel_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">{{ hotel.hotel_name }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="cast-edit-no-data">
+                                <p>ホテルが登録されていません</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- オプション -->
+                    <tr>
+                        <th>オプション</th>
+                        <td>
+                            {% if all_options %}
                             <div class="cast-edit-checkbox-grid">
                                 {% for option in all_options %}
-                                    <label class="cast-edit-checkbox-label">
-                                        <input type="checkbox" 
-                                               name="ng_options" 
-                                               value="{{ option.option_id }}"
-                                               {% if option.option_id in ng_option_ids %}checked{% endif %}
-                                               class="cast-edit-checkbox">
-                                        <span class="cast-edit-checkbox-text">{{ option.name }}</span>
-                                    </label>
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_options" class="cast-edit-checkbox"
+                                           value="{{ option.option_id }}"
+                                           {% if option.option_id in ng_option_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">{{ option.option_name }}</span>
+                                </label>
                                 {% endfor %}
                             </div>
-                        {% else %}
-                            <p class="cast-edit-no-data">登録されているオプションがありません。</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- NGエリア設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">NGエリア設定</h3>
-                        
-                        {% if all_ng_areas %}
-                            <div class="cast-edit-checkbox-grid">
-                                {% for ng_area in all_ng_areas %}
-                                    <label class="cast-edit-checkbox-label">
-                                        <input type="checkbox" 
-                                               name="ng_custom_areas" 
-                                               value="{{ ng_area.ng_area_id }}"
-                                               {% if ng_area.ng_area_id in ng_custom_area_ids %}checked{% endif %}
-                                               class="cast-edit-checkbox">
-                                        <span class="cast-edit-checkbox-text">{{ ng_area.area_name }}</span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="cast-edit-no-data">
-                                登録されているNGエリアがありません。<br>
-                                <a href="{{ url_for('settings', store=store) }}" style="color: #007bff; text-decoration: underline;">
-                                    設定ページ
-                                </a>
-                                からNGエリアを追加してください。
-                            </p>
-                        {% endif %}
-                    </div>
-
-                    <!-- 年齢NG設定セクション -->
-                    <div class="cast-edit-section">
-                        <h3 class="cast-edit-section-title">年齢NG設定</h3>
-                        
-                        {% if all_ng_age_patterns %}
-                            <div class="cast-edit-checkbox-grid">
-                                {% for ng_age in all_ng_age_patterns %}
-                                    <label class="cast-edit-checkbox-label">
-                                        <input type="checkbox" 
-                                               name="ng_age_patterns" 
-                                               value="{{ ng_age.ng_age_id }}"
-                                               {% if ng_age.ng_age_id in ng_age_pattern_ids %}checked{% endif %}
-                                               class="cast-edit-checkbox">
-                                        <span class="cast-edit-checkbox-text">
-                                            {{ ng_age.pattern_name }}
-                                            {% if ng_age.description %}
-                                                <small style="color: #6c757d; display: block; margin-top: 2px;">
-                                                    ({{ ng_age.description }})
-                                                </small>
-                                            {% endif %}
-                                        </span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="cast-edit-no-data">
-                                登録されている年齢NGパターンがありません。<br>
-                                <a href="{{ url_for('settings', store=store) }}" style="color: #007bff; text-decoration: underline;">
-                                    設定ページ
-                                </a>
-                                から年齢NGパターンを追加してください。
-                            </p>
-                        {% endif %}
-                    </div>
-
-                    <!-- 保存ボタン -->
-                    <div class="cast-edit-form-actions">
-                        <button type="submit" class="cast-edit-submit-btn">
-                            NG設定を保存
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- 右側：ガイドエリア -->
-        <div class="cast-edit-guide-area">
-            <div class="cast-edit-guide-card">
-                <h3 class="cast-edit-guide-title">現在の登録情報</h3>
-                <div class="cast-edit-guide-content">
-                    <div class="cast-edit-info-item">
-                        <span class="cast-edit-info-label">キャストID</span>
-                        <span class="cast-edit-info-value">{{ cast.cast_id }}</span>
-                    </div>
-                    <div class="cast-edit-info-item">
-                        <span class="cast-edit-info-label">ステータス</span>
-                        <span class="cast-edit-info-value">
-                            <span class="badge 
-                                {% if cast.status == '在籍' %}badge-success
-                                {% elif cast.status == '休職' %}badge-warning
-                                {% elif cast.status == '退職' %}badge-secondary
-                                {% else %}badge-secondary{% endif %}">
-                                {{ cast.status or '未設定' }}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="cast-edit-info-item">
-                        <span class="cast-edit-info-label">最終ログイン</span>
-                        <span class="cast-edit-info-value">
-                            {% if cast.last_login %}
-                                {{ cast.last_login.strftime('%Y/%m/%d %H:%M') }}
                             {% else %}
-                                未ログイン
+                            <div class="cast-edit-no-data">
+                                <p>オプションが登録されていません</p>
+                            </div>
                             {% endif %}
-                        </span>
-                    </div>
-                    <div class="cast-edit-info-item">
-                        <span class="cast-edit-info-label">登録日</span>
-                        <span class="cast-edit-info-value">
-                            {{ cast.created_at.strftime('%Y/%m/%d') if cast.created_at else '不明' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
+                        </td>
+                    </tr>
 
-            <div class="cast-edit-guide-card">
-                <h3 class="cast-edit-guide-title">入力ガイド</h3>
-                <div class="cast-edit-guide-content">
-                    <div class="cast-edit-guide-item">
-                        <h4>基本情報</h4>
-                        <p>キャスト名は必須項目です。システム内で表示される名前になります。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>オートコール設定</h4>
-                        <p>退室時刻の指定分数前に自動で電話通知が送信されます。キャストごとに個別設定できます。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>認証設定</h4>
-                        <p>ログインIDとパスワードを設定すると、キャストがマイページにアクセスできます。</p>
-                    </div>
-                    <div class="cast-edit-guide-item">
-                        <h4>NG設定</h4>
-                        <p>NG設定タブから、特定のホテルやコースなどを制限できます。</p>
-                    </div>
-                </div>
+                    <!-- エリア -->
+                    <tr>
+                        <th>エリア</th>
+                        <td>
+                            {% if all_ng_areas %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for area in all_ng_areas %}
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_custom_areas" class="cast-edit-checkbox"
+                                           value="{{ area.ng_area_id }}"
+                                           {% if area.ng_area_id in ng_custom_area_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">{{ area.area_name }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="cast-edit-no-data">
+                                <p>NGエリアが登録されていません</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- 年齢パターン -->
+                    <tr>
+                        <th>年齢パターン</th>
+                        <td>
+                            {% if all_ng_age_patterns %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for pattern in all_ng_age_patterns %}
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_age_patterns" class="cast-edit-checkbox"
+                                           value="{{ pattern.ng_age_id }}"
+                                           {% if pattern.ng_age_id in ng_age_pattern_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">
+                                        {{ pattern.pattern_name }}
+                                        {% if pattern.description %}
+                                        <br><small>({{ pattern.description }})</small>
+                                        {% endif %}
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="cast-edit-no-data">
+                                <p>NG年齢パターンが登録されていません</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
-    </div>
-</div>
 
+        <!-- ボタン -->
+        <div class="cast-edit-buttons">
+            <button type="submit" class="cast-edit-submit-btn">更新</button>
+            <a href="{{ url_for('main_routes.delete_cast', store=store, cast_id=cast.cast_id) }}" 
+               class="cast-edit-delete-btn"
+               onclick="return confirm('本当に削除しますか？');">削除</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/address.js') }}"></script>
+<script>
+// タブ切り替え
+document.querySelectorAll('.cast-edit-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const tabName = this.dataset.tab;
+        
+        // タブのアクティブ状態を切り替え
+        document.querySelectorAll('.cast-edit-tab').forEach(t => t.classList.remove('cast-edit-tab-active'));
+        this.classList.add('cast-edit-tab-active');
+        
+        // コンテンツの表示を切り替え
+        document.querySelectorAll('.cast-edit-tab-content').forEach(content => {
+            content.classList.remove('cast-edit-tab-content-active');
+        });
+        document.getElementById(tabName + '-tab').classList.add('cast-edit-tab-content-active');
+    });
+});
+
+// 生年月日から年齢を自動計算
+const birthDateInput = document.getElementById('birthDate');
+const ageDisplay = document.getElementById('ageDisplay');
+
+function updateAge() {
+    if (!birthDateInput || !ageDisplay) return;
+
+    const birthDateValue = birthDateInput.value;
+    if (!birthDateValue) {
+        ageDisplay.textContent = '';
+        return;
+    }
+
+    const birthDate = new Date(birthDateValue);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    ageDisplay.textContent = `（${age}歳）`;
+}
+
+// ページ読み込み時に年齢を表示
+if (birthDateInput) {
+    updateAge();
+
+    // 生年月日変更時に年齢を再計算
+    birthDateInput.addEventListener('change', updateAge);
+}
+
+// フラッシュメッセージの自動非表示と閉じるボタン
+document.querySelectorAll('.cast-edit-flash').forEach(function(flash) {
+    // 閉じるボタンのクリックイベント
+    const closeBtn = flash.querySelector('.cast-edit-flash-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            flash.style.opacity = '0';
+            setTimeout(function() {
+                flash.remove();
+            }, 300);
+        });
+    }
+    
+    // 5秒後に自動で消える
+    setTimeout(function() {
+        flash.style.opacity = '0';
+        setTimeout(function() {
+            flash.remove();
+        }, 300);
+    }, 5000);
+});
+</script>
 {% endblock %}

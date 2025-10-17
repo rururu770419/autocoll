@@ -122,7 +122,15 @@ async function loadCustomerData() {
             
             // 住所情報
             setFieldValue('prefecture', customer.prefecture);
-            setFieldValue('address_detail', customer.address_detail);
+
+            // 住所詳細を分割（互換性のため）
+            if (customer.address_detail) {
+                setFieldValue('street_address', customer.street_address || customer.address_detail);
+                setFieldValue('building_name', customer.building_name || '');
+            } else {
+                setFieldValue('street_address', customer.street_address || '');
+                setFieldValue('building_name', customer.building_name || '');
+            }
             
             // 会員情報
             setFieldValue('member_type', customer.member_type);
@@ -364,7 +372,10 @@ async function handleFormSubmit(e) {
         age: ageValue ? parseInt(ageValue) : null,  // 空文字列の場合はnull
         prefecture: getValue('prefecture'),
         city: getValue('city'),
-        address_detail: getValue('address_detail'),
+        street_address: getValue('street_address'),
+        building_name: getValue('building_name'),
+        // 互換性のため、address_detailも送信（street_address + building_nameを結合）
+        address_detail: [getValue('street_address'), getValue('building_name')].filter(v => v).join(' '),
         member_type: getValue('member_type'),
         status: getValue('status'),
         web_member: getValue('web_member'),

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
 <script src="{{ url_for('static', filename='js/address.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/customer_registration.js') }}" defer></script>
@@ -11,8 +12,9 @@
 <div class="customer-container">
     <!-- ヘッダー -->
     <div class="customer-header">
-        <div class="customer-title-area">
-            <h1>顧客登録</h1>
+        <h1>顧客登録</h1>
+        <div class="customer-header-buttons">
+            <div></div>
             <a href="{{ url_for('main_routes.customer_management', store=store) }}" class="customer-back-btn">
                 ← 一覧に戻る
             </a>
@@ -46,10 +48,10 @@
                 </div>
                 
                 <div class="customer-form-group">
-                    <label class="customer-label customer-label-points">現在の所持PT</label>
+                    <label class="customer-label customer-label-points">所持PT</label>
                     <div class="customer-input-group">
-                        <input type="number" name="current_points" id="current_points" class="customer-input" 
-                               value="0" min="0" step="1" inputmode="numeric">
+                        <input type="number" name="current_points" id="current_points" class="customer-input"
+                               value="0" min="0" step="1" inputmode="numeric" style="width: 100px;">
                         <span class="customer-input-suffix">pt</span>
                     </div>
                 </div>
@@ -79,22 +81,22 @@
                 </div>
                 
                 <div class="customer-form-group">
-                    <label class="customer-label customer-label-birthday">生年月日・年齢</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <label class="customer-label customer-label-birthday">生年月日</label>
+                    <div style="display: flex; gap: 6px; flex: 1;">
                         <input type="date" name="birthday" id="birthday" class="customer-input" style="flex: 1;">
-                        <input type="text" id="age" class="customer-input customer-input-readonly" 
-                               readonly placeholder="自動" style="width: 60px;">
+                        <input type="text" id="age" class="customer-input customer-input-readonly"
+                               readonly placeholder="年齢" style="width: 60px;">
                     </div>
                 </div>
             </div>
 
-            <!-- 3行目：住所（3列分）、顧客番号（1列分） -->
+            <!-- 3行目：住所、番地等、建物・マンション名、顧客番号 -->
             <div class="customer-form-grid-4">
-                <div class="customer-form-group customer-form-group-span3">
+                <div class="customer-form-group">
                     <label class="customer-label customer-label-address">住所</label>
-                    <div style="display: flex; gap: 0;">
-                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 150px; border-radius: 4px 0 0 4px;">
-                            <option value="">選択してください</option>
+                    <div style="display: flex; gap: 6px; flex: 1;">
+                        <select name="prefecture" id="prefecture" class="customer-select" style="width: 80px;">
+                            <option value="">都道府県</option>
                             <option value="北海道">北海道</option>
                             <option value="青森県">青森県</option>
                             <option value="岩手県">岩手県</option>
@@ -143,20 +145,27 @@
                             <option value="鹿児島県">鹿児島県</option>
                             <option value="沖縄県">沖縄県</option>
                         </select>
-                        
-                        <select name="city" id="city" class="customer-select" style="width: 200px; border-radius: 0; border-left: none;">
-                            <option value="">都道府県を選択してください</option>
+
+                        <select name="city" id="city" class="customer-select" style="width: 140px;">
+                            <option value="">市区町村</option>
                         </select>
-                        
-                        <textarea name="address_detail" id="address_detail" class="customer-textarea" 
-                                  rows="1" placeholder="番地・建物名等" style="flex: 1; border-radius: 0 4px 4px 0; border-left: none; resize: none;"></textarea>
                     </div>
                 </div>
-                
+
+                <div class="customer-form-group customer-form-group-no-label">
+                    <input type="text" name="street_address" id="street_address" class="customer-input"
+                           placeholder="番地等">
+                </div>
+
+                <div class="customer-form-group customer-form-group-no-label">
+                    <input type="text" name="building_name" id="building_name" class="customer-input"
+                           placeholder="建物、マンション名">
+                </div>
+
                 <div class="customer-form-group">
                     <label class="customer-label customer-label-customer-id">顧客番号</label>
-                    <input type="text" name="customer_number" id="customer_number" 
-                           class="customer-input customer-input-readonly" readonly placeholder="自動採番">
+                    <input type="text" name="customer_number" id="customer_number"
+                           class="customer-input customer-input-readonly customer-input-fit" readonly placeholder="自動採番">
                 </div>
             </div>
 
@@ -164,7 +173,7 @@
             <div class="customer-form-grid-4">
                 <div class="customer-form-group customer-form-group-span4">
                     <label class="customer-label customer-label-comment">コメント</label>
-                    <textarea name="comment" id="comment" class="customer-textarea" 
+                    <textarea name="comment" id="comment" class="customer-textarea customer-textarea-auto"
                               rows="1" placeholder="備考・メモなど"></textarea>
                 </div>
             </div>
@@ -202,12 +211,8 @@
             <!-- 保存ボタン -->
             <div class="customer-form-actions">
                 <button type="submit" class="customer-submit-btn">
-                    顧客を登録
+                    登録
                 </button>
-                <a href="{{ url_for('main_routes.customer_management', store=store) }}" 
-                   class="customer-cancel-btn">
-                    キャンセル
-                </a>
             </div>
         </form>
     </div>
