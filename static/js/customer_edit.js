@@ -139,11 +139,14 @@ async function loadCustomerData() {
             setFieldValue('current_points', customer.current_points);
             setFieldValue('recruitment_source', customer.recruitment_source);
             setFieldValue('customer_number', customer.customer_number);
-            
+
             // マイページ情報
             setFieldValue('mypage_id', customer.mypage_id);
             setFieldValue('mypage_password', customer.mypage_password);
-            
+
+            // 車情報
+            setFieldValue('car_info', customer.car_info);
+
             // コメント
             setFieldValue('comment', customer.comment);
             
@@ -376,6 +379,7 @@ async function handleFormSubmit(e) {
         building_name: getValue('building_name'),
         // 互換性のため、address_detailも送信（street_address + building_nameを結合）
         address_detail: [getValue('street_address'), getValue('building_name')].filter(v => v).join(' '),
+        car_info: getValue('car_info'),
         member_type: getValue('member_type'),
         status: getValue('status'),
         web_member: getValue('web_member'),

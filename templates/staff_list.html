@@ -1,113 +1,123 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_management.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/register_staff.css') }}">
 {% endblock %}
 
-{% block title %}
-  スタッフ一覧 | {{ display_name }}
-{% endblock %}
+{% block title %}スタッフ管理 | {{ display_name }}{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1>スタッフ管理</h1>
+<div class="staff-container">
+    <h1 class="staff-title">スタッフ管理</h1>
 
-  {% if success %}
-    <div class="alert alert-success">{{ success }}</div>
-  {% endif %}
-  {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-  {% endif %}
-
-  <!-- アクションボタンエリア -->
-  <div class="staff-list-actions">
-    <a href="{{ url_for('main_routes.new_staff', store=store) }}" class="btn btn-success">
-      + 新規スタッフ登録
-    </a>
-    <div class="staff-list-summary">
-      登録スタッフ数: <strong>{{ users|length }}名</strong>
+    <!-- 新規登録ボタン -->
+    <div class="staff-header">
+        <a href="{{ url_for('main_routes.new_staff', store=store) }}" class="staff-btn-register">
+            <i class="fas fa-plus"></i> 新規登録
+        </a>
     </div>
-  </div>
 
-  <!-- スタッフ一覧テーブル -->
-  <div class="table-responsive">
-    {% if users %}
-      <table class="table table-striped staff-list-table">
-        <thead>
-          <tr>
-            <th class="staff-table-name">名前</th>
-            <th class="staff-table-color">カラー</th>
-            <th class="staff-table-login">ログインID</th>
-            <th class="staff-table-role">権限</th>
-            <th class="staff-table-line">LINE連携</th>
-            <th class="staff-table-notification">通知設定</th>
-            <th class="staff-table-time">通知時間</th>
-            <th class="staff-table-actions">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in users %}
-          <tr class="staff-list-row">
-            <td class="staff-name-cell">
-              <strong>{{ user.name }}</strong>
-            </td>
-            <td class="staff-color-cell">
-              {% set color_value = user.color if user.color else '#FFE5E5' %}
-              <div class="staff-color-display">
-                <div class="staff-color-box" style="background-color: {{ color_value }};"></div>
-                <span class="staff-color-text">{{ color_value }}</span>
-              </div>
-            </td>
-            <td class="staff-login-cell">{{ user.login_id }}</td>
-            <td class="staff-role-cell">
-              <span class="staff-role-badge staff-role-{{ 'driver' if user.role == 'ドライバー' else 'staff' }}">
-                {{ user.role }}
-              </span>
-            </td>
-            <td class="staff-line-status-cell">
-              {% if user.line_id %}
-                <span class="line-status-connected">✓ 連携済み</span>
-              {% else %}
-                <span class="line-status-not-connected">未設定</span>
-              {% endif %}
-            </td>
-            <td class="staff-notification-cell">
-              {% if user.line_notification_enabled %}
-                <span class="notification-enabled">🔔 ON</span>
-              {% else %}
-                <span class="notification-disabled">🔕 OFF</span>
-              {% endif %}
-            </td>
-            <td class="staff-notification-time-cell">
-              <span class="notification-time">{{ user.notification_minutes_before }}分前</span>
-            </td>
-            <td class="staff-actions-cell">
-              <a href="{{ url_for('main_routes.edit_staff_by_id', store=store, user_id=user.id) }}" class="btn btn-edit">編集</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      
-      <!-- LINE通知に関する説明 -->
-      <div class="staff-line-info">
-        <h3 class="staff-line-info-title">💬 LINE通知機能について</h3>
-        <ul class="staff-line-info-list">
-          <li>各スタッフが個別にLINE Botを友だち追加して設定できます</li>
-          <li>送迎時間の指定分前に自動通知されます</li>
-          <li>通知時間は個別に設定可能です（10分前、15分前など）</li>
-          <li>通知のON/OFF切り替えも個別に設定できます</li>
-        </ul>
-      </div>
-      
-    {% else %}
-      <div class="staff-empty-state">
-        <div class="staff-empty-icon">👥</div>
-        <h3 class="staff-empty-title">登録されているスタッフはいません</h3>
-        <p class="staff-empty-text">新規スタッフ登録から始めてください</p>
-        <a href="{{ url_for('main_routes.new_staff', store=store) }}" class="btn btn-success">最初のスタッフを登録する</a>
-      </div>
-    {% endif %}
-  </div>
+    <!-- スタッフ一覧テーブル -->
+    <div class="staff-list-card">
+        {% if users %}
+            <div class="staff-table-wrapper">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th class="sort-header">並び替え</th>
+                            <th>名前</th>
+                            <th class="color-header">カラー</th>
+                            <th>ログインID</th>
+                            <th>権限</th>
+                            <th class="line-header">LINE連携</th>
+                            <th class="notification-header">通知設定</th>
+                            <th>通知時間</th>
+                            <th class="action-header">編集</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <!-- 並び替え -->
+                            <td class="sort-column">
+                                <button class="staff-sort-btn {% if loop.first %}staff-sort-btn-disabled{% endif %}"
+                                        {% if loop.first %}disabled{% endif %}
+                                        onclick="moveUp({{ user.id }})">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <button class="staff-sort-btn {% if loop.last %}staff-sort-btn-disabled{% endif %}"
+                                        {% if loop.last %}disabled{% endif %}
+                                        onclick="moveDown({{ user.id }})">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </td>
+
+                            <!-- 名前 -->
+                            <td>{{ user.name }}</td>
+
+                            <!-- カラー -->
+                            <td class="color-column">
+                                {% set color_value = user.color if user.color else '#FFE5E5' %}
+                                <div class="color-box" style="background-color: {{ color_value }};"></div>
+                            </td>
+
+                            <!-- ログインID -->
+                            <td>{{ user.login_id }}</td>
+
+                            <!-- 権限 -->
+                            <td>{{ user.role if user.role else 'スタッフ' }}</td>
+
+                            <!-- LINE連携 -->
+                            <td class="line-column">
+                                {% if user.line_id %}
+                                    <span class="line-status-connected">連携済み</span>
+                                {% else %}
+                                    <button class="line-connect-btn" onclick="connectLine({{ user.id }})">
+                                        連携する
+                                    </button>
+                                {% endif %}
+                            </td>
+
+                            <!-- 通知設定 -->
+                            <td class="notification-column">
+                                <label class="staff-toggle-switch">
+                                    <input type="checkbox"
+                                           class="staff-toggle-checkbox"
+                                           {% if user.line_notification_enabled %}checked{% endif %}
+                                           onchange="toggleNotification({{ user.id }})">
+                                    <span class="staff-toggle-slider"></span>
+                                </label>
+                            </td>
+
+                            <!-- 通知時間 -->
+                            <td>
+                                {% if user.notification_minutes_before %}
+                                    {{ user.notification_minutes_before }}分前
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <!-- 編集 -->
+                            <td class="action-column">
+                                <a href="{{ url_for('main_routes.edit_staff_by_id', store=store, user_id=user.id) }}"
+                                   class="staff-btn-edit" title="編集">
+                                    <i class="fas fa-pencil-alt staff-edit-icon"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="staff-table-empty">
+                スタッフが登録されていません。「新規登録」ボタンから最初のスタッフを登録してください。
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<script src="{{ url_for('static', filename='js/register_staff.js') }}"></script>
 {% endblock %}

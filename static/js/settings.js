@@ -452,8 +452,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentParkingId = null;
     };
     
-    window.toggleParkingFeature = async function(enabled) {
-        
+    window.toggleParkingFeature = async function(enabled, autoSave = true) {
+
         const section = document.getElementById('parkingListSection');
         if (enabled) {
             section.style.display = 'block';
@@ -461,20 +461,24 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             section.style.display = 'none';
         }
-        
-        // 駐車場設定を自動保存
+
+        // ユーザーが変更した時のみ自動保存（初期化時は保存しない）
+        if (!autoSave) {
+            return;
+        }
+
         try {
             const formData = new FormData();
             formData.append('parking_enabled', enabled ? 'true' : 'false');
-            
-            
+
+
             const response = await fetch(window.settingsUrls.save, {
                 method: 'POST',
                 body: formData
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 showMessage('駐車場設定を保存しました', 'success');
             } else {
@@ -669,17 +673,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.addEventListener('DOMContentLoaded', function() {
         console.log('⚙️ Settings.js 初期化開始');
-        
+
         // 色ピッカー初期化
         initColorPicker();
-        
-        // 駐車場機能の初期表示チェック
+
+        // 駐車場機能の初期表示チェック（保存はしない）
         const parkingCheckbox = document.getElementById('parking_enabled');
         if (parkingCheckbox) {
             console.log(`🅿️ 駐車場チェックボックス: ${parkingCheckbox.checked}`);
-            toggleParkingFeature(parkingCheckbox.checked);
+            toggleParkingFeature(parkingCheckbox.checked, false); // autoSave = false
         }
-        
+
         console.log('✅ Settings.js 初期化完了');
     });
     

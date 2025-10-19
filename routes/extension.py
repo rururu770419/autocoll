@@ -1,9 +1,29 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from database.connection import get_db, get_store_id, get_display_name
 from database.extension_db import (
     get_all_extensions, get_extension_by_id, register_extension,
     update_extension, delete_extension_permanently, move_extension_order
 )
+
+# ========================================
+# API: 延長一覧取得
+# ========================================
+def get_extensions_api(store):
+    """延長一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        store_id = get_store_id(store)
+        db = get_db()
+        extensions = get_all_extensions(db, store_id=store_id)
+        db.close()
+        # extension_id, extension_name, fee(extension_fee), extension_minutes を含むデータを返す
+        return jsonify([{
+            'extension_id': ext['extension_id'],
+            'extension_name': ext['extension_name'],
+            'fee': ext['extension_fee'] if ext.get('extension_fee') else 0,
+            'extension_minutes': ext.get('extension_minutes', 0)
+        } for ext in extensions])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def extension_management(store):
     """延長管理ページ"""

@@ -1,10 +1,27 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from database.connection import get_store_id, get_display_name
 from database.nominate_db import (
     get_all_nomination_types, get_nomination_type_by_id, add_nomination_type,
     update_nomination_type, delete_nomination_type,
     move_nomination_type_up, move_nomination_type_down
 )
+
+# ========================================
+# API: 指名種類一覧取得
+# ========================================
+def get_nomination_types_api(store):
+    """指名種類一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        store_id = get_store_id(store)
+        nomination_types = get_all_nomination_types(store_id=store_id)
+        # nomination_type_id, type_name, fee(additional_fee) を含むデータを返す
+        return jsonify([{
+            'nomination_type_id': nom['nomination_type_id'],
+            'type_name': nom['type_name'],
+            'fee': nom['additional_fee'] if nom.get('additional_fee') else 0
+        } for nom in nomination_types])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def nominate_management(store):
     """指名管理ページ"""

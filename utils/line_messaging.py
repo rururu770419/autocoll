@@ -91,40 +91,43 @@ def send_line_message(line_user_id, message_text):
         }
 
 
-def send_pickup_reminder_to_staff(staff_name, cast_name, exit_time_str, hotel_name):
+def send_pickup_reminder_to_staff(staff_name, cast_name, exit_time_str, hotel_name, line_user_id=None):
     """
     スタッフにピックアップリマインダーを送信（テンプレート使用）
-    
+
     Args:
         staff_name (str): スタッフ名
         cast_name (str): キャスト名
         exit_time_str (str): 退室時刻
         hotel_name (str): ホテル名
-    
+        line_user_id (str, optional): LINE User ID (指定されない場合はDBから取得)
+
     Returns:
         dict: 送信結果
     """
     try:
-        # スタッフのLINE IDを取得
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("""
-            SELECT line_id 
-            FROM users 
-            WHERE name = %s AND line_id IS NOT NULL
-            LIMIT 1
-        """, (staff_name,))
-        
-        result = cursor.fetchone()
-        
-        if not result or not result['line_id']:
+        # LINE IDが指定されていない場合は取得（後方互換性のため）
+        if not line_user_id:
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT line_id
+                FROM users
+                WHERE name = %s AND line_id IS NOT NULL
+                LIMIT 1
+            """, (staff_name,))
+
+            result = cursor.fetchone()
+
+            if not result or not result['line_id']:
+                cursor.close()
+                return {
+                    'success': False,
+                    'error': f'スタッフ {staff_name} のLINE IDが登録されていません'
+                }
+
+            line_user_id = result['line_id']
             cursor.close()
-            return {
-                'success': False,
-                'error': f'スタッフ {staff_name} のLINE IDが登録されていません'
-            }
-        
-        line_user_id = result['line_id']
         
         # 🔧 メッセージテンプレートを取得
         cursor.execute("""

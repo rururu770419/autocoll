@@ -1,6 +1,7 @@
 from flask import render_template, request, session, jsonify
 from datetime import datetime, timedelta
 from database.db_connection import get_db_connection
+from database.connection import get_store_id
 from database.db_access import (
     get_display_name, get_db, get_pickup_records_by_date, get_staff_list,
     get_all_casts, get_all_hotels_with_details, update_pickup_record,
@@ -11,11 +12,12 @@ def store_home(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
+    store_id = get_store_id(store)
     db = get_db(store)
     if db is None:
         return "店舗が見つかりません。", 404
-    
+
     try:
         # URLパラメータから日付を取得（なければ今日）
         target_date = request.args.get('date')
@@ -94,7 +96,7 @@ def store_home(store):
                 record['cast_auto_call_disabled'] = False
         
         staff_list = get_staff_list(db)
-        casts = get_all_casts(db)
+        casts = get_all_casts(db, store_id)
         hotels = get_all_hotels_with_details(db)
         
         # その日のお知らせ情報を取得（修正済み）

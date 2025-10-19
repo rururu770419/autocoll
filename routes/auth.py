@@ -1,11 +1,12 @@
 from flask import render_template, request, session, redirect, url_for
 from database.db_access import get_display_name, find_user_by_login_id, get_db
+from database.connection import get_store_id
 
 def index(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
     return render_template("login.html", store=store, display_name=display_name, error=request.args.get('error'))
 
 def login(store):
@@ -13,10 +14,11 @@ def login(store):
     if db is None:
         return "店舗が見つかりません。", 404
 
+    store_id = get_store_id(store)
     login_id = request.form["login_id"]
     password = request.form["password"]
 
-    user = find_user_by_login_id(db, login_id)
+    user = find_user_by_login_id(db, login_id, store_id)
     if user is None:
         return redirect(url_for('main_routes.index', store=store, error="ログインIDが違います"))
 
@@ -25,6 +27,7 @@ def login(store):
 
     session.clear()
     session['logged_in'] = True
+    session['user_id'] = user['id']
     session['login_id'] = user['login_id']
     session['user_name'] = user['name']
     session['user_role'] = user['role']

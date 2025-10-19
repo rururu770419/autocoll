@@ -11,7 +11,12 @@
 
 /* ヘッダー */
 .customer-header {
-    margin-bottom: 30px;
+    margin: 0;
+}
+
+/* 顧客編集ページ専用ヘッダー */
+.customer-edit-header {
+    padding: 20px;
 }
 
 .customer-header h1 {
@@ -36,13 +41,18 @@
 }
 
 .customer-back-btn {
+    grid-column: 2;
     padding: 8px 16px;
     background-color: #6c757d;
     color: white;
     text-decoration: none;
-    border-radius: 0;
+    border-radius: 4px;
     font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
     transition: background-color 0.3s;
+    text-align: center;
+    justify-self: end;  /* 右寄せ */
 }
 
 .customer-back-btn:hover {
@@ -285,7 +295,7 @@
 /* テーブル用スタイル（一覧画面用） */
 .customer-table-wrapper {
     background-color: #fff;
-    border-radius: 0;
+    border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow-x: auto;
 }
@@ -413,14 +423,16 @@
 .customer-search-area {
     background-color: #f8f9fa;
     padding: 20px;
-    border-radius: 0;
+    border-radius: 8px;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .customer-search-wrapper {
     display: flex;
     gap: 10px;
-    max-width: 400px;
 }
 
 .customer-select-narrow {
@@ -441,7 +453,7 @@
     background-color: #00BCD4;
     color: white;
     border: none;
-    border-radius: 0;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s;
@@ -545,24 +557,25 @@
     background-color: #FF6B6B;
 }
 
-/* 新規登録ボタン（cast_managementと同じスタイル） */
+/* 新規登録ボタン（左側・メインカラーエリアの幅） */
 .customer-btn-register {
+    grid-column: 1;
     display: inline-block;
     padding: 10px 20px;
     background-color: #00BCD4;
     color: #fff;
     text-decoration: none;
     border: none;
-    border-radius: 0;
+    border-radius: 4px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin-bottom: 20px;
+    transition: background-color 0.3s;
+    text-align: center;
 }
 
 .customer-btn-register:hover {
-    background-color: #00ACC1;
+    background-color: #0097A7;
     color: #fff;
     text-decoration: none;
 }
@@ -588,11 +601,11 @@
     color: #00BCD4;
 }
 
-/* ヘッダーボタンエリア */
+/* ヘッダーボタンエリア - メインコンテナの幅に合わせる */
 .customer-header-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 20% 1fr;  /* メインコンテナと同じ比率 */
+    gap: 20px;
     align-items: center;
     padding-bottom: 15px;
     border-bottom: 1px solid #ddd;
@@ -607,4 +620,254 @@
 /* 幅を調整したinput */
 .customer-input-fit {
     max-width: 100%;
+}
+
+/* ========================================
+   予約登録ページと同じレイアウト（顧客編集用）
+   ======================================== */
+
+/* 予約登録ページと同じレイアウト */
+.reservation-container {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    gap: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.customer-info-area {
+    grid-column: 1;
+}
+
+.customer-info-card {
+    background: #00BCD4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.customer-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* メインカラー内のラベル */
+.customer-label-white {
+    font-size: 0.85em;
+    color: white !important;
+    margin-bottom: 5px;
+    font-weight: 500;
+    background: none;
+    padding: 0;
+    min-width: auto;
+}
+
+/* 左側メインカラーエリアのすべてのラベルを白に */
+.customer-info-card label {
+    color: white !important;
+}
+
+/* 白いinputフィールド */
+.form-input-white {
+    background: white;
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 0.95em;
+}
+
+.form-input-white:focus {
+    outline: none;
+    border-color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* 左側メインカラーエリア内のinput幅調整（所持PTと年齢） */
+.customer-info-card input#current_points,
+.customer-info-card input#age {
+    width: 80px;
+    max-width: 80px;
+}
+
+/* 所持PTのinput（customer-input-group内） */
+.customer-info-card .customer-input-group input[type="number"] {
+    width: 80px;
+    max-width: 80px;
+}
+
+/* PT入力の白いサフィックス */
+.customer-input-suffix-white {
+    padding: 5px 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: none;
+    border-radius: 0;
+    font-size: 14px;
+    color: white;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+}
+
+/* 右側のフォームエリア */
+.reservation-form-area {
+    grid-column: 2;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.customer-form {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* 右側フォームエリアのラベル（予約ページと同じスタイル） */
+.reservation-form-area .form-group label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    min-width: auto;
+    text-align: left;
+    white-space: normal;
+}
+
+/* 右側フォームエリアの入力フィールド（予約ページと同じスタイル） */
+.reservation-form-area .form-select,
+.reservation-form-area .form-input,
+.reservation-form-area .form-textarea,
+.reservation-form-area .customer-select,
+.reservation-form-area .customer-input,
+.reservation-form-area .customer-textarea {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.reservation-form-area .form-select:focus,
+.reservation-form-area .form-input:focus,
+.reservation-form-area .form-textarea:focus,
+.reservation-form-area .customer-select:focus,
+.reservation-form-area .customer-input:focus,
+.reservation-form-area .customer-textarea:focus {
+    outline: none;
+    border-color: #00BCD4;
+    box-shadow: none;
+}
+
+.reservation-form-area .form-textarea,
+.reservation-form-area .customer-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* 読み取り専用フィールド */
+.reservation-form-area .customer-input-readonly,
+.reservation-form-area input[readonly],
+.reservation-form-area .form-input[readonly] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* 無効化されたセレクトボックス */
+.reservation-form-area .form-select[disabled] {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.form-full-width {
+    grid-column: 1 / 4;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* ボタン */
+.btn-submit {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background: #00BCD4;
+    color: white;
+}
+
+.btn-submit:hover {
+    background: #0097A7;
+}
+
+.btn-reset {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background: #dc3545;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #c82333;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 1200px) {
+    .reservation-container {
+        grid-template-columns: 25% 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .reservation-container {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-info-card {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .customer-form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-full-width {
+        grid-column: 1;
+    }
+
+    /* モバイルでコメント欄も1列に */
+    .customer-form-group[style*="grid-column: span 3"] {
+        grid-column: 1 !important;
+    }
 }

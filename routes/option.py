@@ -1,9 +1,28 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 from database.connection import get_store_id
 from database.db_access import (
-    get_all_options, get_option_by_id, add_option, update_option, 
+    get_all_options, get_option_by_id, add_option, update_option,
     delete_option, move_option_up, move_option_down, get_display_name
 )
+
+# ========================================
+# API: オプション一覧取得
+# ========================================
+def get_options_api(store):
+    """オプション一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        options_data = get_all_options()
+        # option_id, option_name, price を含むデータを返す
+        return jsonify([{
+            'option_id': opt['option_id'],
+            'option_name': opt['name'],  # データベースのカラム名は 'name'
+            'price': opt['price'] if opt.get('price') else 0
+        } for opt in options_data])
+    except Exception as e:
+        print(f"オプションAPI取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 def options(store):
     """オプション管理ページ"""

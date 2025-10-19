@@ -56,6 +56,7 @@
     background: #00BCD4;
     color: #fff;
     padding: 10px 20px;
+    border-radius: 4px;
 }
 
 .staff-shift-btn-prev:hover,
@@ -115,7 +116,7 @@
 .staff-shift-table-wrapper {
     overflow-x: auto;
     background: #fff;
-    border-radius: 0;
+    border-radius: 4px 4px 0 0;
 }
 
 /* テーブル */
@@ -139,6 +140,14 @@
     color: #fff;
     border: 1px solid #ddd;
     background: #5a5a5a;
+}
+
+.staff-shift-table thead tr:first-child th:first-child {
+    border-top-left-radius: 4px;
+}
+
+.staff-shift-table thead tr:first-child th:last-child {
+    border-top-right-radius: 4px;
 }
 
 .staff-shift-th-date {
@@ -207,7 +216,7 @@
 
 .staff-shift-type-badge {
     padding: 4px 12px;
-    border-radius: 0;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: bold;
     color: white;

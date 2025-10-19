@@ -115,7 +115,7 @@ function renderOptionItem(fieldKey, option, index, totalCount) {
                 <input type="checkbox"
                        class="customer-field-checkbox-input"
                        ${isVisible ? 'checked' : ''}
-                       onchange="toggleOptionVisibility(${option.id}, ${!isVisible})"
+                       onchange="toggleOptionVisibility(${option.id}, this.checked)"
                        title="チェックON=表示、OFF=非表示">
             </div>
 
@@ -358,7 +358,11 @@ function initCustomerFieldColorPicker() {
 // 表示/非表示切り替え
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async function toggleOptionVisibility(optionId, isHidden) {
+async function toggleOptionVisibility(optionId, isChecked) {
+    // チェックON = 表示 = is_hidden は false
+    // チェックOFF = 非表示 = is_hidden は true
+    const isHidden = !isChecked;
+
     try {
         const store = getStoreCode();
         const response = await fetch(`/${store}/api/customer_fields/option/${optionId}/visibility`, {
@@ -366,11 +370,11 @@ async function toggleOptionVisibility(optionId, isHidden) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_hidden: isHidden })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
-            showMessage(isHidden ? '非表示にしました' : '表示しました', 'success');
+            showMessage(isChecked ? '表示しました' : '非表示にしました', 'success');
             loadCustomerFieldSettings();
         } else {
             alert(result.message || '更新に失敗しました');

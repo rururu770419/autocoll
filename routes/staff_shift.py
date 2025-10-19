@@ -8,7 +8,7 @@ from database.shift_db import (
     get_date_memos_by_month,
     upsert_date_memo
 )
-from database.connection import get_db
+from database.connection import get_db, get_store_id
 from datetime import datetime
 import calendar
 
@@ -42,21 +42,23 @@ def get_staff_shift_data(store):
     try:
         year = request.args.get('year', type=int)
         month = request.args.get('month', type=int)
-        
+
         if not year or not month:
             today = datetime.now()
             year = today.year
             month = today.month
-        
+
+        store_id = get_store_id(store)
+
         # スタッフ一覧を取得（role='スタッフ' または 'ドライバー'）
         db = get_db()
         cursor = db.cursor()
         cursor.execute("""
             SELECT login_id, name
             FROM users
-            WHERE role IN ('スタッフ', 'ドライバー')
-            ORDER BY name
-        """)
+            WHERE role IN ('スタッフ', 'ドライバー') AND store_id = %s
+            ORDER BY COALESCE(sort_order, 0), name
+        """, (store_id,))
         staff_list_raw = cursor.fetchall()
         
         # スタッフリストをJSON serializable形式に変換

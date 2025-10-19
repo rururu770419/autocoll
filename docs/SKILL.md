@@ -105,7 +105,6 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 | **メインカラー** | `#00BCD4` |
 | **タイトル** | `margin: 0` |
 | **フォームカード背景** | `#f5f5f5` |
-| **テーブルヘッダー背景** | `#5a5a5a` |
 | **テーブルセルパディング** | `6px` |
 | **トグルスイッチ** | 丸型（`border-radius: 24px` / つまみ`50%`）、有効時`#00BCD4` |
 | **並び順ボタン** | `padding: 2px 6px`, `font-size: 14px`, 背景`#00BCD4` |
@@ -233,6 +232,7 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 - [ ] テーブルヘッダー`#5a5a5a`
 - [ ] トグルスイッチは丸型
 - [ ] 状態表示は丸いボタン型
+- [ ] **ボタンは角丸4px**（`border-radius: 4px`）
 - [ ] アイコンは`fa-pencil-alt`、`fa-trash-alt`
 - [ ] 並び順ボタンは`loop.first`/`loop.last`でdisabled
 
@@ -244,7 +244,6 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 
 ### CSS
 - [ ] クラス名を使用（タグ直接指定禁止）
-- [ ] 角丸は使わない（`border-radius: 0`）
 
 ---
 
@@ -315,24 +314,10 @@ cursor.execute("SELECT * FROM customers")  # 全店舗のデータが取れる
 cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 ```
 
----
 
-### ❌ 間違い6：デザインが既存ページと違う
 
-**必ず既存ページ（オプション管理など）と同じデザインにする**
 
-| 要素 | ❌ 間違い | ✅ 正しい |
-|------|-----------|----------|
-| トグルスイッチ | 角型 | 丸型（border-radius: 24px） |
-| テーブルヘッダー | `#495057` | `#5a5a5a` |
-| 編集アイコン | `fa-pen` | `fa-pencil-alt` |
-| 削除アイコン | `fa-trash` | `fa-trash-alt` |
-| 並び順ボタン | `padding: 6px 10px` | `padding: 4px 8px` |
-| 状態表示 | 色付きテキスト | 丸いボタン型、背景色付き |
-
----
-
-### ❌ 間違い7：並び順ボタンのdisabled処理を忘れる
+### ❌ 間違い6：並び順ボタンのdisabled処理を忘れる
 
 **一番上/下の項目でもボタンが押せてしまう**
 

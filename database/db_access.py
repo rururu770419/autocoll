@@ -14,10 +14,13 @@ from config import DATABASE_CONFIG
 
 # ❌ 削除: find_hotel_by_name_category_area は hotel_db.py にあるので重複
 
-def get_staff_list(db):
+def get_staff_list(db, store_id=None):
     """スタッフ一覧を取得（ダッシュボード用）"""
     cursor = db.cursor()
-    cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true ORDER BY name")
+    if store_id:
+        cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true AND store_id = %s ORDER BY name", (store_id,))
+    else:
+        cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true ORDER BY name")
     staff = cursor.fetchall()
     return staff
 

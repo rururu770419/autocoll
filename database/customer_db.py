@@ -179,11 +179,12 @@ def get_customer_by_id(store_code, customer_id):
     """顧客情報取得（ID指定）"""
     conn = get_db_connection(store_code)
     cur = conn.cursor(row_factory=dict_row)
-    
+
     cur.execute('''
-        SELECT 
+        SELECT
             customer_id, name, furigana, phone,
             birthday, age, postal_code, prefecture, city, address_detail,
+            car_info,
             recruitment_source, mypage_id, mypage_password_hash,
             current_points, member_type, status,
             web_member, comment, nickname,
@@ -191,11 +192,11 @@ def get_customer_by_id(store_code, customer_id):
         FROM customers
         WHERE customer_id = %s
     ''', (customer_id,))
-    
+
     customer = cur.fetchone()
     cur.close()
     conn.close()
-    
+
     return customer
 
 def update_customer(store_code, customer_id, customer_data):
@@ -213,8 +214,9 @@ def update_customer(store_code, customer_id, customer_data):
         cur.execute('''
             UPDATE customers SET
                 name = %s, furigana = %s, phone = %s,
-                birthday = %s, age = %s, postal_code = %s, 
+                birthday = %s, age = %s, postal_code = %s,
                 prefecture = %s, city = %s, address_detail = %s,
+                car_info = %s,
                 recruitment_source = %s, mypage_id = %s,
                 mypage_password_hash = %s,
                 current_points = %s, member_type = %s, status = %s,
@@ -231,9 +233,10 @@ def update_customer(store_code, customer_id, customer_data):
             customer_data.get('prefecture'),
             customer_data.get('city'),
             customer_data.get('address_detail'),
+            customer_data.get('car_info'),
             customer_data.get('recruitment_source'),
             customer_data.get('mypage_id'),
-            customer_data.get('mypage_password'),  # ← ここを修正
+            customer_data.get('mypage_password'),
             customer_data.get('current_points', 0),
             customer_data.get('member_type', '通常会員'),
             customer_data.get('status', '普通'),
@@ -249,6 +252,7 @@ def update_customer(store_code, customer_id, customer_data):
                 name = %s, furigana = %s, phone = %s,
                 birthday = %s, age = %s, postal_code = %s,
                 prefecture = %s, city = %s, address_detail = %s,
+                car_info = %s,
                 recruitment_source = %s, mypage_id = %s,
                 current_points = %s, member_type = %s, status = %s,
                 web_member = %s, comment = %s, nickname = %s,
@@ -264,6 +268,7 @@ def update_customer(store_code, customer_id, customer_data):
             customer_data.get('prefecture'),
             customer_data.get('city'),
             customer_data.get('address_detail'),
+            customer_data.get('car_info'),
             customer_data.get('recruitment_source'),
             customer_data.get('mypage_id'),
             customer_data.get('current_points', 0),

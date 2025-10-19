@@ -26,34 +26,43 @@ def get_db_connection(store_code):
     return conn
 
 # ==== ユーザー関連の関数 ====
-def find_user_by_login_id(db, login_id):
+def find_user_by_login_id(db, login_id, store_id=None):
     """ログインIDでユーザーを検索する"""
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
+    if store_id:
+        cursor.execute("SELECT * FROM users WHERE login_id = %s AND store_id = %s", (login_id, store_id))
+    else:
+        cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
     user = cursor.fetchone()
     return user if user else None
 
-def find_user_by_name(db, name):
+def find_user_by_name(db, name, store_id=None):
     """名前でユーザーを検索する"""
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE name = %s", (name,))
+    if store_id:
+        cursor.execute("SELECT * FROM users WHERE name = %s AND store_id = %s", (name, store_id))
+    else:
+        cursor.execute("SELECT * FROM users WHERE name = %s", (name,))
     user = cursor.fetchone()
     return user if user else None
 
-def get_all_users(db):
+def get_all_users(db, store_id=None):
     """データベースから全てのユーザー情報を取得します。"""
     cursor = db.cursor()
-    cursor.execute("SELECT name, login_id, role, color FROM users WHERE is_active = true ORDER BY name")
+    if store_id:
+        cursor.execute("SELECT name, login_id, role, color FROM users WHERE is_active = true AND store_id = %s ORDER BY name", (store_id,))
+    else:
+        cursor.execute("SELECT name, login_id, role, color FROM users WHERE is_active = true ORDER BY name")
     users = cursor.fetchall()
     return users
 
-def register_user(db, name, login_id, password, role, color):
+def register_user(db, name, login_id, password, role, color, store_id):
     """新しいユーザーをデータベースに登録する"""
     try:
         cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO users (name, login_id, password, role, color) VALUES (%s, %s, %s, %s, %s)",
-            (name, login_id, password, role, color)
+            "INSERT INTO users (name, login_id, password, role, color, store_id) VALUES (%s, %s, %s, %s, %s, %s)",
+            (name, login_id, password, role, color, store_id)
         )
         db.commit()
         return True
@@ -63,10 +72,13 @@ def register_user(db, name, login_id, password, role, color):
         print(f"ユーザー登録エラー: {e}")
         return False
 
-def get_staff_list(db):
+def get_staff_list(db, store_id=None):
     """スタッフ一覧を取得（ダッシュボード用）"""
     cursor = db.cursor()
-    cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true ORDER BY name")
+    if store_id:
+        cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true AND store_id = %s ORDER BY name", (store_id,))
+    else:
+        cursor.execute("SELECT login_id, name, color FROM users WHERE is_active = true ORDER BY name")
     staff = cursor.fetchall()
     return staff
 
@@ -102,10 +114,13 @@ def delete_user(db, user_id):
         print(f"ユーザー削除エラー: {e}")
         return False
 
-def find_user_by_id(db, user_id):
+def find_user_by_id(db, user_id, store_id=None):
     """IDでユーザーを検索"""
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+    if store_id:
+        cursor.execute("SELECT * FROM users WHERE user_id = %s AND store_id = %s", (user_id, store_id))
+    else:
+        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
     user = cursor.fetchone()
     return user if user else None
 
@@ -120,26 +135,42 @@ def verify_user_password(db, login_id, password):
     
     return False
 
-def get_active_users(db):
+def get_active_users(db, store_id=None):
     """アクティブなユーザー一覧を取得"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT user_id, name, login_id, role, color, created_at, updated_at 
-        FROM users 
-        WHERE is_active = true 
-        ORDER BY name
-    """)
+    if store_id:
+        cursor.execute("""
+            SELECT user_id, name, login_id, role, color, created_at, updated_at
+            FROM users
+            WHERE is_active = true AND store_id = %s
+            ORDER BY name
+        """, (store_id,))
+    else:
+        cursor.execute("""
+            SELECT user_id, name, login_id, role, color, created_at, updated_at
+            FROM users
+            WHERE is_active = true
+            ORDER BY name
+        """)
     return cursor.fetchall()
 
-def get_users_by_role(db, role):
+def get_users_by_role(db, role, store_id=None):
     """役割別ユーザー一覧を取得"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT user_id, name, login_id, role, color 
-        FROM users 
-        WHERE role = %s AND is_active = true 
-        ORDER BY name
-    """, (role,))
+    if store_id:
+        cursor.execute("""
+            SELECT user_id, name, login_id, role, color
+            FROM users
+            WHERE role = %s AND is_active = true AND store_id = %s
+            ORDER BY name
+        """, (role, store_id))
+    else:
+        cursor.execute("""
+            SELECT user_id, name, login_id, role, color
+            FROM users
+            WHERE role = %s AND is_active = true
+            ORDER BY name
+        """, (role,))
     return cursor.fetchall()
 
 def update_user_password(db, user_id, new_password):

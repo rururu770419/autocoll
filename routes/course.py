@@ -2,10 +2,34 @@ from flask import render_template, request, redirect, url_for, jsonify
 from database.db_access import (
     get_display_name, get_db,
     get_all_courses, get_course_by_id, add_course, update_course, delete_course as db_delete_course,
-    move_course_up as db_move_course_up, move_course_down as db_move_course_down, 
+    move_course_up as db_move_course_up, move_course_down as db_move_course_down,
     get_all_course_categories, add_course_category, update_course_category, delete_course_category,
     move_course_category_up as db_move_category_up, move_course_category_down as db_move_category_down
 )
+from database.course_db import get_all_courses as get_courses_from_db
+
+# ========================================
+# API: コース一覧取得
+# ========================================
+def get_courses_api(store):
+    """コース一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        db = get_db()
+        courses = get_courses_from_db(db)
+        db.close()
+
+        # course_id, course_name(name), price, time_minutes を含むデータを返す
+        return jsonify([{
+            'course_id': course['course_id'],
+            'course_name': course['name'],  # カラム名は 'name'
+            'price': course['price'] if course.get('price') else 0,
+            'duration_minutes': course.get('time_minutes', 0)  # カラム名は 'time_minutes'
+        } for course in courses])
+    except Exception as e:
+        print(f"コース一覧API取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 # ========================================
 # コース管理

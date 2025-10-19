@@ -2,7 +2,7 @@ import re
 import os
 import json
 from datetime import datetime
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from werkzeug.utils import secure_filename
 from flask import render_template, request, redirect, url_for
 from database.connection import get_db, get_display_name, get_store_id
@@ -89,14 +89,32 @@ def cast_management(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
+    store_id = get_store_id(store)
     db = get_db()
-    casts = get_all_casts_with_details(db)
-    
-    return render_template('cast_management.html', 
-                         store=store, 
-                         display_name=display_name, 
+    casts = get_all_casts_with_details(db, store_id)
+
+    return render_template('cast_management.html',
+                         store=store,
+                         display_name=display_name,
                          casts=casts)
+
+# ========================================
+# API: キャスト一覧取得
+# ========================================
+def get_casts_api(store):
+    """キャスト一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        store_id = get_store_id(store)
+        db = get_db()
+        casts = get_all_casts(db, store_id)
+        # cast_id, name を含むデータを返す
+        return jsonify([{
+            'cast_id': cast['cast_id'],
+            'name': cast['name']
+        } for cast in casts])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def register_cast(store):
     """キャスト新規登録ページ（フル機能版 + コースカテゴリ対応）"""

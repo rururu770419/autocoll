@@ -3,18 +3,19 @@ from flask import Blueprint
 # 各機能モジュールからインポート
 from .auth import index, login, logout
 # スタッフ関連に新しい関数を追加（get_line_bot_idを追加）
-from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id
+from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id, staff_sort, staff_notification, get_staff_api
 # キャスト関連（save_cast_ng_settingsを削除）
-from .cast import register_cast, cast_management
+from .cast import register_cast, cast_management, get_casts_api
 from .cast import edit_cast, delete_cast
 # コース関連（move_course_up, move_course_down + カテゴリ管理関数を追加）
 from .course import (
-    course_registration, 
-    edit_course, 
-    delete_course, 
-    move_course_up, 
+    course_registration,
+    edit_course,
+    delete_course,
+    move_course_up,
     move_course_down,
     update_course_endpoint,  # コース更新API
+    get_courses_api,  # コース一覧API（予約登録画面用）
     # カテゴリ管理関数
     course_category_management_view,
     course_category_registration_view,
@@ -69,7 +70,7 @@ from .dashboard import (
     get_course_data        # ★ 追加
 )
 from .money import money_management, delete_money_record, register_change, check_change_registration
-from .option import options, register_option, edit_option, update_option_route, delete_option_route, move_option_up_route, move_option_down_route
+from .option import options, register_option, edit_option, update_option_route, delete_option_route, move_option_up_route, move_option_down_route, get_options_api
 # 延長管理を追加
 from .extension import (
     extension_management,
@@ -77,7 +78,8 @@ from .extension import (
     update_extension_route,
     delete_extension_route,
     move_extension_up_route,
-    move_extension_down_route
+    move_extension_down_route,
+    get_extensions_api  # 延長一覧API（予約登録画面用）
 )
 # 指名管理を追加
 from .nominate import (
@@ -86,7 +88,8 @@ from .nominate import (
     update_nomination_type_route,
     delete_nomination_type_route,
     move_nomination_type_up_route,
-    move_nomination_type_down_route
+    move_nomination_type_down_route,
+    get_nomination_types_api  # 指名種類一覧API（予約登録画面用）
 )
 # 割引管理を追加
 from .discount import (
@@ -152,12 +155,18 @@ main_routes.add_url_rule('/<store>/staff/save', 'save_staff', save_staff, method
 main_routes.add_url_rule('/<store>/staff/edit/<int:user_id>', 'edit_staff_by_id', edit_staff, methods=['GET'])
 main_routes.add_url_rule('/<store>/staff/delete/<int:user_id>', 'delete_staff_by_id', delete_staff, methods=['POST'])
 main_routes.add_url_rule('/<store>/api/line/info', 'get_line_bot_info', get_line_bot_info, methods=['GET'])
+main_routes.add_url_rule('/<store>/staff/sort', 'staff_sort', staff_sort, methods=['POST'])
+main_routes.add_url_rule('/<store>/staff/notification', 'staff_notification', staff_notification, methods=['POST'])
+# API: スタッフ一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/staff/api', 'get_staff_api', get_staff_api, methods=['GET'])
 
 # キャスト管理
 main_routes.add_url_rule('/<store>/cast_management', 'cast_management', cast_management, methods=['GET'])
 main_routes.add_url_rule('/<store>/register_cast', 'register_cast', register_cast, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/edit_cast/<int:cast_id>', 'edit_cast', edit_cast, methods=['GET', 'POST'])
 main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', delete_cast, methods=['GET'])
+# API: キャスト一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/casts/api', 'get_casts_api', get_casts_api, methods=['GET'])
 
 # コース管理（既存のルート + 並び順変更を追加）
 main_routes.add_url_rule('/<store>/course_registration', 'course_registration', course_registration, methods=['GET', 'POST'])
@@ -167,6 +176,8 @@ main_routes.add_url_rule('/<store>/move_course_up/<int:course_id>', 'move_course
 main_routes.add_url_rule('/<store>/move_course_down/<int:course_id>', 'move_course_down', move_course_down, methods=['GET'])
 # API: コース更新
 main_routes.add_url_rule('/<store>/api/course/update', 'update_course_endpoint', update_course_endpoint, methods=['POST'])
+# API: コース一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/courses/api', 'get_courses_api', get_courses_api, methods=['GET'])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # コースカテゴリ管理（新規追加）
@@ -266,6 +277,8 @@ main_routes.add_url_rule('/<store>/options/<int:option_id>/update', 'update_opti
 main_routes.add_url_rule('/<store>/options/<int:option_id>/delete', 'delete_option_route', delete_option_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_up', 'move_option_up_route', move_option_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/options/<int:option_id>/move_down', 'move_option_down_route', move_option_down_route, methods=['GET'])
+# API: オプション一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/options/api', 'get_options_api', get_options_api, methods=['GET'])
 
 # 延長管理
 main_routes.add_url_rule('/<store>/extension', 'extension_management', extension_management, methods=['GET'])
@@ -274,6 +287,8 @@ main_routes.add_url_rule('/<store>/extension/<int:extension_id>/update', 'update
 main_routes.add_url_rule('/<store>/extension/<int:extension_id>/delete', 'delete_extension', delete_extension_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/extension/<int:extension_id>/move_up', 'move_extension_up', move_extension_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/extension/<int:extension_id>/move_down', 'move_extension_down', move_extension_down_route, methods=['GET'])
+# API: 延長一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/extensions/api', 'get_extensions_api', get_extensions_api, methods=['GET'])
 
 # 指名管理
 main_routes.add_url_rule('/<store>/nominate', 'nominate_management', nominate_management, methods=['GET'])
@@ -282,6 +297,8 @@ main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/update', 'u
 main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/delete', 'delete_nomination_type', delete_nomination_type_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/move_up', 'move_nomination_type_up', move_nomination_type_up_route, methods=['GET'])
 main_routes.add_url_rule('/<store>/nominate/<int:nomination_type_id>/move_down', 'move_nomination_type_down', move_nomination_type_down_route, methods=['GET'])
+# API: 指名種類一覧取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/nomination-types/api', 'get_nomination_types_api', get_nomination_types_api, methods=['GET'])
 
 # 割引管理（画面）
 main_routes.add_url_rule('/<store>/discount_management', 'discount_management', discount_management, methods=['GET'])

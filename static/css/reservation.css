@@ -1,0 +1,586 @@
+/* ========================================
+   予約登録ページCSS
+======================================== */
+
+/* ========================================
+   全体レイアウト
+======================================== */
+.reservation-container {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    gap: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ========================================
+   顧客情報エリア（第1列）
+======================================== */
+.customer-info-area {
+    grid-column: 1;
+}
+
+.customer-info-card {
+    background: #00BCD4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 顧客情報コンテンツ */
+.customer-info-content {
+    margin-bottom: 15px;
+}
+
+.customer-number {
+    font-size: 0.9em;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.customer-name {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 8px 0;
+    color: white;
+}
+
+.customer-phone {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 15px;
+}
+
+/* 統計情報（1行表示） */
+.customer-stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.customer-stat-line:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: white;
+    font-weight: normal;
+}
+
+.stat-value {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: white;
+}
+
+/* 縦並び表示用のスタイル */
+.customer-stat-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.customer-stat-vertical .stat-label {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.customer-stat-vertical .stat-value {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: white;
+}
+
+/* 詳細ボタン */
+.customer-detail-btn {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    color: #00BCD4;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s;
+    font-size: 1em;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.customer-detail-btn:hover {
+    background: #f0f0f0;
+    color: #00BCD4;
+}
+
+/* 顧客検索ボタン */
+.customer-search-btn {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    color: #00BCD4;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    font-size: 1em;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.customer-search-btn:hover {
+    background: #f0f0f0;
+    color: #00BCD4;
+}
+
+/* ========================================
+   フォームエリア（第2-4列）
+======================================== */
+.reservation-form-area {
+    grid-column: 2;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#reservation_form,
+#reservation_edit_form {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+/* 列 */
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* 全幅要素（列2-4をまたぐ） */
+.form-full-width {
+    grid-column: 1 / 4;
+}
+
+/* ========================================
+   フォームグループ
+======================================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: #00BCD4;
+}
+
+.form-select[disabled] {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ホテル名・部屋番号の横並びレイアウト */
+.form-group-hotel-room {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.hotel-select {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+}
+
+.room-number-input {
+    width: 70px;
+    flex-shrink: 0;
+}
+
+/* 予約日の年月日セレクトボックス */
+.date-select-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.date-select {
+    width: auto;
+    min-width: 70px;
+}
+
+.date-separator {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0 2px;
+}
+
+/* 予約時間の時分セレクトボックス */
+.time-select-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.time-select {
+    width: auto;
+    min-width: 65px;
+}
+
+.time-separator {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #666;
+    margin: 0 2px;
+}
+
+/* 料金総額の背景色 */
+#total_amount {
+    background-color: #FFEEFF;
+}
+
+/* ========================================
+   カスタムセレクトボックス
+======================================== */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+/* SELECTボックスの見た目（他のSELECTに合わせる） */
+.select-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    min-height: 38px;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out;
+    font-size: 1em;
+}
+
+.select-display:hover {
+    border-color: #00BCD4;
+}
+
+.select-display:focus {
+    border-color: #00BCD4;
+    outline: 0;
+}
+
+.select-placeholder {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1em;
+    color: #333;
+}
+
+.select-arrow {
+    margin-left: 10px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: #333;
+}
+
+/* ドロップダウンエリア */
+.options-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    z-index: 9999;
+    display: flex !important;
+    flex-direction: column;
+    gap: 0;
+}
+
+.options-dropdown.collapsed {
+    display: none !important;
+}
+
+/* オプションアイテム */
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.option-item:last-child {
+    border-bottom: none;
+}
+
+.option-item:hover {
+    background-color: #f8f9fa;
+}
+
+.option-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: #00BCD4;
+    margin: 0;
+}
+
+.option-name {
+    flex: 1;
+    font-size: 0.95em;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.option-price {
+    margin-left: auto;
+    font-size: 0.9em;
+    color: #00BCD4;
+    font-weight: bold;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   PT入力エリア
+======================================== */
+.pt-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.pt-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pt-input-group label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+}
+
+.pt-input {
+    width: 100px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: right;
+}
+
+.pt-input:focus {
+    outline: none;
+    border-color: #00BCD4;
+}
+
+.pt-unit {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.pt-result {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pt-result label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+}
+
+.pt-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+.pt-value.pt-negative {
+    color: red;
+}
+
+/* ========================================
+   ボタン
+======================================== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-reset,
+.btn-cancel,
+.btn-delete,
+.btn-submit {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-reset {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.btn-reset:hover {
+    background: #e0e0e0;
+}
+
+.btn-cancel {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #f57c00;
+}
+
+.btn-delete {
+    background: #f44336;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #d32f2f;
+}
+
+.btn-submit {
+    background: #00BCD4;
+    color: white;
+}
+
+.btn-submit:hover {
+    background: #0097A7;
+}
+
+/* ========================================
+   レスポンシブ対応
+======================================== */
+@media (max-width: 1200px) {
+    .reservation-container {
+        grid-template-columns: 25% 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .reservation-container {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-info-card {
+        position: static;
+    }
+
+    .customer-info-area {
+        grid-column: 1;
+    }
+
+    .reservation-form-area {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    #reservation_form,
+    #reservation_edit_form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-column {
+        grid-column: 1;
+    }
+
+    .form-full-width {
+        grid-column: 1;
+    }
+
+    .pt-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pt-result {
+        margin-left: 0;
+    }
+
+    .pt-input {
+        width: 100%;
+    }
+}

@@ -135,16 +135,17 @@ def check_and_send_notifications():
         
         for record in staff_records:
             print(f"  → スタッフへのLINE通知: {record['staff_name']}さん (LINE ID: {record['staff_line_id']})")
-            
+
             # 退室時刻をフォーマット
             exit_time_str = record['exit_time'].strftime('%H:%M')
-            
+
             # LINE通知
             result = send_pickup_reminder_to_staff(
                 staff_name=record['staff_name'],
                 cast_name=record['cast_name'],
                 exit_time_str=exit_time_str,
-                hotel_name=record['hotel_name'] or '未設定'
+                hotel_name=record['hotel_name'] or '未設定',
+                line_user_id=record['staff_line_id']
             )
             
             # 送信フラグを更新

@@ -715,3 +715,142 @@ def register_reservation_settings_routes(app):
                 'success': False,
                 'message': '年齢NGの削除に失敗しました'
             }), 500
+
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 待ち合わせ場所管理
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    @app.route('/<store>/reservation-settings/meeting_places', endpoint='rs_get_meeting_places')
+    @admin_required
+    def get_meeting_places(store):
+        """待ち合わせ場所一覧を取得"""
+        try:
+            from database.meeting_places_db import get_all_meeting_places
+
+            store_id = get_store_id_from_code(store)
+            places = get_all_meeting_places(store_id)
+
+            return jsonify({
+                'success': True,
+                'data': places
+            })
+
+        except Exception as e:
+            print(f"Error in get_meeting_places: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': '待ち合わせ場所の取得に失敗しました'
+            }), 500
+
+
+    @app.route('/<store>/reservation-settings/meeting_places', methods=['POST'], endpoint='rs_create_meeting_place')
+    @admin_required
+    def create_meeting_place_route(store):
+        """待ち合わせ場所を新規作成"""
+        try:
+            from database.meeting_places_db import add_meeting_place
+
+            data = request.get_json()
+            place_name = data.get('place_name')
+
+            if not place_name:
+                return jsonify({
+                    'success': False,
+                    'message': '場所名を入力してください'
+                }), 400
+
+            store_id = get_store_id_from_code(store)
+            place_id = add_meeting_place(store_id, place_name, True)
+
+            if place_id:
+                return jsonify({
+                    'success': True,
+                    'message': '待ち合わせ場所を追加しました',
+                    'place_id': place_id
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '待ち合わせ場所の追加に失敗しました'
+                }), 500
+
+        except Exception as e:
+            print(f"Error in create_meeting_place: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': '待ち合わせ場所の追加に失敗しました'
+            }), 500
+
+
+    @app.route('/<store>/reservation-settings/meeting_places/<int:place_id>', methods=['PUT'], endpoint='rs_update_meeting_place')
+    @admin_required
+    def update_meeting_place_route(store, place_id):
+        """待ち合わせ場所を更新"""
+        try:
+            from database.meeting_places_db import update_meeting_place
+
+            data = request.get_json()
+            place_name = data.get('place_name')
+
+            if not place_name:
+                return jsonify({
+                    'success': False,
+                    'message': '場所名を入力してください'
+                }), 400
+
+            success = update_meeting_place(place_id, place_name=place_name)
+
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '待ち合わせ場所を更新しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '待ち合わせ場所の更新に失敗しました'
+                }), 500
+
+        except Exception as e:
+            print(f"Error in update_meeting_place: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': '待ち合わせ場所の更新に失敗しました'
+            }), 500
+
+
+    @app.route('/<store>/reservation-settings/meeting_places/<int:place_id>', methods=['DELETE'], endpoint='rs_delete_meeting_place')
+    @admin_required
+    def delete_meeting_place_route(store, place_id):
+        """待ち合わせ場所を論理削除"""
+        try:
+            from database.meeting_places_db import delete_meeting_place
+
+            success = delete_meeting_place(place_id)
+
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': '待ち合わせ場所を削除しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': '待ち合わせ場所の削除に失敗しました'
+                }), 500
+
+        except Exception as e:
+            print(f"Error in delete_meeting_place: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': '待ち合わせ場所の削除に失敗しました'
+            }), 500

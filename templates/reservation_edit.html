@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reservation.css') }}">
+<style>
+/* テスト用：ドロップダウンを強制表示 */
+.options-dropdown {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    top: calc(100% + 2px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    background: white !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15) !important;
+    z-index: 9999 !important;
+}
+
+.options-dropdown.collapsed {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
+{% block title %}予約編集 | {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="reservation-container">
+    <!-- ========== 第1列：顧客情報表示エリア ========== -->
+    <div class="customer-info-area">
+        <div class="customer-info-card">
+            <!-- 顧客情報 -->
+            <div class="customer-info-content">
+                <p class="customer-number">顧客番号: {{ customer.get('customer_number', '---') }}</p>
+                <h2 class="customer-name">{{ customer.get('name', '名前未登録') }} 様</h2>
+                <p class="customer-phone"><i class="fas fa-phone"></i> {{ customer.get('phone', '未登録') }}</p>
+
+                <!-- 来店回数 -->
+                <div class="customer-stat-line">
+                    <span class="stat-label">来店回数:</span>
+                    <span class="stat-value">{{ customer.get('visit_count', 0) }} times</span>
+                </div>
+
+                <!-- 現在のPT -->
+                <div class="customer-stat-line">
+                    <span class="stat-label">現在のPT:</span>
+                    <span class="stat-value" id="current_pt_display">{{ "{:,}".format(customer.get('current_points', 0) or 0) }} PT</span>
+                </div>
+
+                <!-- 最終キャスト -->
+                <div class="customer-stat-line">
+                    <span class="stat-label">最終キャスト:</span>
+                    <span class="stat-value">{{ customer.get('last_cast_name', '未設定') }}</span>
+                </div>
+
+                <!-- 最終来店日時（縦並び） -->
+                <div class="customer-stat-line customer-stat-vertical">
+                    <span class="stat-label">最終来店日時</span>
+                    <span class="stat-value">
+                        {% if customer.get('last_visit_datetime') %}
+                            {{ customer.get('last_visit_datetime').strftime('%Y年%m月%d日 %H:%M') }}～
+                        {% else %}
+                            未来店
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- 最終利用ホテル（縦並び） -->
+                <div class="customer-stat-line customer-stat-vertical">
+                    <span class="stat-label">最終利用ホテル</span>
+                    <span class="stat-value">{{ customer.get('last_hotel_name', '未設定') }}</span>
+                </div>
+            </div>
+
+            <!-- 詳細ボタン -->
+            <a href="{{ url_for('main_routes.edit_customer', store=store, customer_id=customer.get('customer_id', '')) }}"
+               class="customer-detail-btn">
+                詳細
+            </a>
+        </div>
+
+        <!-- 予約一覧に戻るボタン -->
+        <a href="{{ url_for('reservation.reservations_list', store=store) }}"
+           class="customer-search-btn">
+            予約一覧に戻る
+        </a>
+    </div>
+
+    <!-- ========== 第2-4列：予約入力フォームエリア ========== -->
+    <div class="reservation-form-area">
+        <form id="reservation_edit_form">
+            <!-- 隠しフィールド -->
+            <input type="hidden" id="reservation_id" name="reservation_id" value="{{ reservation.get('reservation_id', '') }}">
+            <input type="hidden" id="customer_id" name="customer_id" value="{{ customer.get('customer_id', '') }}">
+
+            <!-- ========== 1行目 ========== -->
+            <!-- 成約種別 -->
+            <div class="form-group">
+                <label>成約種別</label>
+                <select id="contract_type" name="contract_type" class="form-select" onchange="toggleCancellation()">
+                    <option value="contract">成約</option>
+                    <option value="cancel">キャンセル</option>
+                </select>
+            </div>
+
+            <!-- 予約日 -->
+            <div class="form-group">
+                <label>予約日</label>
+                <div class="date-select-group">
+                    <select id="year" class="form-select date-select">
+                        <!-- JavaScriptで生成 -->
+                    </select>
+                    <span class="date-separator">年</span>
+                    <select id="month" class="form-select date-select">
+                        <!-- JavaScriptで生成 -->
+                    </select>
+                    <span class="date-separator">月</span>
+                    <select id="day" class="form-select date-select">
+                        <!-- JavaScriptで生成 -->
+                    </select>
+                    <span class="date-separator">日</span>
+                </div>
+                <!-- FormData送信用のhiddenフィールド -->
+                <input type="hidden" id="reservation_date" name="reservation_date">
+            </div>
+
+            <!-- 予約時間 -->
+            <div class="form-group">
+                <label>予約時間</label>
+                <div class="time-select-group">
+                    <select id="hour" class="form-select time-select">
+                        <!-- JavaScriptで生成 -->
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select id="minute" class="form-select time-select">
+                        <!-- JavaScriptで生成 -->
+                    </select>
+                </div>
+                <!-- FormData送信用のhiddenフィールド -->
+                <input type="hidden" id="reservation_time" name="reservation_time">
+            </div>
+
+            <!-- ========== 2行目 ========== -->
+            <!-- キャスト -->
+            <div class="form-group">
+                <label>キャスト</label>
+                <select id="cast_id" name="cast_id" class="form-select">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 予約方法 -->
+            <div class="form-group">
+                <label>予約方法</label>
+                <select id="reservation_method" name="reservation_method" class="form-select">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 指名種類 -->
+            <div class="form-group">
+                <label>指名種類</label>
+                <select id="nomination_type" name="nomination_type" class="form-select" onchange="calculateTotal()">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- ========== 3行目 ========== -->
+            <!-- コース -->
+            <div class="form-group">
+                <label>コース</label>
+                <select id="course_id" name="course_id" class="form-select" onchange="calculateTotal()">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- オプション（チェックボックス） -->
+            <div class="form-group" style="overflow: visible;">
+                <label>オプション</label>
+                <div class="custom-select-wrapper">
+                    <div class="custom-select" id="options-select">
+                        <div class="select-display" id="options_select_display">
+                            <span class="select-placeholder">オプションを選択してください</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="options-dropdown collapsed" id="options_container">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 延長 -->
+            <div class="form-group">
+                <label>延長</label>
+                <select id="extension" name="extension" class="form-select" onchange="calculateTotal()">
+                    <option value="">なし</option>
+                </select>
+            </div>
+
+            <!-- ========== 4行目 ========== -->
+            <!-- 待ち合わせ場所 -->
+            <div class="form-group">
+                <label>待ち合わせ場所</label>
+                <select id="meeting_place" name="meeting_place" class="form-select">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 交通費 -->
+            <div class="form-group">
+                <label>交通費</label>
+                <select id="transportation_fee" name="transportation_fee" class="form-select" onchange="calculateTotal()">
+                    <option value="0">なし</option>
+                </select>
+            </div>
+
+            <!-- ホテル名+部屋番号（横並び） -->
+            <div class="form-group">
+                <label>ホテル名・部屋番号</label>
+                <div class="form-group-hotel-room">
+                    <select id="hotel_id" name="hotel_id" class="form-select hotel-select">
+                        <option value="">選択してください</option>
+                    </select>
+                    <input type="text" id="room_number" name="room_number" class="form-input room-number-input" placeholder="部屋番号">
+                </div>
+            </div>
+
+            <!-- ========== 5行目 ========== -->
+            <!-- 支払い方法 -->
+            <div class="form-group">
+                <label>支払い方法</label>
+                <select id="payment_method" name="payment_method" class="form-select">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 担当スタッフ -->
+            <div class="form-group">
+                <label>担当スタッフ</label>
+                <select id="staff_id" name="staff_id" class="form-select">
+                </select>
+            </div>
+
+            <!-- キャンセル理由 -->
+            <div class="form-group">
+                <label>キャンセル理由</label>
+                <select id="cancellation_reason" name="cancellation_reason" class="form-select" disabled>
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- ========== 6行目 ========== -->
+            <!-- 割引 -->
+            <div class="form-group">
+                <label>割引</label>
+                <select id="discount_id" name="discount_id" class="form-select" onchange="calculateTotal()">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- PT関連（2-3列、2列分） -->
+            <div class="form-group" style="grid-column: span 2;">
+                <div class="pt-row">
+                    <div class="pt-input-group">
+                        <label>PT追加</label>
+                        <input type="number" id="pt_add" name="pt_add" class="pt-input" placeholder="0" min="0" oninput="calculatePT()">
+                        <span class="pt-unit">PT</span>
+                    </div>
+
+                    <div class="pt-input-group">
+                        <label>PT消費</label>
+                        <input type="number" id="pt_consume" name="pt_consume" class="pt-input" placeholder="0" min="0" oninput="calculatePT()">
+                        <span class="pt-unit">PT</span>
+                    </div>
+
+                    <div class="pt-result">
+                        <label>残PT</label>
+                        <span id="remaining_pt" class="pt-value">1,500</span>
+                        <span class="pt-unit">PT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== 7行目 ========== -->
+            <!-- 料金総額 -->
+            <div class="form-group">
+                <label>料金総額</label>
+                <input type="text" id="total_amount" name="total_amount" class="form-input" readonly value="0円">
+            </div>
+
+            <!-- ========== 8行目: コメント（列1-3全幅） ========== -->
+            <div class="form-full-width">
+                <div class="form-group">
+                    <label>コメント</label>
+                    <textarea id="comment" name="comment" class="form-textarea" rows="3" placeholder="予約に関するコメントを入力"></textarea>
+                </div>
+            </div>
+
+            <!-- ========== 送信ボタン（列1-3全幅） ========== -->
+            <div class="form-full-width form-actions">
+                <button type="button" class="btn-reset" onclick="window.location.href='{{ url_for('reservation.reservations_list', store=store) }}'">一覧に戻る</button>
+                <button type="submit" class="btn-submit">予約更新</button>
+                <button type="button" class="btn-delete" onclick="deleteReservation()">削除</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 予約データをJavaScriptに渡す
+window.reservationData = {{ reservation_json|safe }};
+// 顧客の現在のPTを初期値として設定
+// ログイン中のスタッフIDを設定
+window.addEventListener('DOMContentLoaded', function() {
+    currentCustomerPT = {{ customer.get('current_points', 0) or 0 }};
+    window.currentStaffId = {{ session.get('user_id', 'null') }};
+    calculatePT(); // PT表示を初期化
+});
+</script>
+<script src="{{ url_for('static', filename='js/reservation_edit.js') }}"></script>
+{% endblock %}

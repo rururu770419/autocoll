@@ -1,5 +1,6 @@
 from flask import render_template, request
 from datetime import datetime
+from database.connection import get_store_id
 from database.db_access import (
     get_display_name, get_db, get_all_courses, get_all_casts,
     get_all_hotels_with_details
@@ -10,14 +11,15 @@ def pickup_register(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
+    store_id = get_store_id(store)
     db = get_db(store)
     if db is None:
         return "店舗が見つかりません。", 404
 
     # データ取得
     courses = get_all_courses(db)
-    casts = get_all_casts(db)
+    casts = get_all_casts(db, store_id)
     hotels = get_all_hotels_with_details(db)
     
     if request.method == "GET":

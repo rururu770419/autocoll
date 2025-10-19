@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import render_template, request, redirect, url_for, session, jsonify
+from database.connection import get_store_id
 from database.db_access import (
     get_display_name, get_db, get_all_casts, get_all_users,
     register_money_record, get_money_records_by_date, delete_money_record_by_id,
@@ -10,7 +11,8 @@ def money_management(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
+    store_id = get_store_id(store)
     db = get_db(store)
     if db is None:
         return "店舗が見つかりません。", 404
@@ -33,8 +35,8 @@ def money_management(store):
             staff_id = request.form.get("staff_id")
 
             if not all([cast_id, exit_time, received_amount, change_amount, payment_method, staff_id]):
-                casts = get_all_casts(db)
-                staff = get_all_users(db)
+                casts = get_all_casts(db, store_id)
+                staff = get_all_users(db, store_id)
                 records = get_money_records_by_date(db, selected_date)
                 cast_totals = {}
                 current_staff_id = session.get('login_id', '')
@@ -52,8 +54,8 @@ def money_management(store):
                 change_amount = int(change_amount)
                 cast_id = int(cast_id)
             except ValueError:
-                casts = get_all_casts(db)
-                staff = get_all_users(db)
+                casts = get_all_casts(db, store_id)
+                staff = get_all_users(db, store_id)
                 records = get_money_records_by_date(db, selected_date)
                 cast_totals = {}
                 current_staff_id = session.get('login_id', '')
@@ -74,8 +76,8 @@ def money_management(store):
             if success:
                 return redirect(url_for('main_routes.money_management', store=store, date=selected_date, success="記録を追加しました。"))
             else:
-                casts = get_all_casts(db)
-                staff = get_all_users(db)
+                casts = get_all_casts(db, store_id)
+                staff = get_all_users(db, store_id)
                 records = get_money_records_by_date(db, selected_date)
                 cast_totals = create_cast_totals(records)
                 current_staff_id = session.get('login_id', '')
@@ -89,8 +91,8 @@ def money_management(store):
                 )
 
         # GETリクエストの場合
-        casts = get_all_casts(db)
-        staff = get_all_users(db)
+        casts = get_all_casts(db, store_id)
+        staff = get_all_users(db, store_id)
         records = get_money_records_by_date(db, selected_date)
         
         # キャスト別集計を作成

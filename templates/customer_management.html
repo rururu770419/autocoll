@@ -20,15 +20,16 @@
     <!-- 検索エリア（統合検索） -->
     <div class="customer-search-area">
         <div class="customer-search-wrapper">
-            <input type="text" id="searchKeyword" class="customer-search-input" 
+            <input type="text" id="searchKeyword" class="customer-search-input"
                    placeholder="フリガナまたは電話番号で検索">
             <button type="button" class="customer-search-btn" onclick="searchCustomers()">検索</button>
         </div>
-    </div>
 
-    <a href="{{ url_for('main_routes.customer_registration', store=store) }}" class="customer-btn-register">
-        <i class="fas fa-plus"></i> 新規登録
-    </a>
+        <!-- 新規登録ボタンを右端に配置 -->
+        <a href="{{ url_for('main_routes.customer_registration', store=store) }}" class="customer-btn-register">
+            <i class="fas fa-plus"></i> 新規登録
+        </a>
+    </div>
 
     <!-- メッセージエリア -->
     <div id="messageArea"></div>

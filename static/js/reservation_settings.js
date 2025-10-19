@@ -26,6 +26,7 @@
         
         // データを読み込み
         loadCancellationReasons();
+        loadMeetingPlaces();
         loadReservationMethods();
         loadCardFeeRate();
         loadNgAreas();
@@ -45,7 +46,13 @@
         if (addCancellationReasonBtn) {
             addCancellationReasonBtn.addEventListener('click', showAddCancellationReasonModal);
         }
-        
+
+        // 待ち合わせ場所追加ボタン
+        const addMeetingPlaceBtn = document.getElementById('add-meeting-place-btn');
+        if (addMeetingPlaceBtn) {
+            addMeetingPlaceBtn.addEventListener('click', showAddMeetingPlaceModal);
+        }
+
         // 予約方法追加ボタン
         const addReservationMethodBtn = document.getElementById('add-reservation-method-btn');
         if (addReservationMethodBtn) {
@@ -233,7 +240,139 @@
             showMessage('削除中にエラーが発生しました', 'error');
         });
     };
-    
+
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 待ち合わせ場所管理
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    function loadMeetingPlaces() {
+        fetch(`/${storeId}/reservation-settings/meeting_places`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayMeetingPlaces(data.data);
+                } else {
+                    console.error('Failed to load meeting places');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading meeting places:', error);
+            });
+    }
+
+    function displayMeetingPlaces(places) {
+        const tbody = document.getElementById('meeting-places-tbody');
+
+        if (!places || places.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="settings-table-empty">登録されている待ち合わせ場所はありません</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = places.map(place => `
+            <tr>
+                <td>${escapeHtml(place.place_name)}</td>
+                <td>
+                    <button type="button" class="settings-btn-small settings-btn-edit"
+                            onclick="window.editMeetingPlace(${place.place_id}, '${escapeHtml(place.place_name)}')">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="settings-btn-small settings-btn-delete"
+                            onclick="window.deleteMeetingPlace(${place.place_id}, '${escapeHtml(place.place_name)}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function showAddMeetingPlaceModal() {
+        currentEditItem = null;
+        document.getElementById('meeting-place-modal-title').textContent = '待ち合わせ場所を追加';
+        document.getElementById('meeting-place-id').value = '';
+        document.getElementById('meeting-place-name').value = '';
+        document.getElementById('meeting-place-modal').style.display = 'flex';
+    }
+
+    window.editMeetingPlace = function(id, name) {
+        currentEditItem = { id, name };
+        document.getElementById('meeting-place-modal-title').textContent = '待ち合わせ場所を編集';
+        document.getElementById('meeting-place-id').value = id;
+        document.getElementById('meeting-place-name').value = name;
+        document.getElementById('meeting-place-modal').style.display = 'flex';
+    };
+
+    window.closeMeetingPlaceModal = function() {
+        document.getElementById('meeting-place-modal').style.display = 'none';
+        currentEditItem = null;
+    };
+
+    window.saveMeetingPlace = function(event) {
+        event.preventDefault();
+
+        const id = document.getElementById('meeting-place-id').value;
+        const name = document.getElementById('meeting-place-name').value;
+
+        if (!name.trim()) {
+            showMessage('場所名を入力してください', 'error');
+            return;
+        }
+
+        const url = id
+            ? `/${storeId}/reservation-settings/meeting_places/${id}`
+            : `/${storeId}/reservation-settings/meeting_places`;
+
+        const method = id ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ place_name: name })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                closeMeetingPlaceModal();
+                loadMeetingPlaces();
+            } else {
+                showMessage(data.message || '保存に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving meeting place:', error);
+            showMessage('保存中にエラーが発生しました', 'error');
+        });
+    };
+
+    window.deleteMeetingPlace = function(id, name) {
+        if (!confirm(`「${name}」を削除してもよろしいですか？`)) {
+            return;
+        }
+
+        fetch(`/${storeId}/reservation-settings/meeting_places/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                loadMeetingPlaces();
+            } else {
+                showMessage(data.message || '削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting meeting place:', error);
+            showMessage('削除中にエラーが発生しました', 'error');
+        });
+    };
+
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // 予約方法管理
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

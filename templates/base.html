@@ -36,6 +36,7 @@
             <li><a href="{{ url_for('main_routes.store_home', store=session['store']) }}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
             <li><a href="{{ url_for('main_routes.money_management', store=session['store']) }}"><i class="fas fa-coins"></i>お釣り管理</a></li>
             <li><a href="{{ url_for('main_routes.customer_management', store=session.get('store', 'nagano')) }}"><i class="fas fa-users"></i>顧客管理</a></li>
+            <li><a href="{{ url_for('reservation.reservations_list', store=session.get('store', 'nagano')) }}"><i class="fas fa-clipboard-list"></i>予約一覧</a></li>
             <li><a href="{{ url_for('schedule.cast_schedule', store=session['store']) }}"><i class="fas fa-calendar-check"></i>出勤管理</a></li>
             <li><a href="{{ url_for('gantt.gantt_chart', store=session.get('store', 'nagano')) }}"><i class="fas fa-calendar-alt"></i>タイムスケジュール</a></li>
             <li><a href="{{ url_for('staff_shift.staff_shift_page', store=session['store']) }}"><i class="fas fa-user-clock"></i>スタッフシフト</a></li>

@@ -29,10 +29,15 @@ def get_db_connection(store_code):
     return conn
 
 # ==== 基本キャスト関数 ====
-def get_all_casts(db):
+def get_all_casts(db, store_id):
     """データベースから全てのキャスト情報を取得します。"""
     cursor = db.cursor()
-    cursor.execute("SELECT cast_id, name, phone_number FROM casts WHERE status = '在籍' ORDER BY name")
+    cursor.execute("""
+        SELECT cast_id, name, phone_number
+        FROM casts
+        WHERE store_id = %s AND status = '在籍'
+        ORDER BY name
+    """, (store_id,))
     casts = cursor.fetchall()
     return casts
 
@@ -83,20 +88,20 @@ def find_cast_by_phone_number(db, phone_number):
     return cast if cast else None
 
 # ==== 拡張キャスト管理関数 ====
-def get_all_casts_with_details(db):
+def get_all_casts_with_details(db, store_id):
     """年齢計算込みのキャスト詳細情報を取得"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT 
+        SELECT
             cast_id,
             name,
             phone_number,
             email,
             birth_date,
-            CASE 
-                WHEN birth_date IS NOT NULL 
-                THEN EXTRACT(YEAR FROM age(birth_date))::INTEGER 
-                ELSE NULL 
+            CASE
+                WHEN birth_date IS NOT NULL
+                THEN EXTRACT(YEAR FROM age(birth_date))::INTEGER
+                ELSE NULL
             END AS age,
             address,
             join_date,
@@ -115,10 +120,10 @@ def get_all_casts_with_details(db):
             updated_at,
             notification_minutes_before,
             auto_call_enabled
-        FROM casts 
-        WHERE is_active = TRUE
+        FROM casts
+        WHERE store_id = %s AND is_active = TRUE
         ORDER BY name
-    """)
+    """, (store_id,))
     return cursor.fetchall()
 
 def register_cast_extended(db, cast_data):

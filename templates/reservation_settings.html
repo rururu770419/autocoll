@@ -55,8 +55,36 @@
           </table>
         </div>
       </div>
-      
-      
+
+
+      <!-- 待ち合わせ場所管理 -->
+      <div class="settings-subsection">
+        <div class="settings-subsection-header">
+          <h3 class="settings-subsection-title">待ち合わせ場所管理</h3>
+          <button type="button" class="settings-btn settings-btn-primary" id="add-meeting-place-btn">
+            新規追加
+          </button>
+        </div>
+
+        <div class="settings-table-wrapper">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th style="width: 60%;">場所名</th>
+                <th style="width: 20%;">編集</th>
+                <th style="width: 20%;">削除</th>
+              </tr>
+            </thead>
+            <tbody id="meeting-places-tbody">
+              <tr>
+                <td colspan="3" class="settings-table-loading">読み込み中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
       <!-- 予約方法管理 -->
       <div class="settings-subsection">
         <div class="settings-subsection-header">
@@ -231,6 +259,39 @@
   </div>
 </div>
 
+<!-- 待ち合わせ場所追加・編集モーダル -->
+<div id="meeting-place-modal" class="modal settings-modal">
+  <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <h3 id="meeting-place-modal-title">待ち合わせ場所を追加</h3>
+      <span class="modal-close settings-modal-close" onclick="closeMeetingPlaceModal()">&times;</span>
+    </div>
+    <div class="modal-body settings-modal-body">
+      <form id="meeting-place-form" onsubmit="saveMeetingPlace(event)">
+        <input type="hidden" id="meeting-place-id" name="place_id">
+
+        <div class="settings-form-group">
+          <label class="settings-label">
+            場所名 <span class="settings-required">*</span>
+          </label>
+          <input type="text" id="meeting-place-name" name="place_name"
+                 class="settings-input" placeholder="例: 〇〇駅" required>
+        </div>
+
+        <div class="modal-footer settings-modal-actions">
+          <button type="submit" class="settings-btn settings-btn-primary">
+            保存
+          </button>
+          <button type="button" class="settings-btn settings-btn-secondary"
+                  onclick="closeMeetingPlaceModal()">
+            キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- 予約方法追加・編集モーダル -->
 <div id="reservation-method-modal" class="modal settings-modal">
   <div class="modal-content settings-modal-content">
@@ -342,6 +403,7 @@
 window.reservationSettingsUrls = {
   store: "/{{ store }}",
   cancellationReasons: "/{{ store }}/reservation-settings/cancellation_reasons",
+  meetingPlaces: "/{{ store }}/reservation-settings/meeting_places",
   reservationMethods: "/{{ store }}/reservation-settings/reservation_methods",
   cardFeeRate: "/{{ store }}/reservation-settings/card_fee_rate",
   ngAreas: "/{{ store }}/reservation-settings/ng_areas",
