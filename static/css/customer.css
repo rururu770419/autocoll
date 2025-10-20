@@ -16,7 +16,7 @@
 
 /* 顧客編集ページ専用ヘッダー */
 .customer-edit-header {
-    padding: 20px;
+    padding: 20px 20px 0 20px;
 }
 
 .customer-header h1 {
@@ -654,7 +654,6 @@
 .customer-info-content {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
 /* メインカラー内のラベル */
@@ -666,11 +665,18 @@
     background: none;
     padding: 0;
     min-width: auto;
+    text-align: center;
 }
 
 /* 左側メインカラーエリアのすべてのラベルを白に */
 .customer-info-card label {
     color: white !important;
+    text-align: center;
+}
+
+/* メインカラーエリア内のform-group labelは中央揃え */
+.customer-info-card .form-group label {
+    align-self: center;
 }
 
 /* 白いinputフィールド */
@@ -681,6 +687,7 @@
     border-radius: 4px;
     padding: 8px;
     font-size: 0.95em;
+    text-align: left;
 }
 
 .form-input-white:focus {
@@ -740,16 +747,16 @@
 
 /* 右側フォームエリアのラベル（予約ページと同じスタイル） */
 .reservation-form-area .form-group label {
+    display: inline-block;
+    width: auto;
+    align-self: flex-start;
+    background-color: #00BCD4;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px;
     font-size: 0.9em;
     font-weight: bold;
-    color: #333;
     margin-bottom: 5px;
-    background: none;
-    padding: 0;
-    border-radius: 0;
-    min-width: auto;
-    text-align: left;
-    white-space: normal;
 }
 
 /* 右側フォームエリアの入力フィールド（予約ページと同じスタイル） */

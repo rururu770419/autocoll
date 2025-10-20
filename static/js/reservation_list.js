@@ -216,31 +216,89 @@ function renderReservations(reservations) {
         castCell.textContent = reservation.cast_name || '未設定';
         row.appendChild(castCell);
 
-        // 割引
-        const discountCell = document.createElement('td');
-        if (reservation.discount_id) {
-            const badge = document.createElement('span');
-            badge.className = 'discount-badge';
-            if (reservation.discount_type === 'percentage') {
-                badge.textContent = `${reservation.discount_value}%`;
-            } else if (reservation.discount_type === 'fixed') {
-                badge.textContent = `¥${reservation.discount_value.toLocaleString()}`;
-            }
-            discountCell.appendChild(badge);
-        } else {
-            discountCell.innerHTML = '<span class="no-discount">なし</span>';
-        }
-        row.appendChild(discountCell);
+        // コース
+        const courseCell = document.createElement('td');
+        courseCell.textContent = reservation.course_name || '-';
+        row.appendChild(courseCell);
 
-        // ホテル名
+        // お客様名前と電話番号
+        const customerCell = document.createElement('td');
+        const customerName = document.createElement('div');
+        customerName.className = 'customer-name-text';
+        customerName.textContent = reservation.customer_name || '-';
+        customerCell.appendChild(customerName);
+
+        if (reservation.customer_phone) {
+            const customerPhone = document.createElement('div');
+            customerPhone.className = 'customer-phone';
+            customerPhone.textContent = reservation.customer_phone;
+            customerCell.appendChild(customerPhone);
+        }
+        row.appendChild(customerCell);
+
+        // 指名種別
+        const nominationCell = document.createElement('td');
+        nominationCell.textContent = reservation.nomination_type_name || '-';
+        row.appendChild(nominationCell);
+
+        // ホテル名と交通費
         const hotelCell = document.createElement('td');
-        hotelCell.textContent = reservation.hotel_name || '-';
+        const hotelName = document.createElement('div');
+        hotelName.textContent = reservation.hotel_name || '-';
+        hotelCell.appendChild(hotelName);
+
+        // 交通費が0より大きい場合のみ表示
+        if (reservation.transportation_fee && reservation.transportation_fee > 0) {
+            const transportationFee = document.createElement('div');
+            transportationFee.className = 'customer-phone';
+            transportationFee.textContent = `交通費: ¥${reservation.transportation_fee.toLocaleString()}`;
+            hotelCell.appendChild(transportationFee);
+        }
         row.appendChild(hotelCell);
 
-        // 部屋番号
+        // 部屋番号（テキストボックス）
         const roomCell = document.createElement('td');
-        roomCell.textContent = reservation.room_number || '-';
+        const roomInput = document.createElement('input');
+        roomInput.type = 'text';
+        roomInput.className = 'room-number-input-list';
+        roomInput.value = reservation.room_number || '';
+        roomInput.maxLength = 4;
+        roomInput.placeholder = '';
+        // 変更時の処理（必要に応じて実装）
+        roomInput.addEventListener('change', function() {
+            // TODO: 部屋番号更新API呼び出し
+            console.log(`部屋番号変更: 予約ID=${reservation.reservation_id}, 新しい部屋番号=${this.value}`);
+        });
+        roomCell.appendChild(roomInput);
         row.appendChild(roomCell);
+
+        // 入店時間
+        const checkInCell = document.createElement('td');
+        checkInCell.className = 'time-cell';
+        checkInCell.textContent = `${String(reservationTime.getHours()).padStart(2, '0')}:${String(reservationTime.getMinutes()).padStart(2, '0')}`;
+        row.appendChild(checkInCell);
+
+        // 退店時間（予約時間+コースの時間で計算）
+        const checkOutCell = document.createElement('td');
+        checkOutCell.className = 'time-cell';
+        if (reservation.end_datetime) {
+            const endTime = new Date(reservation.end_datetime);
+            checkOutCell.textContent = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+        } else if (reservation.course_time_minutes) {
+            // コースの時間が設定されている場合、予約時間+コースの時間で計算
+            const endTime = new Date(reservationTime);
+            endTime.setMinutes(endTime.getMinutes() + reservation.course_time_minutes);
+            checkOutCell.textContent = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+        } else {
+            checkOutCell.textContent = '-';
+        }
+        row.appendChild(checkOutCell);
+
+        // 合計金額（中央寄せ、ピンク色、太字）
+        const totalCell = document.createElement('td');
+        totalCell.className = 'center-align total-amount-cell';
+        totalCell.textContent = `¥${reservation.total_amount.toLocaleString()}`;
+        row.appendChild(totalCell);
 
         // オプション
         const optionsCell = document.createElement('td');
@@ -254,52 +312,24 @@ function renderReservations(reservations) {
         }
         row.appendChild(optionsCell);
 
-        // オプション金額
+        // オプション金額（中央寄せ）
         const optionAmountCell = document.createElement('td');
-        optionAmountCell.className = 'amount-cell';
+        optionAmountCell.className = 'center-align';
         optionAmountCell.textContent = reservation.options_total ? `¥${reservation.options_total.toLocaleString()}` : '¥0';
         row.appendChild(optionAmountCell);
 
-        // 合計金額
-        const totalCell = document.createElement('td');
-        totalCell.className = 'amount-cell';
-        totalCell.textContent = `¥${reservation.total_amount.toLocaleString()}`;
-        row.appendChild(totalCell);
-
-        // 入店時間
-        const checkInCell = document.createElement('td');
-        checkInCell.className = 'time-cell';
-        checkInCell.textContent = `${String(reservationTime.getHours()).padStart(2, '0')}:${String(reservationTime.getMinutes()).padStart(2, '0')}`;
-        row.appendChild(checkInCell);
-
-        // 退店時間
-        const checkOutCell = document.createElement('td');
-        checkOutCell.className = 'time-cell';
-        if (reservation.end_datetime) {
-            const endTime = new Date(reservation.end_datetime);
-            checkOutCell.textContent = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+        // 割引（割引項目名を表示）
+        const discountCell = document.createElement('td');
+        if (reservation.discount_name) {
+            discountCell.textContent = reservation.discount_name;
         } else {
-            checkOutCell.textContent = '-';
+            discountCell.textContent = '-';
         }
-        row.appendChild(checkOutCell);
+        row.appendChild(discountCell);
 
-        // お客様名前
-        const customerCell = document.createElement('td');
-        customerCell.textContent = reservation.customer_name || '-';
-        row.appendChild(customerCell);
-
-        // 電話番号
-        const phoneCell = document.createElement('td');
-        phoneCell.textContent = reservation.customer_phone || '-';
-        row.appendChild(phoneCell);
-
-        // 指名種別
-        const nominationCell = document.createElement('td');
-        nominationCell.textContent = reservation.nomination_type_name || '-';
-        row.appendChild(nominationCell);
-
-        // 追加PT
+        // 追加PT（中央寄せ）
         const ptCell = document.createElement('td');
+        ptCell.className = 'center-align';
         ptCell.textContent = reservation.points_to_grant || '0';
         row.appendChild(ptCell);
 

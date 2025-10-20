@@ -205,22 +205,22 @@ def delete_discount(db, discount_id):
         db.rollback()
         return False
 
-def is_discount_used(db, discount_id):
-    """割引が予約で使用されているかチェック"""
+def is_discount_used(db, discount_id, store_id):
+    """割引が予約で使用されているかチェック（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
         SELECT COUNT(*) as count
         FROM reservation_discounts
-        WHERE discount_id = %s
-    """, (discount_id,))
+        WHERE discount_id = %s AND store_id = %s
+    """, (discount_id, store_id))
     result = cursor.fetchone()
-    return result.count > 0 if result else False
+    return result['count'] > 0 if result else False
 
-def delete_discount_permanently(db, discount_id):
-    """割引マスタを完全削除（予約で未使用の場合のみ）"""
+def delete_discount_permanently(db, discount_id, store_id):
+    """割引マスタを完全削除（予約で未使用の場合のみ、store_idでフィルタ）"""
     try:
         # 使用チェック
-        if is_discount_used(db, discount_id):
+        if is_discount_used(db, discount_id, store_id):
             return False
         
         cursor = db.cursor()
@@ -253,15 +253,15 @@ def calculate_discount_amount(discount, course_price):
 
 # ==== 予約-割引関連関数 ====
 
-def add_discount_to_reservation(db, reservation_id, discount_id, applied_value):
-    """予約に割引を適用"""
+def add_discount_to_reservation(db, reservation_id, discount_id, applied_value, store_id):
+    """予約に割引を適用（store_id追加）"""
     try:
         cursor = db.cursor()
         cursor.execute("""
             INSERT INTO reservation_discounts (
-                reservation_id, discount_id, applied_value, created_at
-            ) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
-        """, (reservation_id, discount_id, applied_value))
+                reservation_id, discount_id, applied_value, store_id, created_at
+            ) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+        """, (reservation_id, discount_id, applied_value, store_id))
         db.commit()
         return True
     except Exception as e:
@@ -269,26 +269,26 @@ def add_discount_to_reservation(db, reservation_id, discount_id, applied_value):
         db.rollback()
         return False
 
-def get_reservation_discounts(db, reservation_id):
-    """予約に適用された割引一覧を取得"""
+def get_reservation_discounts(db, reservation_id, store_id):
+    """予約に適用された割引一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
         SELECT rd.*, d.name, d.discount_type, d.value
         FROM reservation_discounts rd
-        JOIN discounts d ON rd.discount_id = d.discount_id
-        WHERE rd.reservation_id = %s
+        JOIN discounts d ON rd.discount_id = d.discount_id AND rd.store_id = d.store_id
+        WHERE rd.reservation_id = %s AND rd.store_id = %s
         ORDER BY rd.created_at
-    """, (reservation_id,))
+    """, (reservation_id, store_id))
     return cursor.fetchall()
 
-def remove_discount_from_reservation(db, reservation_id, discount_id):
-    """予約から割引を削除"""
+def remove_discount_from_reservation(db, reservation_id, discount_id, store_id):
+    """予約から割引を削除（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
         cursor.execute("""
-            DELETE FROM reservation_discounts 
-            WHERE reservation_id = %s AND discount_id = %s
-        """, (reservation_id, discount_id))
+            DELETE FROM reservation_discounts
+            WHERE reservation_id = %s AND discount_id = %s AND store_id = %s
+        """, (reservation_id, discount_id, store_id))
         db.commit()
         return True
     except Exception as e:

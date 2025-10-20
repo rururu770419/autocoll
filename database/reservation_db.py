@@ -249,7 +249,8 @@ def create_reservation(
     points_to_grant: int = 0,
     customer_comment: Optional[str] = None,
     staff_memo: Optional[str] = None,
-    cancellation_reason_id: Optional[int] = None
+    cancellation_reason_id: Optional[int] = None,
+    reservation_method_id: Optional[int] = None
 ) -> Optional[int]:
     """新規予約を作成（既存のreservationsテーブル構造に対応）"""
     conn = get_connection()
@@ -268,7 +269,7 @@ def create_reservation(
         cast_name = None
         if cast_id:
             cursor.execute("""
-                SELECT name FROM users WHERE id = %s AND store_id = %s
+                SELECT name FROM casts WHERE cast_id = %s AND store_id = %s
             """, (cast_id, store_id))
             cast_result = cursor.fetchone()
             cast_name = cast_result[0] if cast_result else None
@@ -288,7 +289,7 @@ def create_reservation(
         course_price = 0
         if course_id:
             cursor.execute("""
-                SELECT name, duration_minutes, price
+                SELECT name, time_minutes, price
                 FROM courses WHERE course_id = %s AND store_id = %s
             """, (course_id, store_id))
             course_result = cursor.fetchone()
@@ -302,8 +303,8 @@ def create_reservation(
         nomination_fee = 0
         if nomination_type_id:
             cursor.execute("""
-                SELECT name, fee
-                FROM nomination_types WHERE nomination_id = %s AND store_id = %s
+                SELECT type_name, additional_fee
+                FROM nomination_types WHERE nomination_type_id = %s AND store_id = %s
             """, (nomination_type_id, store_id))
             nomination_result = cursor.fetchone()
             if nomination_result:
@@ -316,7 +317,7 @@ def create_reservation(
         extension_fee = 0
         if extension_id:
             cursor.execute("""
-                SELECT name, duration_minutes, price
+                SELECT extension_name, extension_minutes, extension_fee
                 FROM extensions WHERE extension_id = %s AND store_id = %s
             """, (extension_id, store_id))
             extension_result = cursor.fetchone()
@@ -329,21 +330,11 @@ def create_reservation(
         meeting_place_name = None
         if meeting_place_id:
             cursor.execute("""
-                SELECT name FROM meeting_places
-                WHERE meeting_place_id = %s AND store_id = %s
+                SELECT place_name FROM meeting_places
+                WHERE place_id = %s AND store_id = %s
             """, (meeting_place_id, store_id))
             meeting_result = cursor.fetchone()
             meeting_place_name = meeting_result[0] if meeting_result else None
-
-            # 待ち合わせ場所からエリア情報を取得
-            if meeting_result and not area_id:
-                cursor.execute("""
-                    SELECT area_id FROM meeting_places
-                    WHERE meeting_place_id = %s
-                """, (meeting_place_id,))
-                area_result = cursor.fetchone()
-                if area_result:
-                    area_id = area_result[0]
 
         # エリア情報を取得
         area_name = None
@@ -358,24 +349,36 @@ def create_reservation(
         hotel_name = None
         if hotel_id:
             cursor.execute("""
-                SELECT name FROM hotels WHERE hotel_id = %s
-            """, (hotel_id,))
+                SELECT name FROM hotels WHERE hotel_id = %s AND store_id = %s
+            """, (hotel_id, store_id))
             hotel_result = cursor.fetchone()
             hotel_name = hotel_result[0] if hotel_result else None
 
         # 割引情報を取得
         discount_type = None
+        discount_name = None
         discount_value = None
         discount_amount = 0
         if discount_id:
             cursor.execute("""
-                SELECT discount_type, value
+                SELECT discount_type, name, value
                 FROM discounts WHERE discount_id = %s AND store_id = %s
             """, (discount_id, store_id))
             discount_result = cursor.fetchone()
             if discount_result:
                 discount_type = discount_result[0]
-                discount_value = discount_result[1]
+                discount_name = discount_result[1]
+                discount_value = discount_result[2]
+
+        # 予約方法情報を取得
+        reservation_method_name = None
+        if reservation_method_id:
+            cursor.execute("""
+                SELECT method_name FROM reservation_methods
+                WHERE method_id = %s AND store_id = %s
+            """, (reservation_method_id, store_id))
+            method_result = cursor.fetchone()
+            reservation_method_name = method_result[0] if method_result else None
 
         # オプション料金を計算
         options_total = 0
@@ -408,18 +411,13 @@ def create_reservation(
         # 合計金額を計算
         total_amount = subtotal + card_fee - discount_amount
 
-        # 終了時刻を計算
+        # 終了時刻を計算（コース時間 + 延長時間）
         end_datetime = None
-        if course_time_minutes and extension_minutes:
-            total_minutes = course_time_minutes + extension_minutes
+        total_minutes = (course_time_minutes or 0) + (extension_minutes or 0)
+        if total_minutes > 0:
             cursor.execute("""
                 SELECT %s::timestamp + INTERVAL '%s minutes'
             """, (reservation_datetime, total_minutes))
-            end_datetime = cursor.fetchone()[0]
-        elif course_time_minutes:
-            cursor.execute("""
-                SELECT %s::timestamp + INTERVAL '%s minutes'
-            """, (reservation_datetime, course_time_minutes))
             end_datetime = cursor.fetchone()[0]
 
         # ステータスを設定
@@ -434,7 +432,8 @@ def create_reservation(
                 course_id, course_name, course_time_minutes, course_price,
                 nomination_type_id, nomination_type_name, nomination_fee,
                 extension_id, extension_name, extension_minutes, extension_fee,
-                discount_id, discount_type, discount_value, discount_amount,
+                discount_id, discount_type, discount_name, discount_value, discount_amount,
+                reservation_method_id, reservation_method_name,
                 meeting_place_id, meeting_place_name,
                 area_id, area_name,
                 hotel_id, hotel_name, room_number,
@@ -446,7 +445,8 @@ def create_reservation(
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s
             )
             RETURNING reservation_id
         """, (
@@ -456,7 +456,8 @@ def create_reservation(
             course_id, course_name, course_time_minutes, course_price,
             nomination_type_id, nomination_type_name, nomination_fee,
             extension_id, extension_name, extension_minutes, extension_fee,
-            discount_id, discount_type, discount_value, discount_amount,
+            discount_id, discount_type, discount_name, discount_value, discount_amount,
+            reservation_method_id, reservation_method_name,
             meeting_place_id, meeting_place_name,
             area_id, area_name,
             hotel_id, hotel_name, room_number,
@@ -472,10 +473,32 @@ def create_reservation(
         # オプションを保存
         if option_ids and len(option_ids) > 0:
             for option_id in option_ids:
+                # オプション情報を取得
                 cursor.execute("""
-                    INSERT INTO reservation_options (reservation_id, option_id)
-                    VALUES (%s, %s)
-                """, (reservation_id, option_id))
+                    SELECT price, cast_back_amount FROM options
+                    WHERE option_id = %s AND store_id = %s
+                """, (option_id, store_id))
+                option = cursor.fetchone()
+
+                if option:
+                    calculated_price = option[0] or 0
+                    cast_back_amount = option[1] or 0
+                else:
+                    calculated_price = 0
+                    cast_back_amount = 0
+
+                # INSERT時に必要なカラムを全て含める（store_id追加）
+                cursor.execute("""
+                    INSERT INTO reservation_options (
+                        reservation_id,
+                        option_id,
+                        quantity,
+                        calculated_price,
+                        cast_back_amount,
+                        store_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (reservation_id, option_id, 1, calculated_price, cast_back_amount, store_id))
 
         # 顧客のポイントを更新
         if points_to_grant > 0:
@@ -515,11 +538,12 @@ def get_reservation_by_id(reservation_id: int) -> Optional[Dict]:
             columns = [desc[0] for desc in cursor.description]
             reservation = dict(zip(columns, result))
 
-            # オプションを取得
+            # オプションを取得（store_idでフィルタ）
             cursor.execute("""
-                SELECT option_id FROM reservation_options
-                WHERE reservation_id = %s
-            """, (reservation_id,))
+                SELECT ro.option_id
+                FROM reservation_options ro
+                WHERE ro.reservation_id = %s AND ro.store_id = %s
+            """, (reservation_id, reservation['store_id']))
 
             options = cursor.fetchall()
             reservation['option_ids'] = [opt[0] for opt in options]
@@ -567,8 +591,11 @@ def get_reservations_by_date(store_id: int, target_date: str) -> List[Dict]:
                 extension_fee,
                 discount_id,
                 discount_type,
+                discount_name,
                 discount_value,
                 discount_amount,
+                reservation_method_id,
+                reservation_method_name,
                 meeting_place_id,
                 meeting_place_name,
                 area_id,
@@ -600,14 +627,14 @@ def get_reservations_by_date(store_id: int, target_date: str) -> List[Dict]:
         columns = [desc[0] for desc in cursor.description]
         reservations = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        # 各予約にオプション情報を追加
+        # 各予約にオプション情報を追加（store_idでフィルタ）
         for reservation in reservations:
             cursor.execute("""
                 SELECT ro.option_id, o.name, o.price
                 FROM reservation_options ro
-                LEFT JOIN options o ON ro.option_id = o.option_id
-                WHERE ro.reservation_id = %s
-            """, (reservation['reservation_id'],))
+                LEFT JOIN options o ON ro.option_id = o.option_id AND ro.store_id = o.store_id
+                WHERE ro.reservation_id = %s AND ro.store_id = %s
+            """, (reservation['reservation_id'], store_id))
 
             option_rows = cursor.fetchall()
             reservation['options'] = [
@@ -656,7 +683,7 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         cast_name = None
         if cast_id:
             cursor.execute("""
-                SELECT name FROM users WHERE id = %s AND store_id = %s
+                SELECT name FROM casts WHERE cast_id = %s AND store_id = %s
             """, (cast_id, store_id))
             result = cursor.fetchone()
             cast_name = result[0] if result else None
@@ -668,7 +695,7 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         course_price = None
         if course_id:
             cursor.execute("""
-                SELECT name, duration_minutes, price FROM courses
+                SELECT name, time_minutes, price FROM courses
                 WHERE course_id = %s AND store_id = %s
             """, (course_id, store_id))
             result = cursor.fetchone()
@@ -683,8 +710,8 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         nomination_fee = None
         if nomination_type_id:
             cursor.execute("""
-                SELECT name, fee FROM nomination_types
-                WHERE nomination_id = %s AND store_id = %s
+                SELECT type_name, additional_fee FROM nomination_types
+                WHERE nomination_type_id = %s AND store_id = %s
             """, (nomination_type_id, store_id))
             result = cursor.fetchone()
             if result:
@@ -698,7 +725,7 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         extension_fee = None
         if extension_id:
             cursor.execute("""
-                SELECT name, duration_minutes, price FROM extensions
+                SELECT extension_name, extension_minutes, extension_fee FROM extensions
                 WHERE extension_id = %s AND store_id = %s
             """, (extension_id, store_id))
             result = cursor.fetchone()
@@ -707,40 +734,54 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
                 extension_minutes = result[1]
                 extension_fee = result[2]
 
-        # 割引情報を取得
-        discount_id = data.get('discount_id', type=int) or None
+        # 割引情報を取得（チェックボックスから最初の選択を取得）
+        discount_ids = data.getlist('discounts[]') if hasattr(data, 'getlist') else []
+        discount_id = int(discount_ids[0]) if discount_ids else None
         discount_type = None
+        discount_name = None
         discount_value = None
         discount_amount = 0
         if discount_id:
             cursor.execute("""
-                SELECT discount_type, value
+                SELECT discount_type, name, value
                 FROM discounts WHERE discount_id = %s AND store_id = %s
             """, (discount_id, store_id))
             result = cursor.fetchone()
             if result:
                 discount_type = result[0]
-                discount_value = result[1]
+                discount_name = result[1]
+                discount_value = result[2]
+
+        # 予約方法情報を取得
+        reservation_method_id = data.get('reservation_method', type=int) or None
+        reservation_method_name = None
+        if reservation_method_id:
+            cursor.execute("""
+                SELECT method_name FROM reservation_methods
+                WHERE method_id = %s AND store_id = %s
+            """, (reservation_method_id, store_id))
+            method_result = cursor.fetchone()
+            reservation_method_name = method_result[0] if method_result else None
 
         # 待ち合わせ場所情報を取得
         meeting_place_id = data.get('meeting_place', type=int) or None
         meeting_place_name = None
-        area_id = None
-        area_name = None
         if meeting_place_id:
             cursor.execute("""
-                SELECT name, area_id FROM meeting_places
-                WHERE meeting_place_id = %s AND store_id = %s
+                SELECT place_name FROM meeting_places
+                WHERE place_id = %s AND store_id = %s
             """, (meeting_place_id, store_id))
             result = cursor.fetchone()
             if result:
                 meeting_place_name = result[0]
-                area_id = result[1]
-                # エリア名を取得
-                if area_id:
-                    cursor.execute("SELECT name FROM areas WHERE area_id = %s", (area_id,))
-                    area_result = cursor.fetchone()
-                    area_name = area_result[0] if area_result else None
+
+        # エリア情報を取得
+        area_id = data.get('area', type=int) or None
+        area_name = None
+        if area_id:
+            cursor.execute("SELECT name FROM areas WHERE area_id = %s", (area_id,))
+            area_result = cursor.fetchone()
+            area_name = area_result[0] if area_result else None
 
         # ホテル情報を取得
         hotel_id = data.get('hotel_id', type=int) or None
@@ -815,18 +856,13 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         reservation_datetime = f"{reservation_date} {reservation_time}"
         business_date = reservation_date
 
-        # 終了時刻を計算
+        # 終了時刻を計算（コース時間 + 延長時間）
         end_datetime = None
         total_minutes = (course_time_minutes or 0) + (extension_minutes or 0)
         if total_minutes > 0:
             cursor.execute("""
                 SELECT %s::timestamp + INTERVAL '%s minutes'
             """, (reservation_datetime, total_minutes))
-            end_datetime = cursor.fetchone()[0]
-        elif course_time_minutes:
-            cursor.execute("""
-                SELECT %s::timestamp + INTERVAL '%s minutes'
-            """, (reservation_datetime, course_time_minutes))
             end_datetime = cursor.fetchone()[0]
 
         # ステータスを設定
@@ -841,7 +877,8 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
                 course_id = %s, course_name = %s, course_time_minutes = %s, course_price = %s,
                 nomination_type_id = %s, nomination_type_name = %s, nomination_fee = %s,
                 extension_id = %s, extension_name = %s, extension_minutes = %s, extension_fee = %s,
-                discount_id = %s, discount_type = %s, discount_value = %s, discount_amount = %s,
+                discount_id = %s, discount_type = %s, discount_name = %s, discount_value = %s, discount_amount = %s,
+                reservation_method_id = %s, reservation_method_name = %s,
                 meeting_place_id = %s, meeting_place_name = %s,
                 area_id = %s, area_name = %s,
                 hotel_id = %s, hotel_name = %s, room_number = %s,
@@ -859,7 +896,8 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
             course_id, course_name, course_time_minutes, course_price,
             nomination_type_id, nomination_type_name, nomination_fee,
             extension_id, extension_name, extension_minutes, extension_fee,
-            discount_id, discount_type, discount_value, discount_amount,
+            discount_id, discount_type, discount_name, discount_value, discount_amount,
+            reservation_method_id, reservation_method_name,
             meeting_place_id, meeting_place_name,
             area_id, area_name,
             hotel_id, hotel_name, room_number,
@@ -871,14 +909,36 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
             reservation_id
         ))
 
-        # オプションを更新（既存を削除して再挿入）
-        cursor.execute("DELETE FROM reservation_options WHERE reservation_id = %s", (reservation_id,))
+        # オプションを更新（既存を削除して再挿入、store_idでフィルタ）
+        cursor.execute("DELETE FROM reservation_options WHERE reservation_id = %s AND store_id = %s", (reservation_id, store_id))
         if option_ids:
             for option_id in option_ids:
+                # オプション情報を取得
                 cursor.execute("""
-                    INSERT INTO reservation_options (reservation_id, option_id)
-                    VALUES (%s, %s)
-                """, (reservation_id, option_id))
+                    SELECT price, cast_back_amount FROM options
+                    WHERE option_id = %s AND store_id = %s
+                """, (option_id, store_id))
+                option = cursor.fetchone()
+
+                if option:
+                    calculated_price = option[0] or 0
+                    cast_back_amount = option[1] or 0
+                else:
+                    calculated_price = 0
+                    cast_back_amount = 0
+
+                # INSERT時に必要なカラムを全て含める（store_id追加）
+                cursor.execute("""
+                    INSERT INTO reservation_options (
+                        reservation_id,
+                        option_id,
+                        quantity,
+                        calculated_price,
+                        cast_back_amount,
+                        store_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (reservation_id, option_id, 1, calculated_price, cast_back_amount, store_id))
 
         # ポイント差分を計算して更新
         points_diff = points_to_grant - (existing_reservation.get('points_to_grant') or 0)
@@ -945,11 +1005,11 @@ def delete_reservation_completely(reservation_id: int) -> bool:
         customer_id = existing_reservation.get('customer_id')
         points_to_grant = existing_reservation.get('points_to_grant') or 0
 
-        # オプションを削除
+        # オプションを削除（store_idでフィルタ）
         cursor.execute("""
             DELETE FROM reservation_options
-            WHERE reservation_id = %s
-        """, (reservation_id,))
+            WHERE reservation_id = %s AND store_id = %s
+        """, (reservation_id, existing_reservation['store_id']))
 
         # 予約を削除
         cursor.execute("""

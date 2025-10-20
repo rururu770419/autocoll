@@ -44,7 +44,7 @@
 .staff-shift-btn {
     padding: 8px 16px;
     border: none;
-    border-radius: 0;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
@@ -337,7 +337,7 @@
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
-    border-radius: 0;
+    border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
 }

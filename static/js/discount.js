@@ -64,17 +64,20 @@ function updateRegisterValueLabel() {
     const label = document.getElementById('register-value-label');
     const input = document.getElementById('register-value');
     const helpText = document.getElementById('register-help-text');
-    
+    const nameInput = document.getElementById('register-name');
+
     if (discountType === 'fixed') {
         label.innerHTML = '割引値 <span style="color: #dc3545;">*</span>';
         input.setAttribute('max', '999999');
         input.setAttribute('placeholder', '例）3000');
         helpText.textContent = '金額は円単位で入力してください';
+        nameInput.setAttribute('placeholder', '例）イベント割引2000円OFF');
     } else {
         label.innerHTML = '割引値（%） <span style="color: #dc3545;">*</span>';
         input.setAttribute('max', '100');
         input.setAttribute('placeholder', '例）10');
         helpText.textContent = 'パーセント割引は100%以下で入力してください';
+        nameInput.setAttribute('placeholder', '例）クーポン10％OFF');
     }
 }
 
@@ -166,7 +169,7 @@ async function openEditModal(discountId) {
             document.getElementById('edit-discount-id').value = discount.discount_id;
             document.getElementById('edit-name').value = discount.name;
             document.querySelector(`input[name="edit_type"][value="${discount.discount_type}"]`).checked = true;
-            document.getElementById('edit-value').value = discount.value;
+            document.getElementById('edit-value').value = Math.floor(discount.value);
             document.getElementById('edit-is-active').checked = discount.is_active;
             
             updateEditValueLabel();
@@ -211,13 +214,16 @@ function updateEditValueLabel() {
     const discountType = document.querySelector('input[name="edit_type"]:checked').value;
     const label = document.getElementById('edit-value-label');
     const input = document.getElementById('edit-value');
-    
+    const nameInput = document.getElementById('edit-name');
+
     if (discountType === 'fixed') {
         label.innerHTML = '割引値 <span style="color: #dc3545;">*</span>';
         input.setAttribute('max', '999999');
+        nameInput.setAttribute('placeholder', '例）イベント割引2000円OFF');
     } else {
         label.innerHTML = '割引値（%） <span style="color: #dc3545;">*</span>';
         input.setAttribute('max', '100');
+        nameInput.setAttribute('placeholder', '例）クーポン10％OFF');
     }
 }
 

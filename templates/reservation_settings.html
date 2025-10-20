@@ -9,11 +9,18 @@
 
 {% block content %}
 <div class="settings-container">
-  
+
   <h1 class="settings-title">予約設定</h1>
-  
-  <div id="message-container"></div>
-  
+
+  {% if success %}
+  <div class="settings-alert settings-alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="settings-alert settings-alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <div id="saveMessage" class="settings-message"></div>
+
   <!-- タブナビゲーション -->
   <div class="settings-tabs">
     <button class="settings-tab-btn active" onclick="switchTab('reservation_management')">予約管理</button>
@@ -125,15 +132,15 @@
               カード手数料率（％）
             </label>
             <div class="settings-input-with-unit">
-              <input 
-                type="number" 
-                id="card-fee-rate-input" 
+              <input
+                type="number"
+                id="card-fee-rate-input"
                 class="settings-input settings-form-input-number"
-                min="0" 
-                max="100" 
-                step="0.1"
-                value="5.0"
-                placeholder="例: 5.0"
+                min="0"
+                max="100"
+                step="1"
+                value="5"
+                placeholder="例: 5"
               >
               <span class="settings-input-unit">%</span>
             </div>
@@ -218,12 +225,9 @@
         </div>
       </div>
     </div>
-    
+
   </div>
-  
-  <!-- メッセージ表示エリア -->
-  <div id="saveMessage" class="settings-message"></div>
-  
+
 </div>
 
 <!-- キャンセル理由追加・編集モーダル -->

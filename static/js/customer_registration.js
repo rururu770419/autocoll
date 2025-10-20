@@ -93,6 +93,20 @@ function populateSelect(selectId, options) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function setupInputRestrictions() {
+    // フリガナ（カタカナのみ）
+    const furiganaInput = document.getElementById('furigana');
+    if (furiganaInput) {
+        furiganaInput.addEventListener('compositionstart', function(e) {
+            isComposing = true;
+        });
+        furiganaInput.addEventListener('compositionend', function(e) {
+            handleCompositionEnd(this);
+        });
+        furiganaInput.addEventListener('input', function(e) {
+            convertToKatakana(this);
+        });
+    }
+
     // 電話番号（数字のみ、11桁）
     const phoneInput = document.getElementById('phone');
     if (phoneInput) {
@@ -100,7 +114,7 @@ function setupInputRestrictions() {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
         });
     }
-    
+
     // 所持PT（数字のみ）
     const pointsInput = document.getElementById('current_points');
     if (pointsInput) {
@@ -108,7 +122,7 @@ function setupInputRestrictions() {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
     }
-    
+
     // マイページID（半角英数字と記号のみ）
     const mypageIdInput = document.getElementById('mypage_id');
     if (mypageIdInput) {
@@ -116,7 +130,7 @@ function setupInputRestrictions() {
             this.value = this.value.replace(/[^a-zA-Z0-9_\-@.]/g, '');
         });
     }
-    
+
     // マイページパスワード（半角文字のみ）
     const passwordInput = document.getElementById('mypage_password');
     if (passwordInput) {
@@ -237,6 +251,7 @@ async function handleFormSubmit(e) {
         building_name: getValue('building_name'),
         // 互換性のため、address_detailも送信（street_address + building_nameを結合）
         address_detail: [getValue('street_address'), getValue('building_name')].filter(v => v).join(' '),
+        car_info: getValue('car_info'),
         member_type: getValue('member_type'),
         status: getValue('status'),
         web_member: getValue('web_member'),
@@ -305,15 +320,56 @@ function getContrastColor(hexColor) {
 function showMessage(message, type) {
     const messageArea = document.getElementById('messageArea');
     if (!messageArea) return;
-    
-    const alertClass = type === 'success' ? 'customer-alert-success' : 
-                      type === 'info' ? 'customer-alert-info' : 
+
+    const alertClass = type === 'success' ? 'customer-alert-success' :
+                      type === 'info' ? 'customer-alert-info' :
                       'customer-alert-error';
-    
+
     messageArea.innerHTML = `<div class="customer-alert ${alertClass}">${message}</div>`;
     messageArea.style.display = 'block';
-    
+
     setTimeout(() => {
         messageArea.style.display = 'none';
     }, 3000);
+}
+
+// IME入力中かどうかのフラグ
+let isComposing = false;
+
+/**
+ * ひらがなをカタカナに自動変換し、カタカナ以外を削除
+ * @param {HTMLInputElement} input - 入力フィールド
+ */
+function convertToKatakana(input) {
+    // IME入力中は処理をスキップ
+    if (isComposing) {
+        return;
+    }
+
+    let value = input.value;
+
+    // 1. ひらがなをカタカナに変換
+    // Unicode: ひらがな (U+3041-U+3096) → カタカナ (U+30A1-U+30F6)
+    let converted = value.replace(/[\u3041-\u3096]/g, function(match) {
+        const chr = match.charCodeAt(0) + 0x60;
+        return String.fromCharCode(chr);
+    });
+
+    // 2. カタカナ、スペース、長音記号のみ許可（それ以外は削除）
+    let filtered = converted.replace(/[^ァ-ヴー\s]/g, '');
+
+    // 3. 変換後の値を設定（変更があった場合のみ）
+    if (value !== filtered) {
+        input.value = filtered;
+    }
+}
+
+/**
+ * IME変換確定時の処理
+ * @param {HTMLInputElement} input - 入力フィールド
+ */
+function handleCompositionEnd(input) {
+    isComposing = false;
+    // 変換確定後に変換処理を実行
+    convertToKatakana(input);
 }

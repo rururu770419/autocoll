@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(psql -U postgres -d pickup_system -c \"\\d courses\")",
+      "Bash(python check_db.py)",
+      "Bash(python -c \"\nfrom database.connection import get_db\ndb = get_db()\ncursor = db.cursor()\ncursor.execute(\"\"\"\"\"\"\n    SELECT column_name, data_type, is_nullable, column_default\n    FROM information_schema.columns\n    WHERE table_name = ''customer_field_options''\n    ORDER BY ordinal_position\n\"\"\"\"\"\")\nfor row in cursor.fetchall():\n    print(row)\ndb.close()\n\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

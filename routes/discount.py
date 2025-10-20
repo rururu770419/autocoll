@@ -1,9 +1,9 @@
 from flask import render_template, request, jsonify, session, redirect
 from functools import wraps
-from database.connection import get_db, get_display_name
+from database.connection import get_db, get_display_name, get_store_id
 from database.discount_db import (
     get_all_discounts, get_discount_by_id, find_discount_by_name,
-    register_discount, update_discount, delete_discount_permanently, 
+    register_discount, update_discount, delete_discount_permanently,
     is_discount_used, move_discount_order
 )
 
@@ -23,15 +23,19 @@ def discount_management(store):
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
-    
+
     db = get_db()
     discounts = get_all_discounts(db)
-    
+    success = request.args.get('success')
+    error = request.args.get('error')
+
     return render_template(
         'discount_management.html',
         store=store,
         display_name=display_name,
-        discounts=discounts
+        discounts=discounts,
+        success=success,
+        error=error
     )
 
 
@@ -137,7 +141,7 @@ def update_discount_api(store, discount_id):
         
         # 名前の重複チェック（自分自身は除く）
         existing = find_discount_by_name(db, data['name'])
-        if existing and existing.discount_id != discount_id:
+        if existing and existing['discount_id'] != discount_id:
             return jsonify({'success': False, 'message': 'この割引名は既に使用されています'}), 400
         
         # 更新実行
@@ -166,16 +170,17 @@ def delete_discount_api(store, discount_id):
     """割引削除API"""
     try:
         db = get_db()
-        
+        store_id = get_store_id(store)
+
         # 使用チェック
-        if is_discount_used(db, discount_id):
+        if is_discount_used(db, discount_id, store_id):
             return jsonify({
-                'success': False, 
+                'success': False,
                 'message': 'この割引は予約で使用されているため削除できません。無効化してください。'
             }), 400
-        
+
         # 完全削除実行
-        success = delete_discount_permanently(db, discount_id)
+        success = delete_discount_permanently(db, discount_id, store_id)
         
         if success:
             return jsonify({'success': True, 'message': '割引を削除しました'})

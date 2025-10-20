@@ -43,94 +43,94 @@ def create_announcements_table(db):
     except Exception as e:
         print(f"お知らせテーブル作成エラー: {e}")
 
-def get_announcement(db, store_name):
-    """指定した店舗のお知らせを取得する"""
+def get_announcement(db, store_id):
+    """指定した店舗のお知らせを取得する（store_id使用）"""
     try:
         cursor = db.cursor()
         cursor.execute("""
-            SELECT id, store_name, content, is_visible
+            SELECT id, store_id, content, is_visible
             FROM announcements
-            WHERE store_name = %s
-        """, (store_name,))
-        
+            WHERE store_id = %s
+        """, (store_id,))
+
         announcement = cursor.fetchone()
-        
+
         if not announcement:
             cursor.execute("""
-                INSERT INTO announcements (store_name, content, is_visible)
+                INSERT INTO announcements (store_id, content, is_visible)
                 VALUES (%s, '', FALSE)
-                RETURNING id, store_name, content, is_visible
-            """, (store_name,))
+                RETURNING id, store_id, content, is_visible
+            """, (store_id,))
             db.commit()
             announcement = cursor.fetchone()
-        
+
         return announcement
-        
+
     except Exception as e:
         print(f"お知らせ取得エラー: {e}")
         return None
 
-def update_announcement(db, store_name, field, value):
-    """指定した店舗のお知らせを更新する"""
+def update_announcement(db, store_id, field, value):
+    """指定した店舗のお知らせを更新する（store_id使用）"""
     try:
         cursor = db.cursor()
-        
+
         cursor.execute("""
             SELECT COUNT(*) as count
             FROM announcements
-            WHERE store_name = %s
-        """, (store_name,))
-        
+            WHERE store_id = %s
+        """, (store_id,))
+
         count_result = cursor.fetchone()
         count = count_result.count
-        
+
         if count == 0:
             cursor.execute("""
-                INSERT INTO announcements (store_name, content, is_visible)
+                INSERT INTO announcements (store_id, content, is_visible)
                 VALUES (%s, '', FALSE)
-            """, (store_name,))
+            """, (store_id,))
             db.commit()
-        
+
         if field not in ['content', 'is_visible']:
             print(f"無効なフィールド名: {field}")
             return False
-        
+
         if field == 'is_visible':
             value = bool(value)
-        
+
         if field == 'content':
             cursor.execute("""
                 UPDATE announcements
                 SET content = %s
-                WHERE store_name = %s
-            """, (value, store_name))
+                WHERE store_id = %s
+            """, (value, store_id))
         else:
             cursor.execute("""
                 UPDATE announcements
                 SET is_visible = %s
-                WHERE store_name = %s
-            """, (value, store_name))
-        
+                WHERE store_id = %s
+            """, (value, store_id))
+
         db.commit()
-        
+
         if cursor.rowcount > 0:
-            print(f"お知らせ更新成功: {store_name} - {field} = {value}")
+            print(f"お知らせ更新成功: store_id {store_id} - {field} = {value}")
             return True
         else:
             print(f"お知らせ更新失敗: 該当レコードが見つかりません")
             return False
-            
+
     except Exception as e:
         print(f"お知らせ更新エラー: {e}")
         return False
 
-def cleanup_old_announcement_records(db, days=30):
-    """古いお知らせ記録を自動削除（30日以上前）"""
+def cleanup_old_announcement_records(db, store_id, days=30):
+    """古いお知らせ記録を自動削除（30日以上前、store_idでフィルタ）"""
     try:
         cursor = db.cursor()
         cursor.execute(
-            "DELETE FROM announcements WHERE announcement_date < CURRENT_DATE - INTERVAL '%s days'", 
-            (days,)
+            "DELETE FROM announcements WHERE store_id = %s AND announcement_date < CURRENT_DATE - INTERVAL '%s days'",
+            (store_id, days)
         )
         db.commit()
         return True
@@ -149,75 +149,78 @@ def cleanup_all_old_records(db):
         print(f"Error in cleanup_all_old_records: {e}")
         return False
 
-def should_run_cleanup(db):
-    """クリーンアップが必要かどうかを判定"""
+def should_run_cleanup(db, store_id):
+    """クリーンアップが必要かどうかを判定（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS cleanup_log (
                 id SERIAL PRIMARY KEY,
+                store_id INTEGER NOT NULL,
                 last_cleanup TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         db.commit()
-        
-        cursor.execute("SELECT COUNT(*) as count FROM cleanup_log")
+
+        cursor.execute("SELECT COUNT(*) as count FROM cleanup_log WHERE store_id = %s", (store_id,))
         count_result = cursor.fetchone()
         count = count_result.count
-        
+
         if count == 0:
             cursor.execute("""
-                INSERT INTO cleanup_log (last_cleanup) 
-                VALUES (CURRENT_TIMESTAMP - INTERVAL '2 days')
-            """)
+                INSERT INTO cleanup_log (store_id, last_cleanup)
+                VALUES (%s, CURRENT_TIMESTAMP - INTERVAL '2 days')
+            """, (store_id,))
             db.commit()
-        
+
         cursor.execute("""
             SELECT COUNT(*) as should_cleanup
-            FROM cleanup_log 
-            WHERE last_cleanup < CURRENT_TIMESTAMP - INTERVAL '1 day'
-            OR last_cleanup IS NULL
-        """)
-        
+            FROM cleanup_log
+            WHERE store_id = %s
+            AND (last_cleanup < CURRENT_TIMESTAMP - INTERVAL '1 day'
+            OR last_cleanup IS NULL)
+        """, (store_id,))
+
         result = cursor.fetchone()
         return result.should_cleanup > 0
-        
+
     except Exception as e:
         print(f"Error in should_run_cleanup: {e}")
         return False
 
-def update_cleanup_timestamp(db):
-    """クリーンアップ実行時刻を更新"""
+def update_cleanup_timestamp(db, store_id):
+    """クリーンアップ実行時刻を更新（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
         cursor.execute("""
-            UPDATE cleanup_log 
+            UPDATE cleanup_log
             SET last_cleanup = CURRENT_TIMESTAMP
-        """)
+            WHERE store_id = %s
+        """, (store_id,))
         db.commit()
         return True
     except Exception as e:
         print(f"Error in update_cleanup_timestamp: {e}")
         return False
 
-def auto_cleanup_if_needed(db):
-    """必要に応じて自動クリーンアップを実行"""
+def auto_cleanup_if_needed(db, store_id):
+    """必要に応じて自動クリーンアップを実行（store_idでフィルタ）"""
     try:
-        if should_run_cleanup(db):
-            print("24時間以上経過しているため、データクリーンアップを実行します...")
-            
+        if should_run_cleanup(db, store_id):
+            print(f"24時間以上経過しているため、データクリーンアップを実行します（store_id: {store_id}）...")
+
             cleanup_old_pickup_records(db, 7)
             cleanup_old_money_records(db, 7)
-            cleanup_old_announcement_records(db, 30)
-            
-            update_cleanup_timestamp(db)
-            
-            print("データクリーンアップが完了しました")
+            cleanup_old_announcement_records(db, store_id, 30)
+
+            update_cleanup_timestamp(db, store_id)
+
+            print(f"データクリーンアップが完了しました（store_id: {store_id}）")
             return True
-        
+
         return False
-        
+
     except Exception as e:
         print(f"Error in auto_cleanup_if_needed: {e}")
         return False

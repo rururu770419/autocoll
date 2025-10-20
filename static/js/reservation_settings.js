@@ -514,7 +514,7 @@
                 if (data.success) {
                     const input = document.getElementById('card-fee-rate-input');
                     if (input) {
-                        input.value = data.rate || 5.0;
+                        input.value = Math.floor(data.rate) || 5;
                     }
                 } else {
                     console.error('Failed to load card fee rate');
@@ -527,8 +527,8 @@
     
     function saveCardFeeRate() {
         const input = document.getElementById('card-fee-rate-input');
-        const rate = parseFloat(input.value);
-        
+        const rate = parseInt(input.value, 10);
+
         if (isNaN(rate) || rate < 0 || rate > 100) {
             showMessage('カード手数料率は0〜100の範囲で入力してください', 'error');
             return;

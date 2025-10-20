@@ -48,11 +48,16 @@ def register_reservation_settings_routes(app):
     def reservation_settings(store):
         """予約設定ページを表示"""
         try:
+            success = request.args.get('success')
+            error = request.args.get('error')
+
             return render_template(
                 'reservation_settings.html',
-                store=store
+                store=store,
+                success=success,
+                error=error
             )
-            
+
         except Exception as e:
             print(f"Error in reservation_settings route: {e}")
             import traceback
@@ -348,9 +353,11 @@ def register_reservation_settings_routes(app):
         """カード手数料率を取得"""
         try:
             from database.settings_db import get_card_fee_rate
-            
-            rate = get_card_fee_rate()
-            
+            from database.connection import get_store_id
+
+            store_id = get_store_id(store)
+            rate = get_card_fee_rate(store_id)
+
             return jsonify({
                 'success': True,
                 'rate': rate

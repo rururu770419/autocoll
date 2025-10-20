@@ -93,15 +93,17 @@
                     <tr>
                         <th>パスワード</th>
                         <td>
-                            <input type="text" name="password" class="cast-edit-input" 
-                                   placeholder="半角英数字" value="{{ cast.password if cast.password else '' }}">
+                            <input type="text" name="password" class="cast-edit-input"
+                                   placeholder="半角英数字" value="{{ cast.password_plain if cast.password_plain else '' }}">
                         </td>
                         <th>働き方区分</th>
                         <td>
                             <select name="work_type" class="cast-edit-select">
                                 <option value="">選択してください</option>
                                 <option value="出稼ぎ" {{ 'selected' if cast.work_type == '出稼ぎ' else '' }}>出稼ぎ</option>
-                                <option value="地元" {{ 'selected' if cast.work_type == '地元' else '' }}>地元</option>
+                                <option value="地元(電車)" {{ 'selected' if cast.work_type == '地元(電車)' else '' }}>地元(電車)</option>
+                                <option value="地元(車)" {{ 'selected' if cast.work_type == '地元(車)' else '' }}>地元(車)</option>
+                                <option value="地元(徒歩・自転車)" {{ 'selected' if cast.work_type == '地元(徒歩・自転車)' else '' }}>地元(徒歩・自転車)</option>
                             </select>
                         </td>
                     </tr>

@@ -11,6 +11,13 @@
 <div class="discount-container">
     <h1 class="discount-title">割引マスタ管理</h1>
 
+    {% if success %}
+    <div class="discount-alert discount-alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="discount-alert discount-alert-danger">{{ error }}</div>
+    {% endif %}
+
     <div id="discount-message-area"></div>
 
     <!-- 登録フォーム -->

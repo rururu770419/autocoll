@@ -33,7 +33,7 @@ def get_all_casts(db, store_id):
     """データベースから全てのキャスト情報を取得します。"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT cast_id, name, phone_number
+        SELECT cast_id, name, phone_number, available_course_categories
         FROM casts
         WHERE store_id = %s AND status = '在籍'
         ORDER BY name
@@ -88,42 +88,80 @@ def find_cast_by_phone_number(db, phone_number):
     return cast if cast else None
 
 # ==== 拡張キャスト管理関数 ====
-def get_all_casts_with_details(db, store_id):
-    """年齢計算込みのキャスト詳細情報を取得"""
+def get_all_casts_with_details(db, store_id, status=None):
+    """年齢計算込みのキャスト詳細情報を取得（ステータスフィルター対応）"""
     cursor = db.cursor()
-    cursor.execute("""
-        SELECT
-            cast_id,
-            name,
-            phone_number,
-            email,
-            birth_date,
-            CASE
-                WHEN birth_date IS NOT NULL
-                THEN EXTRACT(YEAR FROM age(birth_date))::INTEGER
-                ELSE NULL
-            END AS age,
-            address,
-            join_date,
-            status,
-            recruitment_source,
-            transportation_fee,
-            available_course_categories,
-            work_type,
-            comments,
-            login_id,
-            password_plain,
-            last_login,
-            profile_image_path,
-            is_active,
-            created_at,
-            updated_at,
-            notification_minutes_before,
-            auto_call_enabled
-        FROM casts
-        WHERE store_id = %s AND is_active = TRUE
-        ORDER BY name
-    """, (store_id,))
+
+    # ステータスフィルターがある場合
+    if status:
+        cursor.execute("""
+            SELECT
+                cast_id,
+                name,
+                phone_number,
+                email,
+                birth_date,
+                CASE
+                    WHEN birth_date IS NOT NULL
+                    THEN EXTRACT(YEAR FROM age(birth_date))::INTEGER
+                    ELSE NULL
+                END AS age,
+                address,
+                join_date,
+                status,
+                recruitment_source,
+                transportation_fee,
+                available_course_categories,
+                work_type,
+                comments,
+                login_id,
+                password_plain,
+                last_login,
+                profile_image_path,
+                is_active,
+                created_at,
+                updated_at,
+                notification_minutes_before,
+                auto_call_enabled
+            FROM casts
+            WHERE store_id = %s AND is_active = TRUE AND status = %s
+            ORDER BY name
+        """, (store_id, status))
+    else:
+        cursor.execute("""
+            SELECT
+                cast_id,
+                name,
+                phone_number,
+                email,
+                birth_date,
+                CASE
+                    WHEN birth_date IS NOT NULL
+                    THEN EXTRACT(YEAR FROM age(birth_date))::INTEGER
+                    ELSE NULL
+                END AS age,
+                address,
+                join_date,
+                status,
+                recruitment_source,
+                transportation_fee,
+                available_course_categories,
+                work_type,
+                comments,
+                login_id,
+                password_plain,
+                last_login,
+                profile_image_path,
+                is_active,
+                created_at,
+                updated_at,
+                notification_minutes_before,
+                auto_call_enabled
+            FROM casts
+            WHERE store_id = %s AND is_active = TRUE
+            ORDER BY name
+        """, (store_id,))
+
     return cursor.fetchall()
 
 def register_cast_extended(db, cast_data):
@@ -526,169 +564,169 @@ def get_all_ng_age_patterns(db):
     return cursor.fetchall()
 
 # ==== NG項目管理関数 ====
-def get_cast_ng_hotels(db, cast_id):
-    """キャストのNGホテル一覧を取得"""
+def get_cast_ng_hotels(db, cast_id, store_id):
+    """キャストのNGホテル一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT h.hotel_id, h.name as hotel_name 
+        SELECT h.hotel_id, h.name as hotel_name
         FROM cast_ng_hotels ng
-        JOIN hotels h ON ng.hotel_id = h.hotel_id
-        WHERE ng.cast_id = %s
+        JOIN hotels h ON ng.hotel_id = h.hotel_id AND ng.store_id = h.store_id
+        WHERE ng.cast_id = %s AND ng.store_id = %s
         ORDER BY h.name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def get_cast_ng_courses(db, cast_id):
-    """キャストのNGコース一覧を取得"""
+def get_cast_ng_courses(db, cast_id, store_id):
+    """キャストのNGコース一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT c.course_id, c.name as course_name 
+        SELECT c.course_id, c.name as course_name
         FROM cast_ng_courses ng
-        JOIN courses c ON ng.course_id = c.course_id
-        WHERE ng.cast_id = %s
+        JOIN courses c ON ng.course_id = c.course_id AND ng.store_id = c.store_id
+        WHERE ng.cast_id = %s AND ng.store_id = %s
         ORDER BY c.name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def get_cast_ng_options(db, cast_id):
-    """キャストのNGオプション一覧を取得"""
+def get_cast_ng_options(db, cast_id, store_id):
+    """キャストのNGオプション一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT o.option_id, o.name as option_name 
+        SELECT o.option_id, o.name as option_name
         FROM cast_ng_options ng
-        JOIN options o ON ng.option_id = o.option_id
-        WHERE ng.cast_id = %s
+        JOIN options o ON ng.option_id = o.option_id AND ng.store_id = o.store_id
+        WHERE ng.cast_id = %s AND ng.store_id = %s
         ORDER BY o.name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def get_cast_ng_areas(db, cast_id):
-    """キャストのNGエリア一覧を取得"""
+def get_cast_ng_areas(db, cast_id, store_id):
+    """キャストのNGエリア一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT a.area_id, a.name as area_name 
+        SELECT a.area_id, a.name as area_name
         FROM cast_ng_areas ng
-        JOIN areas a ON ng.area_id = a.area_id
-        WHERE ng.cast_id = %s
+        JOIN areas a ON ng.area_id = a.area_id AND ng.store_id = a.store_id
+        WHERE ng.cast_id = %s AND ng.store_id = %s
         ORDER BY a.name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def get_cast_ng_custom_areas(db, cast_id):
-    """キャストのNGエリア（カスタム）一覧を取得"""
+def get_cast_ng_custom_areas(db, cast_id, store_id):
+    """キャストのNGエリア（カスタム）一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT na.ng_area_id, na.area_name 
+        SELECT na.ng_area_id, na.area_name
         FROM cast_ng_custom_areas cna
         JOIN ng_areas na ON cna.ng_area_id = na.ng_area_id
-        WHERE cna.cast_id = %s AND na.is_active = TRUE
+        WHERE cna.cast_id = %s AND cna.store_id = %s AND na.is_active = TRUE
         ORDER BY na.area_name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def get_cast_ng_age_patterns(db, cast_id):
-    """キャストの年齢NGパターン一覧を取得"""
+def get_cast_ng_age_patterns(db, cast_id, store_id):
+    """キャストの年齢NGパターン一覧を取得（store_idでフィルタ）"""
     cursor = db.cursor()
     cursor.execute("""
-        SELECT nap.ng_age_id, nap.pattern_name, nap.description 
+        SELECT nap.ng_age_id, nap.pattern_name, nap.description
         FROM cast_ng_age_patterns cnap
         JOIN ng_age_patterns nap ON cnap.ng_age_id = nap.ng_age_id
-        WHERE cnap.cast_id = %s AND nap.is_active = TRUE
+        WHERE cnap.cast_id = %s AND cnap.store_id = %s AND nap.is_active = TRUE
         ORDER BY nap.pattern_name
-    """, (cast_id,))
+    """, (cast_id, store_id))
     return cursor.fetchall()
 
-def update_cast_ng_items(db, cast_id, ng_type, item_ids):
-    """キャストのNG項目を一括更新"""
+def update_cast_ng_items(db, cast_id, ng_type, item_ids, store_id):
+    """キャストのNG項目を一括更新（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
-        
+
         table_map = {
             'hotels': ('cast_ng_hotels', 'hotel_id'),
             'courses': ('cast_ng_courses', 'course_id'),
             'options': ('cast_ng_options', 'option_id'),
             'areas': ('cast_ng_areas', 'area_id')
         }
-        
+
         if ng_type not in table_map:
             raise ValueError(f"Invalid ng_type: {ng_type}")
-        
+
         table_name, id_column = table_map[ng_type]
-        
-        cursor.execute(f"DELETE FROM {table_name} WHERE cast_id = %s", (cast_id,))
-        
+
+        cursor.execute(f"DELETE FROM {table_name} WHERE cast_id = %s AND store_id = %s", (cast_id, store_id))
+
         if item_ids:
-            values = [(cast_id, item_id) for item_id in item_ids]
-            placeholders = ','.join(['(%s, %s)'] * len(values))
-            flat_values = [val for pair in values for val in pair]
-            
+            values = [(cast_id, item_id, store_id) for item_id in item_ids]
+            placeholders = ','.join(['(%s, %s, %s)'] * len(values))
+            flat_values = [val for triple in values for val in triple]
+
             cursor.execute(f"""
-                INSERT INTO {table_name} (cast_id, {id_column}) 
+                INSERT INTO {table_name} (cast_id, {id_column}, store_id)
                 VALUES {placeholders}
             """, flat_values)
-        
+
         db.commit()
-        print(f"キャストNG{ng_type}更新成功: cast_id {cast_id}")
+        print(f"キャストNG{ng_type}更新成功: cast_id {cast_id}, store_id {store_id}")
         return True
-        
+
     except Exception as e:
         print(f"キャストNG項目更新エラー: {e}")
         import traceback
         traceback.print_exc()
         return False
 
-def update_cast_ng_custom_areas(db, cast_id, ng_area_ids):
-    """キャストのNGエリア（カスタム）を一括更新"""
+def update_cast_ng_custom_areas(db, cast_id, ng_area_ids, store_id):
+    """キャストのNGエリア（カスタム）を一括更新（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
-        
+
         # 既存のNG設定を削除
-        cursor.execute("DELETE FROM cast_ng_custom_areas WHERE cast_id = %s", (cast_id,))
-        
+        cursor.execute("DELETE FROM cast_ng_custom_areas WHERE cast_id = %s AND store_id = %s", (cast_id, store_id))
+
         # 新しいNG設定を登録
         if ng_area_ids:
-            values = [(cast_id, area_id) for area_id in ng_area_ids]
-            placeholders = ','.join(['(%s, %s)'] * len(values))
-            flat_values = [val for pair in values for val in pair]
-            
+            values = [(cast_id, area_id, store_id) for area_id in ng_area_ids]
+            placeholders = ','.join(['(%s, %s, %s)'] * len(values))
+            flat_values = [val for triple in values for val in triple]
+
             cursor.execute(f"""
-                INSERT INTO cast_ng_custom_areas (cast_id, ng_area_id) 
+                INSERT INTO cast_ng_custom_areas (cast_id, ng_area_id, store_id)
                 VALUES {placeholders}
             """, flat_values)
-        
+
         db.commit()
-        print(f"キャストNGエリア更新成功: cast_id {cast_id}")
+        print(f"キャストNGエリア更新成功: cast_id {cast_id}, store_id {store_id}")
         return True
-        
+
     except Exception as e:
         print(f"キャストNGエリア更新エラー: {e}")
         import traceback
         traceback.print_exc()
         return False
 
-def update_cast_ng_age_patterns(db, cast_id, ng_age_ids):
-    """キャストの年齢NGパターンを一括更新"""
+def update_cast_ng_age_patterns(db, cast_id, ng_age_ids, store_id):
+    """キャストの年齢NGパターンを一括更新（store_idでフィルタ）"""
     try:
         cursor = db.cursor()
-        
+
         # 既存のNG設定を削除
-        cursor.execute("DELETE FROM cast_ng_age_patterns WHERE cast_id = %s", (cast_id,))
-        
+        cursor.execute("DELETE FROM cast_ng_age_patterns WHERE cast_id = %s AND store_id = %s", (cast_id, store_id))
+
         # 新しいNG設定を登録
         if ng_age_ids:
-            values = [(cast_id, age_id) for age_id in ng_age_ids]
-            placeholders = ','.join(['(%s, %s)'] * len(values))
-            flat_values = [val for pair in values for val in pair]
-            
+            values = [(cast_id, age_id, store_id) for age_id in ng_age_ids]
+            placeholders = ','.join(['(%s, %s, %s)'] * len(values))
+            flat_values = [val for triple in values for val in triple]
+
             cursor.execute(f"""
-                INSERT INTO cast_ng_age_patterns (cast_id, ng_age_id) 
+                INSERT INTO cast_ng_age_patterns (cast_id, ng_age_id, store_id)
                 VALUES {placeholders}
             """, flat_values)
-        
+
         db.commit()
-        print(f"キャスト年齢NG更新成功: cast_id {cast_id}")
+        print(f"キャスト年齢NG更新成功: cast_id {cast_id}, store_id {store_id}")
         return True
-        
+
     except Exception as e:
         print(f"キャスト年齢NG更新エラー: {e}")
         import traceback

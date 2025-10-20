@@ -15,6 +15,7 @@ from database.parking_db import (
     delete_parking_lot,
     get_parking_enabled
 )
+from database.connection import get_store_id
 from twilio.rest import Client
 import os
 from dotenv import load_dotenv
@@ -41,14 +42,17 @@ def register_settings_routes(app):
     @app.route('/<store>/settings')
     @admin_required
     def settings(store):
-        
+
         try:
+            # store_idを取得
+            store_id = get_store_id(store)
+
             # 全設定を取得
-            settings_data = get_all_settings()
-            
+            settings_data = get_all_settings(store_id)
+
             # 駐車場設定を取得
-            parking_enabled = get_parking_enabled()
-            
+            parking_enabled = get_parking_enabled(store_id)
+
             return render_template(
                 'settings.html',
                 store=store,
@@ -57,9 +61,11 @@ def register_settings_routes(app):
                 auto_call=settings_data['auto_call'],
                 parking_enabled=parking_enabled
             )
-            
+
         except Exception as e:
             print(f"Error in settings route: {e}")
+            import traceback
+            traceback.print_exc()
             flash('設定の読み込みに失敗しました', 'error')
             return redirect(url_for('main_routes.store_home', store=store))
     
@@ -69,18 +75,21 @@ def register_settings_routes(app):
     def save_settings(store):
         """設定を保存"""
         try:
+            # store_idを取得
+            store_id = get_store_id(store)
+
             # POSTデータを取得
             settings_dict = {}
-            
+
             # フォームから送られてきた全データを取得
             for key in request.form:
                 settings_dict[key] = request.form[key]
-            
+
             # 更新者を記録
             updated_by = session.get('user', {}).get('login_id', 'unknown')
-            
+
             # 一括更新
-            success_count, error_count = bulk_update_settings(settings_dict, updated_by)
+            success_count, error_count = bulk_update_settings(settings_dict, store_id, updated_by)
             
             if error_count > 0:
                 return jsonify({
@@ -106,16 +115,19 @@ def register_settings_routes(app):
     def test_call(store):
         """テスト発信"""
         try:
+            # store_idを取得
+            store_id = get_store_id(store)
+
             # テスト用電話番号を取得
             data = request.get_json()
             test_phone = data.get('phone_number')
-            
+
             if not test_phone:
                 return jsonify({
                     'success': False,
                     'message': '電話番号を入力してください'
                 }), 400
-            
+
             # 電話番号のフォーマットチェック（簡易）
             test_phone = test_phone.replace('-', '').replace(' ', '')
             if not test_phone.startswith('+'):
@@ -127,28 +139,28 @@ def register_settings_routes(app):
                         'success': False,
                         'message': '電話番号の形式が正しくありません'
                     }), 400
-            
+
             # Twilio設定を取得
-            twilio_config = get_twilio_config()
-            
+            twilio_config = get_twilio_config(store_id)
+
             if not twilio_config['account_sid'] or not twilio_config['auth_token']:
                 return jsonify({
                     'success': False,
                     'message': 'Twilio設定が完了していません'
                 }), 400
-            
+
             # Twilioクライアント作成
             client = Client(
                 twilio_config['account_sid'],
                 twilio_config['auth_token']
             )
-            
+
             # メッセージテンプレートを取得
-            message_template = get_setting('call_message_template') or 'これはテスト通話です。'
+            message_template = get_setting('call_message_template', store_id) or 'これはテスト通話です。'
             message = message_template.replace('{name}', 'テスト')
-            
+
             # 通話時間を取得
-            timeout_seconds = int(get_setting('call_timeout_seconds') or '15')
+            timeout_seconds = int(get_setting('call_timeout_seconds', store_id) or '15')
             
             # テスト発信
             call = client.calls.create(
@@ -177,7 +189,10 @@ def register_settings_routes(app):
     def get_setting_value(store, key):
         """特定の設定値を取得（AJAX用）"""
         try:
-            value = get_setting(key)
+            # store_idを取得
+            store_id = get_store_id(store)
+
+            value = get_setting(key, store_id)
             return jsonify({
                 'success': True,
                 'value': value
@@ -199,15 +214,18 @@ def register_settings_routes(app):
     def get_parking_lots_api(store):
         """駐車場設定ページ"""
         try:
-            parking_lots = get_all_parking_lots()
-            parking_enabled = get_parking_enabled()
-            
+            # store_idを取得
+            store_id = get_store_id(store)
+
+            parking_lots = get_all_parking_lots(store_id)
+            parking_enabled = get_parking_enabled(store_id)
+
             return jsonify({
                 'success': True,
                 'parking_lots': parking_lots,
                 'parking_enabled': parking_enabled
             })
-            
+
         except Exception as e:
             print(f"Error in parking_settings: {e}")
             return jsonify({
@@ -221,20 +239,23 @@ def register_settings_routes(app):
     def create_parking(store):
         """駐車場を新規作成"""
         try:
+            # store_idを取得
+            store_id = get_store_id(store)
+
             data = request.get_json()
             parking_name = data.get('parking_name')
-            
+
             if not parking_name:
                 return jsonify({
                     'success': False,
                     'message': '駐車場名を入力してください'
                 }), 400
-            
+
             # 表示順序を取得（最後に追加）
-            existing_lots = get_all_parking_lots()
+            existing_lots = get_all_parking_lots(store_id)
             display_order = len(existing_lots)
-            
-            parking_id = create_parking_lot(parking_name, display_order)
+
+            parking_id = create_parking_lot(parking_name, store_id, display_order)
             
             if parking_id:
                 return jsonify({
@@ -261,16 +282,19 @@ def register_settings_routes(app):
     def update_parking(store, parking_id):
         """駐車場を更新"""
         try:
+            # store_idを取得
+            store_id = get_store_id(store)
+
             data = request.get_json()
             parking_name = data.get('parking_name')
-            
+
             if not parking_name:
                 return jsonify({
                     'success': False,
                     'message': '駐車場名を入力してください'
                 }), 400
-            
-            success = update_parking_lot(parking_id, parking_name=parking_name)
+
+            success = update_parking_lot(parking_id, store_id, parking_name=parking_name)
             
             if success:
                 return jsonify({
@@ -296,7 +320,10 @@ def register_settings_routes(app):
     def delete_parking(store, parking_id):
         """駐車場を削除"""
         try:
-            success = delete_parking_lot(parking_id)
+            # store_idを取得
+            store_id = get_store_id(store)
+
+            success = delete_parking_lot(parking_id, store_id)
             
             if success:
                 return jsonify({
@@ -326,14 +353,17 @@ def register_settings_routes(app):
         """シフト種別一覧を取得"""
         try:
             from database.shift_db import get_all_shift_types
-            
-            shift_types = get_all_shift_types()
-            
+
+            # store_idを取得
+            store_id = get_store_id(store)
+
+            shift_types = get_all_shift_types(store_id)
+
             return jsonify({
                 'success': True,
                 'shift_types': shift_types
             })
-            
+
         except Exception as e:
             print(f"Error in get_shift_types: {e}")
             return jsonify({
@@ -348,20 +378,24 @@ def register_settings_routes(app):
         """シフト種別を新規作成"""
         try:
             from database.shift_db import create_shift_type as db_create_shift_type, get_all_shift_types
-            
+
+            # store_idを取得
+            store_id = get_store_id(store)
+
             data = request.get_json()
             shift_name = data.get('shift_name')
             is_work_day = data.get('is_work_day', True)
             color = data.get('color', '#3498db')
-            
+
             if not shift_name:
                 return jsonify({
                     'success': False,
                     'message': 'シフト名を入力してください'
                 }), 400
-            
+
             shift_type_id = db_create_shift_type(
                 shift_name=shift_name,
+                store_id=store_id,
                 is_work_day=is_work_day,
                 color=color,
             )
@@ -392,20 +426,24 @@ def register_settings_routes(app):
         """シフト種別を更新"""
         try:
             from database.shift_db import update_shift_type as db_update_shift_type
-            
+
+            # store_idを取得
+            store_id = get_store_id(store)
+
             data = request.get_json()
             shift_name = data.get('shift_name')
             is_work_day = data.get('is_work_day')
             color = data.get('color')
-            
+
             if not shift_name:
                 return jsonify({
                     'success': False,
                     'message': 'シフト名を入力してください'
                 }), 400
-            
+
             success = db_update_shift_type(
                 shift_type_id=shift_type_id,
+                store_id=store_id,
                 shift_name=shift_name,
                 is_work_day=is_work_day,
                 color=color
@@ -436,8 +474,11 @@ def register_settings_routes(app):
         """シフト種別を削除"""
         try:
             from database.shift_db import delete_shift_type as db_delete_shift_type
-            
-            success = db_delete_shift_type(shift_type_id)
+
+            # store_idを取得
+            store_id = get_store_id(store)
+
+            success = db_delete_shift_type(shift_type_id, store_id)
             
             if success:
                 return jsonify({

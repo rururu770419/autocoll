@@ -141,4 +141,29 @@ document.addEventListener('DOMContentLoaded', function() {
     initAgeCalculation();
     initFileUpload();
     initFileRemoval();
+
+    // 成功・エラーメッセージがある場合、NG設定タブを開く
+    const hasMessage = document.querySelector('.cast-edit-flash-success, .cast-edit-flash-error');
+    if (hasMessage) {
+        // NG設定タブをアクティブにする
+        const tabs = document.querySelectorAll('.cast-edit-tab');
+        const tabContents = document.querySelectorAll('.cast-edit-tab-content');
+        const ngSettingsTab = document.querySelector('.cast-edit-tab[data-tab="ng-settings"]');
+        const ngSettingsContent = document.getElementById('ng-settings-tab');
+
+        if (ngSettingsTab && ngSettingsContent) {
+            // 全てのタブとコンテンツを非アクティブに
+            tabs.forEach(t => t.classList.remove('cast-edit-tab-active'));
+            tabContents.forEach(content => content.classList.remove('cast-edit-tab-active'));
+
+            // NG設定タブをアクティブに
+            ngSettingsTab.classList.add('cast-edit-tab-active');
+            ngSettingsContent.classList.add('cast-edit-tab-active');
+
+            // NG設定タブにスクロール
+            setTimeout(() => {
+                ngSettingsContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
 });

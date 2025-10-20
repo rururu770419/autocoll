@@ -609,6 +609,7 @@ def get_hotels_api(store):
                 "type_name": hotel.get('category_name', '-'),
                 "area_id": hotel.get('area_id'),
                 "area_name": hotel.get('area_name', '-'),
+                "transportation_fee": hotel.get('transportation_fee', 0),
                 "is_active": hotel.get('is_active', True)
             })
         

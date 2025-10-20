@@ -168,6 +168,12 @@ def register_reservation(store):
     try:
         store_id = get_store_id(store)
 
+        # デバッグ: 送信されたフォームデータを全て表示
+        print("=== 予約登録フォームデータ ===")
+        for key, value in request.form.items():
+            print(f"{key}: {value}")
+        print("===========================")
+
         # FormDataから全てのデータを取得
         customer_id = request.form.get('customer_id', type=int)
         contract_type = request.form.get('contract_type', 'contract')
@@ -190,6 +196,7 @@ def register_reservation(store):
         # その他のフィールド
         cast_id = request.form.get('cast_id', type=int) or None
         staff_id = request.form.get('staff_id', type=int) or None
+        reservation_method_id = request.form.get('reservation_method', type=int) or None
         nomination_type_id = request.form.get('nomination_type', type=int) or None
         course_id = request.form.get('course_id', type=int) or None
         extension_id = request.form.get('extension', type=int) or None
@@ -209,8 +216,9 @@ def register_reservation(store):
         # area_idの取得（交通費から逆引きする場合もあるが、今回は未使用）
         area_id = None
 
-        # discount_idの取得
-        discount_id = request.form.get('discount_id', type=int) or None
+        # discount_idの取得（チェックボックスから最初の選択を取得）
+        discount_ids = request.form.getlist('discounts[]', type=int)
+        discount_id = discount_ids[0] if discount_ids else None
 
         # 予約を作成
         reservation_id = create_reservation(
@@ -235,7 +243,8 @@ def register_reservation(store):
             points_to_grant=pt_add,
             customer_comment=comment,
             staff_memo=None,
-            cancellation_reason_id=cancellation_reason_id
+            cancellation_reason_id=cancellation_reason_id,
+            reservation_method_id=reservation_method_id
         )
 
         if reservation_id:

@@ -149,7 +149,7 @@
 }
 
 .reservation-table td {
-    padding: 12px 8px;
+    padding: 6px 8px;
     font-size: 14px;
     vertical-align: middle;
 }
@@ -176,6 +176,27 @@
 .amount-cell {
     text-align: right;
     font-weight: bold;
+}
+
+/* 中央寄せ */
+.center-align {
+    text-align: center;
+}
+
+/* 合計金額のスタイル */
+.total-amount-cell {
+    color: #ff1493;
+    font-weight: bold;
+}
+
+/* 部屋番号入力 */
+.room-number-input-list {
+    width: 60px;
+    padding: 2px 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
 }
 
 .option-list {
@@ -210,6 +231,17 @@
 
 .edit-icon-link:hover {
     color: #0097A7;
+}
+
+/* お客様の電話番号 */
+.customer-phone {
+    font-size: 12px;
+    color: #666;
+}
+
+/* お客様の名前 */
+.customer-name-text {
+    font-weight: bold;
 }
 
 /* 編集列は狭めに */

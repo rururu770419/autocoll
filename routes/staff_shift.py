@@ -66,21 +66,21 @@ def get_staff_shift_data(store):
         for staff in staff_list_raw:
             staff_dict = dict(staff)
             staff_list.append(staff_dict)
-        
+
         # シフト種別を取得
-        shift_types_raw = get_all_shift_types()
-        
+        shift_types_raw = get_all_shift_types(store_id)
+
         # シフト種別をJSON serializable形式に変換
         shift_types = []
         for shift_type in shift_types_raw:
             shift_type_dict = dict(shift_type)
             shift_types.append(shift_type_dict)
-        
+
         # 指定月のシフトを取得
-        shifts = get_shifts_by_month(year, month)
-        
+        shifts = get_shifts_by_month(year, month, store_id)
+
         # 日付別備考を取得
-        memos = get_date_memos_by_month(year, month)
+        memos = get_date_memos_by_month(year, month, store_id)
         
         # その月の日数を取得
         _, days_in_month = calendar.monthrange(year, month)
@@ -134,35 +134,37 @@ def get_staff_shift_data(store):
 def save_staff_shift(store):
     """シフトを保存"""
     try:
+        store_id = get_store_id(store)
         data = request.get_json()
-        
+
         staff_id = data.get('staff_id')
         shift_date = data.get('shift_date')
         shift_type_id = data.get('shift_type_id')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
         memo = data.get('memo')
-        
+
         if not staff_id or not shift_date:
             return jsonify({
                 'success': False,
                 'message': 'スタッフIDと日付は必須です'
             }), 400
-        
+
         # シフト種別IDがNoneの場合はNULL、空文字の場合もNULL
         if shift_type_id == '' or shift_type_id == 'null':
             shift_type_id = None
-        
+
         # 時間が空文字の場合はNULL
         if start_time == '':
             start_time = None
         if end_time == '':
             end_time = None
-        
+
         success = upsert_shift(
             staff_id=staff_id,
             shift_date=shift_date,
             shift_type_id=shift_type_id,
+            store_id=store_id,
             start_time=start_time,
             end_time=end_time,
             parking_id=None,  # 駐車場は今回使わない
@@ -195,18 +197,19 @@ def save_staff_shift(store):
 def delete_staff_shift(store):
     """シフトを削除"""
     try:
+        store_id = get_store_id(store)
         data = request.get_json()
-        
+
         staff_id = data.get('staff_id')
         shift_date = data.get('shift_date')
-        
+
         if not staff_id or not shift_date:
             return jsonify({
                 'success': False,
                 'message': 'スタッフIDと日付は必須です'
             }), 400
-        
-        success = delete_shift(staff_id, shift_date)
+
+        success = delete_shift(staff_id, shift_date, store_id)
         
         if success:
             return jsonify({
@@ -232,18 +235,19 @@ def delete_staff_shift(store):
 def save_date_memo(store):
     """日付別備考を保存"""
     try:
+        store_id = get_store_id(store)
         data = request.get_json()
-        
+
         memo_date = data.get('memo_date')
         memo_text = data.get('memo_text', '')
-        
+
         if not memo_date:
             return jsonify({
                 'success': False,
                 'message': '日付は必須です'
             }), 400
-        
-        success = upsert_date_memo(memo_date, memo_text)
+
+        success = upsert_date_memo(memo_date, memo_text, store_id)
         
         if success:
             return jsonify({

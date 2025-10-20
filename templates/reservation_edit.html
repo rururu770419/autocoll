@@ -33,7 +33,10 @@
 <div class="reservation-container">
     <!-- ========== 第1列：顧客情報表示エリア ========== -->
     <div class="customer-info-area">
-        <div class="customer-info-card">
+        <div class="customer-info-card edit-mode">
+            <!-- ページ名 -->
+            <div class="reservation-page-label">予約編集</div>
+
             <!-- 顧客情報 -->
             <div class="customer-info-content">
                 <p class="customer-number">顧客番号: {{ customer.get('customer_number', '---') }}</p>
@@ -84,9 +87,14 @@
             </a>
         </div>
 
+        <!-- 顧客評価ボタン（新規追加） -->
+        <button type="button" class="customer-action-btn customer-rating-btn" onclick="alert('顧客評価ページは準備中です')">
+            顧客評価
+        </button>
+
         <!-- 予約一覧に戻るボタン -->
         <a href="{{ url_for('reservation.reservations_list', store=store) }}"
-           class="customer-search-btn">
+           class="customer-action-btn customer-back-btn">
             予約一覧に戻る
         </a>
     </div>
@@ -235,7 +243,7 @@
             <!-- 支払い方法 -->
             <div class="form-group">
                 <label>支払い方法</label>
-                <select id="payment_method" name="payment_method" class="form-select">
+                <select id="payment_method" name="payment_method" class="form-select" onchange="calculateTotal()">
                     <option value="">選択してください</option>
                 </select>
             </div>
@@ -257,11 +265,19 @@
 
             <!-- ========== 6行目 ========== -->
             <!-- 割引 -->
-            <div class="form-group">
+            <div class="form-group" style="overflow: visible;">
                 <label>割引</label>
-                <select id="discount_id" name="discount_id" class="form-select" onchange="calculateTotal()">
-                    <option value="">選択してください</option>
-                </select>
+                <div class="custom-select-wrapper">
+                    <div class="custom-select" id="discount-select">
+                        <div class="select-display" id="discount_select_display">
+                            <span class="select-placeholder">割引を選択してください</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="options-dropdown discount-dropdown collapsed" id="discount_container">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- PT関連（2-3列、2列分） -->

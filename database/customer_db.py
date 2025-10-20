@@ -79,19 +79,23 @@ def calculate_age(birthday):
 def add_customer(store_code, customer_data):
     """顧客を追加する関数"""
     try:
+        # store_idを取得
+        from database.connection import get_store_id
+        store_id = get_store_id(store_code)
+
         conn = get_db_connection(store_code)
         cur = conn.cursor()
-        
+
         # 空文字列をNoneに変換（DATE型フィールド）
-        birthday = customer_data.get('birth_date')
+        birthday = customer_data.get('birth_date') or customer_data.get('birthday')
         if birthday == '':
             birthday = None
-        
+
         # 住所は個別カラムで保存
         prefecture = customer_data.get('prefecture')
         city = customer_data.get('city')
         address_detail = customer_data.get('address_detail')
-        
+
         # 年齢計算（birthdayがある場合）
         age = None
         if birthday:
@@ -99,18 +103,19 @@ def add_customer(store_code, customer_data):
             today = date.today()
             birth = date.fromisoformat(birthday) if isinstance(birthday, str) else birthday
             age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
-        
+
         cur.execute('''
             INSERT INTO customers (
-                name, furigana, phone, 
+                store_id, name, furigana, phone,
                 birthday, age, prefecture, city, address_detail,
                 mypage_id, mypage_password_hash, status,
                 web_member, comment, nickname, current_points, member_type,
-                recruitment_source
+                recruitment_source, car_info
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             ) RETURNING customer_id
         ''', (
+            store_id,
             customer_data.get('name'),
             customer_data.get('furigana'),
             customer_data.get('phone_number') or customer_data.get('phone') or None,
@@ -127,18 +132,19 @@ def add_customer(store_code, customer_data):
             customer_data.get('nickname'),
             customer_data.get('current_points', 0),
             customer_data.get('member_type', '通常会員'),
-            customer_data.get('recruitment_source')
+            customer_data.get('recruitment_source'),
+            customer_data.get('car_info')
         ))
-        
+
         customer_id = cur.fetchone()[0]
-        
+
         conn.commit()
         cur.close()
         conn.close()
-        
+
         print(f"顧客追加成功: {customer_data.get('name')}")
         return customer_id
-        
+
     except Exception as e:
         print(f"Error in add_customer: {e}")
         import traceback
@@ -378,18 +384,19 @@ def search_customers(store_code, keyword, search_type=None):
     finally:
         conn.close()
 
-def get_customer_field_categories():
-    """顧客項目のカテゴリ一覧を取得"""
+def get_customer_field_categories(store_id):
+    """顧客項目のカテゴリ一覧を取得（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         cursor.execute("""
             SELECT field_key, field_label, display_order
             FROM customer_field_categories
+            WHERE store_id = %s
             ORDER BY display_order
-        """)
-        
+        """, (store_id,))
+
         categories = []
         for row in cursor.fetchall():
             categories.append({
@@ -397,37 +404,33 @@ def get_customer_field_categories():
                 'field_label': row[1],
                 'display_order': row[2]
             })
-        
+
         return categories
-        
+
     finally:
         cursor.close()
         conn.close()
 
 
-def get_customer_field_options_all():
-    """全ての顧客項目の選択肢を取得（セッションのstore_codeを使用）"""
-    from flask import session
-    
+def get_customer_field_options_all(store_id):
+    """全ての顧客項目の選択肢を取得（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
-        store_code = session.get('store', 'naganoe')
-        
         cursor.execute("""
             SELECT id, field_key, option_value, display_color, display_order, is_hidden
             FROM customer_field_options
-            WHERE store_code = %s
+            WHERE store_id = %s
             ORDER BY field_key, display_order
-        """, (store_code,))
-        
+        """, (store_id,))
+
         options = {}
         for row in cursor.fetchall():
             field_key = row[1]
             if field_key not in options:
                 options[field_key] = []
-            
+
             options[field_key].append({
                 'id': row[0],
                 'field_key': row[1],
@@ -436,28 +439,28 @@ def get_customer_field_options_all():
                 'display_order': row[4],
                 'is_hidden': row[5]
             })
-        
+
         return options
-        
+
     finally:
         cursor.close()
         conn.close()
 
-def update_customer_field_label(field_key, field_label):
-    """カテゴリ名を更新"""
+def update_customer_field_label(field_key, field_label, store_id):
+    """カテゴリ名を更新（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         cursor.execute("""
             UPDATE customer_field_categories
             SET field_label = %s
-            WHERE field_key = %s
-        """, (field_label, field_key))
-        
+            WHERE field_key = %s AND store_id = %s
+        """, (field_label, field_key, store_id))
+
         conn.commit()
         return cursor.rowcount > 0
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error updating field label: {e}")
@@ -467,37 +470,33 @@ def update_customer_field_label(field_key, field_label):
         conn.close()
 
 
-def add_customer_field_option(field_key, option_value, display_color='#f0f0f0'):
-    """選択肢を追加"""
-    from flask import session
-    
+def add_customer_field_option(field_key, option_value, store_id, display_color='#f0f0f0'):
+    """選択肢を追加（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
-        store_code = session.get('store', 'naganoe')
-        
         # 現在の最大display_orderを取得
         cursor.execute("""
             SELECT COALESCE(MAX(display_order), 0)
             FROM customer_field_options
-            WHERE store_code = %s AND field_key = %s
-        """, (store_code, field_key))
-        
+            WHERE store_id = %s AND field_key = %s
+        """, (store_id, field_key))
+
         max_order = cursor.fetchone()[0]
         new_order = max_order + 1
-        
+
         cursor.execute("""
-            INSERT INTO customer_field_options 
-            (store_code, field_key, option_value, display_color, display_order, is_hidden)
+            INSERT INTO customer_field_options
+            (store_id, field_key, option_value, display_color, display_order, is_hidden)
             VALUES (%s, %s, %s, %s, %s, FALSE)
             RETURNING id
-        """, (store_code, field_key, option_value, display_color, new_order))
-        
+        """, (store_id, field_key, option_value, display_color, new_order))
+
         option_id = cursor.fetchone()[0]
         conn.commit()
         return option_id
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error adding option: {e}")
@@ -509,37 +508,38 @@ def add_customer_field_option(field_key, option_value, display_color='#f0f0f0'):
         conn.close()
 
 
-def update_customer_field_option(option_id, option_value=None, display_color=None):
-    """選択肢を更新"""
+def update_customer_field_option(option_id, store_id, option_value=None, display_color=None):
+    """選択肢を更新（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         updates = []
         params = []
-        
+
         if option_value is not None:
             updates.append("option_value = %s")
             params.append(option_value)
-        
+
         if display_color is not None:
             updates.append("display_color = %s")
             params.append(display_color)
-        
+
         if not updates:
             return False
-        
+
         params.append(option_id)
-        
+        params.append(store_id)
+
         cursor.execute(f"""
             UPDATE customer_field_options
             SET {', '.join(updates)}
-            WHERE id = %s
+            WHERE id = %s AND store_id = %s
         """, params)
-        
+
         conn.commit()
         return cursor.rowcount > 0
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error updating option: {e}")
@@ -549,21 +549,21 @@ def update_customer_field_option(option_id, option_value=None, display_color=Non
         conn.close()
 
 
-def toggle_customer_field_option_visibility(option_id, is_hidden):
-    """選択肢の表示/非表示を切り替え"""
+def toggle_customer_field_option_visibility(option_id, is_hidden, store_id):
+    """選択肢の表示/非表示を切り替え（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         cursor.execute("""
             UPDATE customer_field_options
             SET is_hidden = %s
-            WHERE id = %s
-        """, (is_hidden, option_id))
-        
+            WHERE id = %s AND store_id = %s
+        """, (is_hidden, option_id, store_id))
+
         conn.commit()
         return cursor.rowcount > 0
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error toggling visibility: {e}")
@@ -573,65 +573,65 @@ def toggle_customer_field_option_visibility(option_id, is_hidden):
         conn.close()
 
 
-def move_customer_field_option(option_id, direction):
-    """選択肢の並び順を変更"""
+def move_customer_field_option(option_id, direction, store_id):
+    """選択肢の並び順を変更（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         # 現在の情報を取得
         cursor.execute("""
             SELECT field_key, display_order
             FROM customer_field_options
-            WHERE id = %s
-        """, (option_id,))
-        
+            WHERE id = %s AND store_id = %s
+        """, (option_id, store_id))
+
         row = cursor.fetchone()
         if not row:
             return False
-        
+
         field_key, current_order = row
-        
+
         # 入れ替え対象を取得
         if direction == 'up':
             cursor.execute("""
                 SELECT id, display_order
                 FROM customer_field_options
-                WHERE field_key = %s AND display_order < %s
+                WHERE field_key = %s AND display_order < %s AND store_id = %s
                 ORDER BY display_order DESC
                 LIMIT 1
-            """, (field_key, current_order))
+            """, (field_key, current_order, store_id))
         else:  # down
             cursor.execute("""
                 SELECT id, display_order
                 FROM customer_field_options
-                WHERE field_key = %s AND display_order > %s
+                WHERE field_key = %s AND display_order > %s AND store_id = %s
                 ORDER BY display_order ASC
                 LIMIT 1
-            """, (field_key, current_order))
-        
+            """, (field_key, current_order, store_id))
+
         target = cursor.fetchone()
         if not target:
             return False
-        
+
         target_id, target_order = target
-        
+
         # 順序を入れ替え
         cursor.execute("""
             UPDATE customer_field_options
             SET display_order = %s
-            WHERE id = %s
-        """, (target_order, option_id))
-        
+            WHERE id = %s AND store_id = %s
+        """, (target_order, option_id, store_id))
+
         cursor.execute("""
             UPDATE customer_field_options
             SET display_order = %s
-            WHERE id = %s
-        """, (current_order, target_id))
-        
+            WHERE id = %s AND store_id = %s
+        """, (current_order, target_id, store_id))
+
         conn.commit()
         return True
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error moving option: {e}")
@@ -641,20 +641,20 @@ def move_customer_field_option(option_id, direction):
         conn.close()
 
 
-def delete_customer_field_option(option_id):
-    """選択肢を削除"""
+def delete_customer_field_option(option_id, store_id):
+    """選択肢を削除（store_idでフィルタ）"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
         cursor.execute("""
             DELETE FROM customer_field_options
-            WHERE id = %s
-        """, (option_id,))
-        
+            WHERE id = %s AND store_id = %s
+        """, (option_id, store_id))
+
         conn.commit()
         return cursor.rowcount > 0
-        
+
     except Exception as e:
         conn.rollback()
         print(f"Error deleting option: {e}")

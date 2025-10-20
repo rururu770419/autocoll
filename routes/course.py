@@ -18,12 +18,13 @@ def get_courses_api(store):
         courses = get_courses_from_db(db)
         db.close()
 
-        # course_id, course_name(name), price, time_minutes を含むデータを返す
+        # course_id, course_name(name), price, time_minutes, category_id を含むデータを返す
         return jsonify([{
             'course_id': course['course_id'],
             'course_name': course['name'],  # カラム名は 'name'
             'price': course['price'] if course.get('price') else 0,
-            'duration_minutes': course.get('time_minutes', 0)  # カラム名は 'time_minutes'
+            'duration_minutes': course.get('time_minutes', 0),  # カラム名は 'time_minutes'
+            'category_id': course.get('category_id')
         } for course in courses])
     except Exception as e:
         print(f"コース一覧API取得エラー: {e}")

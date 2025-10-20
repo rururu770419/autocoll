@@ -85,19 +85,24 @@ def delete_cast_file(file_path):
     return False
 
 def cast_management(store):
-    """キャスト一覧ページ"""
+    """キャスト一覧ページ（ステータスフィルター対応）"""
     display_name = get_display_name(store)
     if display_name is None:
         return "店舗が見つかりません。", 404
 
     store_id = get_store_id(store)
+
+    # ステータスフィルターを取得（デフォルトは「在籍」）
+    status_filter = request.args.get('status', '在籍')
+
     db = get_db()
-    casts = get_all_casts_with_details(db, store_id)
+    casts = get_all_casts_with_details(db, store_id, status=status_filter)
 
     return render_template('cast_management.html',
                          store=store,
                          display_name=display_name,
-                         casts=casts)
+                         casts=casts,
+                         current_status=status_filter)
 
 # ========================================
 # API: キャスト一覧取得
@@ -108,10 +113,11 @@ def get_casts_api(store):
         store_id = get_store_id(store)
         db = get_db()
         casts = get_all_casts(db, store_id)
-        # cast_id, name を含むデータを返す
+        # cast_id, name, course_category_id を含むデータを返す
         return jsonify([{
             'cast_id': cast['cast_id'],
-            'name': cast['name']
+            'name': cast['name'],
+            'course_category_id': json.loads(cast.get('available_course_categories', '[]'))[0] if cast.get('available_course_categories') else None
         } for cast in casts])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -579,11 +585,11 @@ def edit_cast(store, cast_id):
             ng_age_patterns = [int(p) for p in ng_age_patterns if p]
             
             # データベース更新
-            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels)
-            update_cast_ng_items(db, cast_id, 'courses', ng_courses)
-            update_cast_ng_items(db, cast_id, 'options', ng_options)
-            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)
-            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)
+            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels, store_id)
+            update_cast_ng_items(db, cast_id, 'courses', ng_courses, store_id)
+            update_cast_ng_items(db, cast_id, 'options', ng_options, store_id)
+            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas, store_id)
+            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns, store_id)
             
         except Exception as e:
             print(f"❌ NG設定更新エラー: {e}")
@@ -645,11 +651,11 @@ def edit_cast(store, cast_id):
         all_ng_age_patterns = get_all_ng_age_patterns(db)
         
         # キャストのNG設定を取得
-        ng_hotels = get_cast_ng_hotels(db, cast_id)
-        ng_courses = get_cast_ng_courses(db, cast_id)
-        ng_options = get_cast_ng_options(db, cast_id)
-        ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)
-        ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)
+        ng_hotels = get_cast_ng_hotels(db, cast_id, store_id)
+        ng_courses = get_cast_ng_courses(db, cast_id, store_id)
+        ng_options = get_cast_ng_options(db, cast_id, store_id)
+        ng_custom_areas = get_cast_ng_custom_areas(db, cast_id, store_id)
+        ng_age_patterns = get_cast_ng_age_patterns(db, cast_id, store_id)
         
         # NGのIDリストを作成
         ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
@@ -701,11 +707,11 @@ def edit_cast(store, cast_id):
     all_ng_age_patterns = get_all_ng_age_patterns(db)
     
     # キャストのNG設定を取得
-    ng_hotels = get_cast_ng_hotels(db, cast_id)
-    ng_courses = get_cast_ng_courses(db, cast_id)
-    ng_options = get_cast_ng_options(db, cast_id)
-    ng_custom_areas = get_cast_ng_custom_areas(db, cast_id)
-    ng_age_patterns = get_cast_ng_age_patterns(db, cast_id)
+    ng_hotels = get_cast_ng_hotels(db, cast_id, store_id)
+    ng_courses = get_cast_ng_courses(db, cast_id, store_id)
+    ng_options = get_cast_ng_options(db, cast_id, store_id)
+    ng_custom_areas = get_cast_ng_custom_areas(db, cast_id, store_id)
+    ng_age_patterns = get_cast_ng_age_patterns(db, cast_id, store_id)
     
     # NGのIDリストを作成
     ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
@@ -740,6 +746,7 @@ def save_cast_ng_settings(store, cast_id):
     if display_name is None:
         return "店舗が見つかりません。", 404
 
+    store_id = get_store_id(store)
     db = get_db()
     cast = get_cast_with_age(db, cast_id)
     
@@ -769,11 +776,11 @@ def save_cast_ng_settings(store, cast_id):
             ng_age_patterns = [int(p) for p in ng_age_patterns if p]
             
             # データベース更新
-            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels)
-            update_cast_ng_items(db, cast_id, 'courses', ng_courses)
-            update_cast_ng_items(db, cast_id, 'options', ng_options)
-            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas)
-            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns)
+            update_cast_ng_items(db, cast_id, 'hotels', ng_hotels, store_id)
+            update_cast_ng_items(db, cast_id, 'courses', ng_courses, store_id)
+            update_cast_ng_items(db, cast_id, 'options', ng_options, store_id)
+            update_cast_ng_custom_areas(db, cast_id, ng_custom_areas, store_id)
+            update_cast_ng_age_patterns(db, cast_id, ng_age_patterns, store_id)
             
             # ✅ 保存後は編集画面にリダイレクト（これはOK - 別ページへの遷移）
             return redirect(url_for('main_routes.edit_cast', store=store, cast_id=cast_id))

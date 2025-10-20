@@ -12,6 +12,7 @@
     max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
+    align-items: start;
 }
 
 /* ========================================
@@ -19,6 +20,10 @@
 ======================================== */
 .customer-info-area {
     grid-column: 1;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
 }
 
 .customer-info-card {
@@ -27,10 +32,24 @@
     border: none;
     border-radius: 8px;
     padding: 20px;
-    position: sticky;
-    top: 20px;
     margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 編集ページの顧客情報カード - 灰色背景 */
+.customer-info-card.edit-mode {
+    background: #5a5a5a;
+}
+
+/* ページ名（カード内の一番上） */
+.reservation-page-label {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* 顧客情報コンテンツ */
@@ -124,26 +143,56 @@
     color: #00BCD4;
 }
 
-/* 顧客検索ボタン */
+/* 顧客検索/変更ボタン */
 .customer-search-btn {
-    width: 100%;
-    padding: 10px;
     background: white;
     color: #00BCD4;
-    border: none;
     border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
-    font-size: 1em;
-    text-align: center;
-    text-decoration: none;
-    display: block;
 }
 
 .customer-search-btn:hover {
     background: #f0f0f0;
     color: #00BCD4;
+}
+
+/* ボタン共通スタイル */
+.customer-action-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-bottom: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+/* 顧客評価ボタン */
+.customer-rating-btn {
+    background: #00BCD4;
+    color: white;
+    border-radius: 4px;
+}
+
+.customer-rating-btn:hover {
+    background: #0097A7;
+    color: white;
+}
+
+/* 予約一覧に戻るボタン */
+.customer-back-btn {
+    background: #6c757d;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.customer-back-btn:hover {
+    background: #5a6268;
+    color: #fff;
 }
 
 /* ========================================
@@ -187,9 +236,15 @@
 }
 
 .form-group label {
+    display: inline-block;
+    width: auto;
+    align-self: flex-start;
+    background-color: #00BCD4;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px;
     font-size: 0.9em;
     font-weight: bold;
-    color: #333;
     margin-bottom: 5px;
 }
 
@@ -207,6 +262,13 @@
 .form-textarea:focus {
     outline: none;
     border-color: #00BCD4;
+}
+
+/* 交通費・割引のセレクトボックス内は通常のフォントサイズ */
+#transportation_fee option,
+#discount_id option {
+    font-size: 1em;
+    color: #333;
 }
 
 .form-select[disabled] {
@@ -375,7 +437,7 @@
 }
 
 .option-item:hover {
-    background-color: #f8f9fa;
+    background-color: transparent;
 }
 
 .option-checkbox {
@@ -397,13 +459,48 @@
     text-overflow: ellipsis;
 }
 
-.option-price {
+.option-price,
+.discount-price,
+.transportation-price {
     margin-left: auto;
-    font-size: 0.9em;
-    color: #00BCD4;
-    font-weight: bold;
+    font-size: 0.85em;
+    color: #666;
+    font-weight: normal;
     white-space: nowrap;
     flex-shrink: 0;
+    text-align: right;
+}
+
+/* オプション・割引ドロップダウン内のlabelは背景色なし */
+.options-dropdown label.option-item,
+.options-dropdown .option-item,
+.discount-dropdown label.option-item,
+.discount-dropdown .option-item {
+    background-color: transparent !important;
+    color: #333 !important;
+    border-radius: 0 !important;
+    padding: 10px 12px !important;
+    width: auto !important;
+    align-self: stretch !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+}
+
+.options-dropdown .option-name,
+.discount-dropdown .option-name {
+    background-color: transparent !important;
+    color: #333 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    display: inline !important;
+}
+
+/* オプション・割引ドロップダウン内のホバー効果を削除 */
+.options-dropdown label.option-item:hover,
+.options-dropdown .option-item:hover,
+.discount-dropdown label.option-item:hover,
+.discount-dropdown .option-item:hover {
+    background-color: transparent !important;
 }
 
 /* ========================================
@@ -425,9 +522,13 @@
 }
 
 .pt-input-group label {
+    display: inline;
+    background-color: transparent;
+    color: #333;
+    border-radius: 0;
+    padding: 0;
     font-size: 0.9em;
     font-weight: bold;
-    color: #333;
 }
 
 .pt-input {
@@ -456,9 +557,13 @@
 }
 
 .pt-result label {
+    display: inline;
+    background-color: transparent;
+    color: #333;
+    border-radius: 0;
+    padding: 0;
     font-size: 0.9em;
     font-weight: bold;
-    color: #333;
 }
 
 .pt-value {
@@ -476,7 +581,7 @@
 ======================================== */
 .form-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 10px;
     margin-top: 20px;
 }
@@ -544,12 +649,11 @@
         grid-template-columns: 1fr;
     }
 
-    .customer-info-card {
-        position: static;
-    }
-
     .customer-info-area {
         grid-column: 1;
+        position: static;
+        max-height: none;
+        overflow-y: visible;
     }
 
     .reservation-form-area {
