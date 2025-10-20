@@ -161,7 +161,7 @@ function formatDateJP(dateStr) {
  */
 function loadReservations(date) {
     const tbody = document.getElementById('reservation-tbody');
-    tbody.innerHTML = '<tr><td colspan="15" class="loading-cell">読み込み中...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" class="loading-cell">読み込み中...</td></tr>';
 
     // APIから予約データを取得
     fetch(`/${window.storeName}/reservations/api?date=${date}`)
@@ -170,12 +170,12 @@ function loadReservations(date) {
             if (data.success) {
                 renderReservations(data.data);
             } else {
-                tbody.innerHTML = `<tr><td colspan="15" class="no-data-cell">エラー: ${data.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="16" class="no-data-cell">エラー: ${data.message}</td></tr>`;
             }
         })
         .catch(error => {
             console.error('Error loading reservations:', error);
-            tbody.innerHTML = '<tr><td colspan="15" class="no-data-cell">予約データの取得に失敗しました</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="16" class="no-data-cell">予約データの取得に失敗しました</td></tr>';
         });
 }
 
@@ -186,7 +186,7 @@ function renderReservations(reservations) {
     const tbody = document.getElementById('reservation-tbody');
 
     if (reservations.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="15" class="no-data-cell">この日の予約はありません</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="16" class="no-data-cell">この日の予約はありません</td></tr>';
         return;
     }
 
@@ -294,6 +294,16 @@ function renderReservations(reservations) {
         }
         row.appendChild(checkOutCell);
 
+        // 延長（中央寄せ）
+        const extensionCell = document.createElement('td');
+        extensionCell.className = 'center-align';
+        if (reservation.extension_fee && reservation.extension_fee > 0) {
+            extensionCell.textContent = `¥${reservation.extension_fee.toLocaleString()}`;
+        } else {
+            extensionCell.textContent = '-';
+        }
+        row.appendChild(extensionCell);
+
         // 合計金額（中央寄せ、ピンク色、太字）
         const totalCell = document.createElement('td');
         totalCell.className = 'center-align total-amount-cell';
@@ -303,10 +313,15 @@ function renderReservations(reservations) {
         // オプション
         const optionsCell = document.createElement('td');
         if (reservation.options && reservation.options.length > 0) {
-            const optionList = document.createElement('div');
-            optionList.className = 'option-list';
-            optionList.textContent = reservation.options.map(opt => opt.name).join(', ');
-            optionsCell.appendChild(optionList);
+            const badgeContainer = document.createElement('div');
+            badgeContainer.className = 'badge-container';
+            reservation.options.forEach(opt => {
+                const badge = document.createElement('span');
+                badge.className = 'option-badge';
+                badge.textContent = opt.badge_name || opt.name;
+                badgeContainer.appendChild(badge);
+            });
+            optionsCell.appendChild(badgeContainer);
         } else {
             optionsCell.textContent = '-';
         }
@@ -318,10 +333,18 @@ function renderReservations(reservations) {
         optionAmountCell.textContent = reservation.options_total ? `¥${reservation.options_total.toLocaleString()}` : '¥0';
         row.appendChild(optionAmountCell);
 
-        // 割引（割引項目名を表示）
+        // 割引（バッジ表示・複数対応）
         const discountCell = document.createElement('td');
-        if (reservation.discount_name) {
-            discountCell.textContent = reservation.discount_name;
+        if (reservation.discounts && reservation.discounts.length > 0) {
+            const badgeContainer = document.createElement('div');
+            badgeContainer.className = 'badge-container';
+            reservation.discounts.forEach(disc => {
+                const badge = document.createElement('span');
+                badge.className = 'discount-badge';
+                badge.textContent = disc.badge_name || disc.name;
+                badgeContainer.appendChild(badge);
+            });
+            discountCell.appendChild(badgeContainer);
         } else {
             discountCell.textContent = '-';
         }

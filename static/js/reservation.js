@@ -84,10 +84,10 @@ function initializeCustomSelect() {
     });
 }
 
-// セレクトボックスの表示を更新
+// セレクトボックスの表示を更新（オプション専用）
 function updateSelectDisplay() {
-    const checkedBoxes = document.querySelectorAll('.options-dropdown input[type="checkbox"]:checked');
-    const displayText = document.querySelector('.select-placeholder');
+    const checkedBoxes = document.querySelectorAll('#options_container input[type="checkbox"]:checked');
+    const displayText = document.querySelector('#options_select_display .select-placeholder');
 
     if (!displayText) return;
 
@@ -188,9 +188,12 @@ function loadMasterData() {
     // 支払い方法（固定値）
     const paymentMethods = [
         { method_id: 'cash', method_name: '現金' },
-        { method_id: 'card', method_name: 'カード' }
+        { method_id: 'card', method_name: 'カード' },
+        { method_id: 'deferred', method_name: '後払い' }
     ];
     populateSelect('payment_method', paymentMethods, 'method_id', 'method_name');
+    // デフォルトで現金を選択
+    document.getElementById('payment_method').value = 'cash';
 
     // 待ち合わせ場所
     fetch(`/${store}/reservation-settings/meeting_places`)
@@ -501,7 +504,7 @@ function calculateTotal() {
     }
 
     // オプション料金の合計（チェックボックス）
-    const optionCheckboxes = document.querySelectorAll('.option-checkbox:checked');
+    const optionCheckboxes = document.querySelectorAll('#options_container .option-checkbox:checked');
     optionCheckboxes.forEach(checkbox => {
         const option = optionsData.find(o => o.option_id == checkbox.value);
         if (option && option.price) {
@@ -509,13 +512,14 @@ function calculateTotal() {
         }
     });
 
-    // 延長料金
+    // 延長料金（回数対応）
     const extensionSelect = document.getElementById('extension');
-    if (extensionSelect.selectedIndex > 0) {
+    const extensionQuantity = parseInt(document.getElementById('extension_quantity').value);
+    if (extensionSelect.selectedIndex > 0 && extensionQuantity > 0) {
         const extensionId = extensionSelect.value;
         const extension = extensionsData.find(e => e.extension_id == extensionId);
         if (extension && extension.fee) {
-            total += extension.fee;
+            total += extension.fee * extensionQuantity;
         }
     }
 
@@ -605,12 +609,13 @@ function resetForm() {
         updateHiddenDateField();
         updateHiddenTimeField();
 
-        // オプションのチェックボックスをすべて解除
-        const optionCheckboxes = document.querySelectorAll('.option-checkbox');
-        optionCheckboxes.forEach(checkbox => {
+        // オプションと割引のチェックボックスをすべて解除
+        const allCheckboxes = document.querySelectorAll('.option-checkbox');
+        allCheckboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
         updateSelectDisplay();
+        updateDiscountDisplay();
 
         calculatePT();
     }

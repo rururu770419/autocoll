@@ -3,13 +3,34 @@
 // ページ読み込み時に実行
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 オプション管理ページ初期化');
-    
+
     // フォームバリデーションを設定
     setupFormValidation();
-    
+
     // トグルスイッチの連動を設定
     setupToggleSwitches();
+
+    // アラートメッセージを自動的に消す
+    autoHideAlerts();
 });
+
+// アラートメッセージを自動的に消す
+function autoHideAlerts() {
+    const alerts = document.querySelectorAll('.options-alert');
+
+    alerts.forEach(function(alert) {
+        // 3秒後にフェードアウト
+        setTimeout(function() {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+
+            // フェードアウト完了後に要素を削除
+            setTimeout(function() {
+                alert.remove();
+            }, 500);
+        }, 3000);
+    });
+}
 
 // フォームバリデーション設定
 function setupFormValidation() {
@@ -84,22 +105,23 @@ function resetForm() {
 }
 
 // 編集モーダルを開く
-function openEditModal(optionId, name, price, castBackAmount, isActive) {
-    console.log('📝 編集モーダルを開く:', { optionId, name, price, castBackAmount, isActive });
-    
+function openEditModal(optionId, name, badgeName, price, castBackAmount, isActive) {
+    console.log('📝 編集モーダルを開く:', { optionId, name, badgeName, price, castBackAmount, isActive });
+
     const modal = document.getElementById('editModal');
     const form = document.getElementById('editForm');
-    
+
     if (!modal || !form) {
         return;
     }
-    
+
     // フォームのactionを設定
     const store = getStoreFromPath();
     form.action = `/${store}/options/${optionId}/update`;
-    
+
     // フォームに値を設定
     document.getElementById('edit_name').value = name;
+    document.getElementById('edit_badge_name').value = badgeName || '';
     document.getElementById('edit_price').value = price;
     document.getElementById('edit_cast_back_amount').value = castBackAmount;
     

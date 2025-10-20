@@ -206,9 +206,20 @@
             <!-- 延長 -->
             <div class="form-group">
                 <label>延長</label>
-                <select id="extension" name="extension" class="form-select" onchange="calculateTotal()">
-                    <option value="">なし</option>
-                </select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="extension" name="extension" class="form-select" onchange="calculateTotal()" style="flex: 1;">
+                        <option value="">なし</option>
+                    </select>
+                    <span style="white-space: nowrap;">回数:</span>
+                    <select name="extension_quantity" id="extension_quantity" class="form-select" style="width: 80px;" onchange="calculateTotal()">
+                        <option value="0">0回</option>
+                        <option value="1">1回</option>
+                        <option value="2">2回</option>
+                        <option value="3">3回</option>
+                        <option value="4">4回</option>
+                        <option value="5">5回</option>
+                    </select>
+                </div>
             </div>
 
             <!-- ========== 4行目 ========== -->

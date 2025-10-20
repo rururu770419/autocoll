@@ -238,8 +238,8 @@ def get_all_options():
         
         cursor = db.cursor()
         cursor.execute("""
-            SELECT option_id, name, price, cast_back_amount, sort_order, is_active, created_at, updated_at 
-            FROM options 
+            SELECT option_id, name, badge_name, price, cast_back_amount, sort_order, is_active, created_at, updated_at
+            FROM options
             ORDER BY sort_order ASC, option_id ASC
         """)
         result = cursor.fetchall()
@@ -256,31 +256,31 @@ def get_option_by_id(option_id):
             return None
         
         cursor = db.cursor()
-        cursor.execute("SELECT option_id, name, price, cast_back_amount, sort_order, is_active, created_at, updated_at FROM options WHERE option_id = %s", (option_id,))
+        cursor.execute("SELECT option_id, name, badge_name, price, cast_back_amount, sort_order, is_active, created_at, updated_at FROM options WHERE option_id = %s", (option_id,))
         result = cursor.fetchone()
         return result if result else None
     except Exception as e:
         print(f"オプション取得エラー (option_id: {option_id}): {e}")
         return None
 
-def add_option(name, price, cast_back_amount, store_id=1, is_active=True):
+def add_option(name, badge_name, price, cast_back_amount, store_id=1, is_active=True):
     """新しいオプションを追加"""
     try:
         db = get_db()
         if db is None:
             return False
-        
+
         cursor = db.cursor()
-        
+
         cursor.execute("SELECT COALESCE(MAX(sort_order), 0) + 1 as next_sort_order FROM options")
         max_sort_result = cursor.fetchone()
         sort_order = max_sort_result['next_sort_order'] if max_sort_result else 1
-        
+
         cursor.execute("""
-            INSERT INTO options (name, price, cast_back_amount, sort_order, store_id, is_active, created_at, updated_at) 
-            VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """, (name, price, cast_back_amount, sort_order, store_id, is_active))
-        
+            INSERT INTO options (name, badge_name, price, cast_back_amount, sort_order, store_id, is_active, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """, (name, badge_name, price, cast_back_amount, sort_order, store_id, is_active))
+
         db.commit()
         return True
     except Exception as e:
@@ -289,20 +289,20 @@ def add_option(name, price, cast_back_amount, store_id=1, is_active=True):
         traceback.print_exc()
         return False
 
-def update_option(option_id, name, price, cast_back_amount, is_active):
+def update_option(option_id, name, badge_name, price, cast_back_amount, is_active):
     """オプション情報を更新"""
     try:
         db = get_db()
         if db is None:
             return False
-        
+
         cursor = db.cursor()
         cursor.execute("""
-            UPDATE options 
-            SET name = %s, price = %s, cast_back_amount = %s, is_active = %s, updated_at = CURRENT_TIMESTAMP 
+            UPDATE options
+            SET name = %s, badge_name = %s, price = %s, cast_back_amount = %s, is_active = %s, updated_at = CURRENT_TIMESTAMP
             WHERE option_id = %s
-        """, (name, price, cast_back_amount, is_active, option_id))
-        
+        """, (name, badge_name, price, cast_back_amount, is_active, option_id))
+
         db.commit()
         return True
     except Exception as e:

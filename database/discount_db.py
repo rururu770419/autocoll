@@ -51,15 +51,16 @@ def register_discount(db, discount_data):
         
         cursor.execute("""
             INSERT INTO discounts (
-                name, discount_type, value, is_active, store_id,
+                name, badge_name, discount_type, value, is_active, store_id,
                 sort_order, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
                 %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
             RETURNING discount_id
         """, (
             discount_data['name'],
+            discount_data.get('badge_name'),
             discount_data['discount_type'],
             discount_data['value'],
             discount_data.get('is_active', True),
@@ -90,9 +91,9 @@ def update_discount(db, discount_id, discount_data):
         
         update_fields = []
         params = []
-        
+
         # 更新するフィールド
-        for field in ['name', 'discount_type', 'value', 'is_active']:
+        for field in ['name', 'badge_name', 'discount_type', 'value', 'is_active']:
             if field in discount_data:
                 update_fields.append(f"{field} = %s")
                 params.append(discount_data[field])

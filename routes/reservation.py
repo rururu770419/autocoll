@@ -200,6 +200,7 @@ def register_reservation(store):
         nomination_type_id = request.form.get('nomination_type', type=int) or None
         course_id = request.form.get('course_id', type=int) or None
         extension_id = request.form.get('extension', type=int) or None
+        extension_quantity = request.form.get('extension_quantity', type=int, default=0)
         meeting_place_id = request.form.get('meeting_place', type=int) or None
         transportation_fee = request.form.get('transportation_fee', type=int, default=0)
         hotel_id = request.form.get('hotel_id', type=int) or None
@@ -216,9 +217,8 @@ def register_reservation(store):
         # area_idの取得（交通費から逆引きする場合もあるが、今回は未使用）
         area_id = None
 
-        # discount_idの取得（チェックボックスから最初の選択を取得）
+        # discount_idsの取得（チェックボックスから複数選択対応）
         discount_ids = request.form.getlist('discounts[]', type=int)
-        discount_id = discount_ids[0] if discount_ids else None
 
         # 予約を作成
         reservation_id = create_reservation(
@@ -232,6 +232,7 @@ def register_reservation(store):
             course_id=course_id,
             nomination_type_id=nomination_type_id,
             extension_id=extension_id,
+            extension_quantity=extension_quantity,
             meeting_place_id=meeting_place_id,
             hotel_id=hotel_id,
             room_number=room_number,
@@ -239,7 +240,7 @@ def register_reservation(store):
             transportation_fee=transportation_fee,
             payment_method=payment_method,
             option_ids=option_ids,
-            discount_id=discount_id,
+            discount_ids=discount_ids,
             points_to_grant=pt_add,
             customer_comment=comment,
             staff_memo=None,

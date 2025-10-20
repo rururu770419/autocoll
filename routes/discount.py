@@ -97,6 +97,7 @@ def register_discount_api(store):
         # 登録実行
         discount_data = {
             'name': data['name'],
+            'badge_name': data.get('badge_name'),
             'discount_type': data.get('discount_type', 'fixed'),
             'value': float(data['value']),
             'is_active': data.get('is_active', True),
@@ -147,6 +148,7 @@ def update_discount_api(store, discount_id):
         # 更新実行
         discount_data = {
             'name': data['name'],
+            'badge_name': data.get('badge_name'),
             'discount_type': data.get('discount_type', 'fixed'),
             'value': float(data['value']),
             'is_active': data.get('is_active', True)

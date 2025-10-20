@@ -29,17 +29,11 @@
                     <input type="text" class="options-form-input" id="name" name="name" required placeholder="例）延長30分">
                 </div>
 
-                <!-- 右列：有効/無効トグル -->
+                <!-- 右列：バッジ表示 -->
                 <div class="options-form-group">
-                    <label class="options-form-label">状態</label>
-                    <div class="options-toggle-wrapper">
-                        <span class="options-toggle-label">無効</span>
-                        <label class="options-toggle-switch">
-                            <input type="checkbox" class="options-toggle-checkbox" id="is_active" name="is_active" checked>
-                            <span class="options-toggle-slider"></span>
-                        </label>
-                        <span class="options-toggle-label">有効</span>
-                    </div>
+                    <label for="badge_name" class="options-form-label">バッジ表示</label>
+                    <input type="text" class="options-form-input" id="badge_name" name="badge_name" maxlength="4" placeholder="4文字まで">
+                    <small class="options-form-hint">※予約一覧で表示される短縮名（4文字まで）。未設定の場合はオプション名を表示</small>
                 </div>
 
                 <!-- 左列：金額 -->
@@ -54,6 +48,19 @@
                     <label for="cast_back_amount" class="options-form-label">バック金額 <span style="color: #dc3545;">*</span></label>
                     <input type="number" class="options-form-input" id="cast_back_amount" name="cast_back_amount" required min="0" placeholder="例）1500" step="1">
                     <small class="options-form-hint">キャストへのバック金額を円単位で入力してください</small>
+                </div>
+
+                <!-- 左列：状態 -->
+                <div class="options-form-group">
+                    <label class="options-form-label">状態</label>
+                    <div class="options-toggle-wrapper">
+                        <span class="options-toggle-label">無効</span>
+                        <label class="options-toggle-switch">
+                            <input type="checkbox" class="options-toggle-checkbox" id="is_active" name="is_active" checked>
+                            <span class="options-toggle-slider"></span>
+                        </label>
+                        <span class="options-toggle-label">有効</span>
+                    </div>
                 </div>
             </div>
 
@@ -74,6 +81,7 @@
                     <tr>
                         <th style="width: 120px;">並び順</th>
                         <th>オプション名</th>
+                        <th style="width: 100px;">バッジ</th>
                         <th style="width: 120px;">金額</th>
                         <th style="width: 120px;">バック金額</th>
                         <th style="width: 80px;">状態</th>
@@ -85,13 +93,13 @@
                     {% for opt in options %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('main_routes.move_option_up_route', store=store, option_id=opt.option_id) }}" 
+                            <a href="{{ url_for('main_routes.move_option_up_route', store=store, option_id=opt.option_id) }}"
                                class="options-sort-btn {% if loop.first %}options-sort-btn-disabled{% endif %}"
                                {% if loop.first %}onclick="return false;" style="pointer-events: none;"{% endif %}
                                title="上に移動">
                                 <i class="fas fa-chevron-up"></i>
                             </a>
-                            <a href="{{ url_for('main_routes.move_option_down_route', store=store, option_id=opt.option_id) }}" 
+                            <a href="{{ url_for('main_routes.move_option_down_route', store=store, option_id=opt.option_id) }}"
                                class="options-sort-btn {% if loop.last %}options-sort-btn-disabled{% endif %}"
                                {% if loop.last %}onclick="return false;" style="pointer-events: none;"{% endif %}
                                title="下に移動">
@@ -99,6 +107,7 @@
                             </a>
                         </td>
                         <td>{{ opt.name }}</td>
+                        <td>{{ opt.badge_name if opt.badge_name else '-' }}</td>
                         <td>{{ "{:,}".format(opt.price) }}円</td>
                         <td>{{ "{:,}".format(opt.cast_back_amount) }}円</td>
                         <td>
@@ -109,7 +118,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="javascript:void(0);" class="options-action-btn" onclick="openEditModal({{ opt.option_id }}, '{{ opt.name }}', {{ opt.price }}, {{ opt.cast_back_amount }}, {{ 'true' if opt.is_active else 'false' }})" title="編集">
+                            <a href="javascript:void(0);" class="options-action-btn" onclick="openEditModal({{ opt.option_id }}, '{{ opt.name }}', '{{ opt.badge_name or '' }}', {{ opt.price }}, {{ opt.cast_back_amount }}, {{ 'true' if opt.is_active else 'false' }})" title="編集">
                                 <i class="fas fa-pencil-alt options-edit-icon"></i>
                             </a>
                         </td>
@@ -144,6 +153,12 @@
                     <div class="options-modal-group">
                         <label for="edit_name" class="options-modal-label">オプション名 <span style="color: #dc3545;">*</span></label>
                         <input type="text" class="options-modal-input" id="edit_name" name="name" required>
+                    </div>
+
+                    <div class="options-modal-group">
+                        <label for="edit_badge_name" class="options-modal-label">バッジ表示</label>
+                        <input type="text" class="options-modal-input" id="edit_badge_name" name="badge_name" maxlength="4" placeholder="4文字まで">
+                        <small style="color: #666; font-size: 0.85em;">※予約一覧で表示される短縮名（4文字まで）</small>
                     </div>
 
                     <div class="options-modal-group">

@@ -97,30 +97,32 @@ function resetForm() {
  */
 async function submitRegister(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('register-name').value.trim();
+    const badgeName = document.getElementById('register-badge-name').value.trim() || null;
     const discountType = document.querySelector('input[name="register_type"]:checked').value;
     const value = parseFloat(document.getElementById('register-value').value);
     const isActive = document.getElementById('register-is-active').checked;
-    
+
     // バリデーション
     if (!name) {
         showMessage('割引名を入力してください', 'danger');
         return;
     }
-    
+
     if (!value || value <= 0) {
         showMessage('割引値は0より大きい値を入力してください', 'danger');
         return;
     }
-    
+
     if (discountType === 'percent' && value > 100) {
         showMessage('パーセント割引は100%以下で入力してください', 'danger');
         return;
     }
-    
+
     const formData = {
         name: name,
+        badge_name: badgeName,
         discount_type: discountType,
         value: value,
         is_active: isActive
@@ -164,14 +166,15 @@ async function openEditModal(discountId) {
         
         if (data.success) {
             const discount = data.discount;
-            
+
             // フォームに値を設定
             document.getElementById('edit-discount-id').value = discount.discount_id;
             document.getElementById('edit-name').value = discount.name;
+            document.getElementById('edit-badge-name').value = discount.badge_name || '';
             document.querySelector(`input[name="edit_type"][value="${discount.discount_type}"]`).checked = true;
             document.getElementById('edit-value').value = Math.floor(discount.value);
             document.getElementById('edit-is-active').checked = discount.is_active;
-            
+
             updateEditValueLabel();
             updateEditTypeButtons();
             
@@ -232,31 +235,33 @@ function updateEditValueLabel() {
  */
 async function submitEdit(event) {
     event.preventDefault();
-    
+
     const discountId = document.getElementById('edit-discount-id').value;
     const name = document.getElementById('edit-name').value.trim();
+    const badgeName = document.getElementById('edit-badge-name').value.trim() || null;
     const discountType = document.querySelector('input[name="edit_type"]:checked').value;
     const value = parseFloat(document.getElementById('edit-value').value);
     const isActive = document.getElementById('edit-is-active').checked;
-    
+
     // バリデーション
     if (!name) {
         showMessage('割引名を入力してください', 'danger');
         return;
     }
-    
+
     if (!value || value <= 0) {
         showMessage('割引値は0より大きい値を入力してください', 'danger');
         return;
     }
-    
+
     if (discountType === 'percent' && value > 100) {
         showMessage('パーセント割引は100%以下で入力してください', 'danger');
         return;
     }
-    
+
     const formData = {
         name: name,
+        badge_name: badgeName,
         discount_type: discountType,
         value: value,
         is_active: isActive

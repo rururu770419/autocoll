@@ -31,7 +31,14 @@
                     <input type="text" class="discount-form-input" id="register-name" name="name" required placeholder="例）クーポン10%OFF">
                 </div>
 
-                <!-- 右列：割引値 -->
+                <!-- 右列：バッジ表示 -->
+                <div class="discount-form-group">
+                    <label for="register-badge-name" class="discount-form-label">バッジ表示</label>
+                    <input type="text" class="discount-form-input" id="register-badge-name" name="badge_name" maxlength="4" placeholder="4文字まで">
+                    <small class="discount-form-hint">※予約一覧で表示される短縮名（4文字まで）。未設定の場合は割引名を表示</small>
+                </div>
+
+                <!-- 左列：割引値 -->
                 <div class="discount-form-group">
                     <label for="register-value" class="discount-form-label" id="register-value-label">割引値 <span style="color: #dc3545;">*</span></label>
                     <input type="number" class="discount-form-input" id="register-value" name="value" required min="1" step="1" placeholder="例）3000">
@@ -84,6 +91,7 @@
                     <tr>
                         <th style="width: 120px;">並び順</th>
                         <th>割引名</th>
+                        <th style="width: 100px;">バッジ</th>
                         <th style="width: 120px;">種類</th>
                         <th style="width: 120px;">割引値</th>
                         <th style="width: 80px;">状態</th>
@@ -95,13 +103,13 @@
                     {% for discount in discounts %}
                     <tr>
                         <td>
-                            <button onclick="moveDiscount({{ discount.discount_id }}, 'up')" 
+                            <button onclick="moveDiscount({{ discount.discount_id }}, 'up')"
                                     class="discount-sort-btn {% if loop.first %}discount-sort-btn-disabled{% endif %}"
                                     {% if loop.first %}disabled{% endif %}
                                     title="上に移動">
                                 <i class="fas fa-chevron-up"></i>
                             </button>
-                            <button onclick="moveDiscount({{ discount.discount_id }}, 'down')" 
+                            <button onclick="moveDiscount({{ discount.discount_id }}, 'down')"
                                     class="discount-sort-btn {% if loop.last %}discount-sort-btn-disabled{% endif %}"
                                     {% if loop.last %}disabled{% endif %}
                                     title="下に移動">
@@ -109,6 +117,7 @@
                             </button>
                         </td>
                         <td>{{ discount.name }}</td>
+                        <td>{{ discount.badge_name if discount.badge_name else '-' }}</td>
                         <td>
                             {% if discount.discount_type == 'fixed' %}
                                 固定金額
@@ -168,6 +177,12 @@
                     <div class="discount-modal-group">
                         <label for="edit-name" class="discount-modal-label">割引名 <span style="color: #dc3545;">*</span></label>
                         <input type="text" class="discount-modal-input" id="edit-name" name="name" required>
+                    </div>
+
+                    <div class="discount-modal-group">
+                        <label for="edit-badge-name" class="discount-modal-label">バッジ表示</label>
+                        <input type="text" class="discount-modal-input" id="edit-badge-name" name="badge_name" maxlength="4" placeholder="4文字まで">
+                        <small style="color: #666; font-size: 0.85em;">※予約一覧で表示される短縮名（4文字まで）</small>
                     </div>
 
                     <div class="discount-modal-group">

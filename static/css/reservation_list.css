@@ -251,6 +251,40 @@
     text-align: center;
 }
 
+/* バッジコンテナ */
+.badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+}
+
+/* オプションバッジ */
+.option-badge {
+    display: inline-block;
+    background-color: #00BCD4;
+    color: white;
+    font-size: 0.85em;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+/* 割引バッジ */
+.discount-badge {
+    display: inline-block;
+    background-color: #FF9800;
+    color: white;
+    font-size: 0.85em;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 1200px) {
     .calendar-date-item {

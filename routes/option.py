@@ -63,31 +63,32 @@ def register_option(store):
     
     try:
         name = request.form.get('name', '').strip()
+        badge_name = request.form.get('badge_name', '').strip() or None
         price = request.form.get('price', '').strip()
         cast_back_amount = request.form.get('cast_back_amount', '').strip()
         is_active = True if request.form.get('is_active') == 'on' else False
-        
+
         # バリデーション
         if not name:
             return redirect(url_for('main_routes.options', store=store, error="オプション名を入力してください"))
-        
+
         if not price or not price.isdigit() or int(price) < 0:
             return redirect(url_for('main_routes.options', store=store, error="正しい金額を入力してください"))
-        
+
         if not cast_back_amount or not cast_back_amount.isdigit() or int(cast_back_amount) < 0:
             return redirect(url_for('main_routes.options', store=store, error="正しいバック金額を入力してください"))
-        
+
         price_int = int(price)
         cast_back_amount_int = int(cast_back_amount)
-        
+
         if cast_back_amount_int > price_int:
             return redirect(url_for('main_routes.options', store=store, error="バック金額は金額以下で入力してください"))
-        
+
         # 店舗IDを動的取得
         store_id = get_store_id(store)
-        
+
         # オプション登録
-        result = add_option(name, price_int, cast_back_amount_int, store_id, is_active)
+        result = add_option(name, badge_name, price_int, cast_back_amount_int, store_id, is_active)
         
         if result:
             return redirect(url_for('main_routes.options', store=store, success="オプションを登録しました"))
@@ -137,29 +138,30 @@ def update_option_route(store, option_id):
     
     try:
         name = request.form.get('name', '').strip()
+        badge_name = request.form.get('badge_name', '').strip() or None
         price = request.form.get('price', '').strip()
         cast_back_amount = request.form.get('cast_back_amount', '').strip()
         is_active_str = request.form.get('is_active', 'true')
         is_active = True if is_active_str == 'true' else False
-        
+
         # バリデーション
         if not name:
             return redirect(url_for('main_routes.options', store=store, error="オプション名を入力してください"))
-        
+
         if not price or not price.isdigit() or int(price) < 0:
             return redirect(url_for('main_routes.options', store=store, error="正しい金額を入力してください"))
-        
+
         if not cast_back_amount or not cast_back_amount.isdigit() or int(cast_back_amount) < 0:
             return redirect(url_for('main_routes.options', store=store, error="正しいバック金額を入力してください"))
-        
+
         price_int = int(price)
         cast_back_amount_int = int(cast_back_amount)
-        
+
         if cast_back_amount_int > price_int:
             return redirect(url_for('main_routes.options', store=store, error="バック金額は金額以下で入力してください"))
-        
+
         # オプション更新
-        if update_option(option_id, name, price_int, cast_back_amount_int, is_active):
+        if update_option(option_id, name, badge_name, price_int, cast_back_amount_int, is_active):
             return redirect(url_for('main_routes.options', store=store, success="オプション情報を更新しました"))
         else:
             return redirect(url_for('main_routes.options', store=store, error="オプション情報の更新に失敗しました"))
