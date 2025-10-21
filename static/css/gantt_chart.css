@@ -96,7 +96,7 @@
 }
 
 .gantt-cast-cell {
-  height: 56px;
+  height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -118,6 +118,12 @@
   color: #666;
 }
 
+/* 未出勤キャスト */
+.gantt-cast-cell.cast-not-working .gantt-cast-name {
+  color: #999;
+  font-style: italic;
+}
+
 .gantt-no-data {
   height: 200px;
   display: flex;
@@ -135,6 +141,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   min-width: 0; /* flexアイテムの縮小を許可 */
+  padding: 0;
+  margin: 0;
 }
 
 .gantt-timeline-header {
@@ -143,6 +151,8 @@
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
   min-width: fit-content; /* コンテンツに合わせて幅を確保 */
+  padding: 0;
+  margin: 0;
 }
 
 .gantt-time-cell {
@@ -150,16 +160,18 @@
   width: 30px; /* JavaScriptで上書きされる */
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 左揃えに変更 */
+  padding: 0 0 0 2px; /* 左端に少し余白 */
+  margin: 0;
   font-size: 11px;
   color: #495057;
   font-weight: 600;
-  /* ヘッダーの細い罫線は削除 */
+  box-sizing: border-box; /* border/paddingを幅に含める */
 }
 
 /* 1時間ごとの区切り（太い線）のみ表示 */
 .gantt-time-cell.gantt-hour-marker {
-  border-right: 2px solid #dee2e6;
+  border-left: 2px solid #dee2e6;
   font-weight: 700;
   font-size: 12px;
 }
@@ -171,7 +183,7 @@
 
 .gantt-timeline-row {
   position: relative;
-  height: 56px;
+  height: 80px;
   border-bottom: 1px solid #dee2e6;
   display: flex;
 }
@@ -186,7 +198,7 @@
 
 /* 1時間ごとの区切り（太い線） */
 .gantt-time-grid.gantt-hour-marker {
-  border-right: 2px solid #e0e0e0;
+  border-left: 2px solid #e0e0e0;
 }
 
 /* 出勤時間外（灰色） */
@@ -215,13 +227,50 @@
 }
 
 /* ============================================
+   移動時間バー
+============================================ */
+.gantt-travel-bar {
+  position: absolute;
+  top: 6px;
+  height: 66px;
+  background: #00BCD4; /* 水色（メインカラー） */
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 188, 212, 0.2);
+  z-index: 1;
+  opacity: 0.85;
+  overflow: hidden;
+  pointer-events: none; /* クリック不可 */
+}
+
+.gantt-travel-content {
+  padding: 4px 6px;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column; /* 縦並び */
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 2px;
+}
+
+.gantt-travel-content i {
+  font-size: 11px;
+}
+
+/* ============================================
    予約バー
 ============================================ */
 .gantt-reservation-bar {
   position: absolute;
-  top: 8px;
-  height: 40px;
-  background: linear-gradient(135deg, #ff6b9d 0%, #c94b7a 100%);
+  top: 6px;
+  height: 66px;
+  background: #FF9800; /* オレンジ */
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: 2;
@@ -389,4 +438,104 @@
     background: transparent;
     color: white;
   }
+}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   カレンダーセクション
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.calendar-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-top: 10px;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.calendar-nav-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: #00BCD4;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: background-color 0.3s;
+}
+
+.calendar-nav-btn:hover {
+    background-color: #0097A7;
+}
+
+.calendar-dates {
+    display: flex;
+    gap: 10px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.calendar-date-item {
+    min-width: 80px;
+    padding: 6px 10px;
+    border: 2px solid #ddd;
+    background-color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.calendar-date-item:hover {
+    background-color: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+.calendar-date-item.selected {
+    background-color: #ff4444;
+    border-color: #ff4444;
+    color: white;
+    font-weight: bold;
+}
+
+.date-main {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.date-day {
+    font-size: 12px;
+    color: #666;
+}
+
+.calendar-date-item.selected .date-day {
+    color: white;
+}
+
+/* 日付ピッカートリガーボタン */
+.date-picker-trigger {
+    min-width: 140px;
+    padding: 8px 10px;
+    border: 2px solid #ddd;
+    background-color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.date-picker-trigger:hover {
+    background-color: #ff4444;
+    border-color: #ff4444;
+    color: white;
 }

@@ -10,61 +10,102 @@ from typing import List, Dict, Any, Optional
 def get_gantt_data(db: psycopg.Connection, store_id: int, target_date: str) -> Dict[str, Any]:
     """
     タイムスケジュール表示用のデータを取得
-    
+
     Args:
         db: データベース接続
         store_id: 店舗ID
         target_date: 対象日（YYYY-MM-DD形式）
-    
+
     Returns:
         dict: タイムスケジュール表示用データ
     """
     cursor = db.cursor()
-    
+
     try:
+        # 1. 出勤しているキャストを取得
         cursor.execute(
             """
-            SELECT 
+            SELECT
                 c.cast_id,
                 c.name AS cast_name,
                 cs.start_time,
                 cs.end_time
             FROM casts c
-            INNER JOIN cast_schedules cs ON c.cast_id = cs.cast_id 
+            INNER JOIN cast_schedules cs ON c.cast_id = cs.cast_id
                 AND cs.work_date = %s
                 AND cs.status = 'confirmed'
             WHERE c.store_id = %s
                 AND c.is_active = TRUE
                 AND cs.start_time IS NOT NULL
-            ORDER BY 
+            ORDER BY
                 cs.start_time,
                 c.furigana
             """,
             (target_date, store_id)
         )
-        
-        rows = cursor.fetchall()
-        
-        casts = []
-        for row in rows:
-            cast_id = row[0]
-            
-            reservations = get_cast_reservations(db, cast_id, target_date)
-            
-            cast_data = {
-                'cast_id': cast_id,
-                'cast_name': row[1],
-                'start_time': str(row[2]) if row[2] else None,
-                'end_time': str(row[3]) if row[3] else None,
-                'reservations': reservations
+
+        working_casts = cursor.fetchall()
+
+        # 2. 予約があるキャストを取得（出勤していないキャストも含む）
+        cursor.execute(
+            """
+            SELECT DISTINCT
+                c.cast_id,
+                c.name AS cast_name
+            FROM reservations r
+            JOIN casts c ON r.cast_id = c.cast_id
+            WHERE r.store_id = %s
+              AND r.business_date = %s
+              AND r.status NOT IN ('cancelled', 'deleted')
+              AND c.is_active = TRUE
+            """,
+            (store_id, target_date)
+        )
+
+        reserved_casts = cursor.fetchall()
+
+        # 3. マージ処理
+        all_casts = {}
+
+        # 出勤キャストを追加
+        for cast in working_casts:
+            all_casts[cast[0]] = {
+                'cast_id': cast[0],
+                'cast_name': cast[1],
+                'start_time': str(cast[2]) if cast[2] else None,
+                'end_time': str(cast[3]) if cast[3] else None,
+                'is_working': True,
+                'reservations': []
             }
-            casts.append(cast_data)
-        
+
+        # 予約があるが出勤していないキャストを追加
+        for cast in reserved_casts:
+            if cast[0] not in all_casts:
+                all_casts[cast[0]] = {
+                    'cast_id': cast[0],
+                    'cast_name': cast[1],
+                    'start_time': None,
+                    'end_time': None,
+                    'is_working': False,
+                    'reservations': []
+                }
+
+        # 4. 予約データを各キャストに紐付け
+        for cast_id in all_casts.keys():
+            reservations = get_cast_reservations(db, cast_id, target_date)
+            all_casts[cast_id]['reservations'] = reservations
+
+        # 5. リストに変換（出勤キャスト優先でソート）
+        casts = sorted(
+            all_casts.values(),
+            key=lambda x: (not x['is_working'], x['start_time'] if x['start_time'] else '99:99', x['cast_name'])
+        )
+
         return {
             'date': target_date,
             'casts': casts
         }
-    
+
     finally:
         cursor.close()
 
@@ -72,38 +113,41 @@ def get_gantt_data(db: psycopg.Connection, store_id: int, target_date: str) -> D
 def get_cast_reservations(db: psycopg.Connection, cast_id: int, target_date: str) -> List[Dict[str, Any]]:
     """
     キャストの予約一覧を取得
-    
+
     Args:
         db: データベース接続
         cast_id: キャストID
         target_date: 対象日（YYYY-MM-DD形式）
-    
+
     Returns:
         list: 予約データのリスト
     """
     cursor = db.cursor()
-    
+
     try:
         cursor.execute(
             """
-            SELECT 
-                reservation_id,
-                customer_name,
-                reservation_datetime,
-                end_datetime,
-                hotel_name,
-                room_number
-            FROM reservations
-            WHERE cast_id = %s
-                AND business_date = %s
-                AND status NOT IN ('cancelled', 'deleted')
-            ORDER BY reservation_datetime
+            SELECT
+                r.reservation_id,
+                r.customer_name,
+                r.reservation_datetime,
+                r.end_datetime,
+                r.hotel_name,
+                r.room_number,
+                a.travel_time_minutes
+            FROM reservations r
+            LEFT JOIN hotels h ON r.hotel_id = h.hotel_id
+            LEFT JOIN areas a ON h.area_id = a.area_id
+            WHERE r.cast_id = %s
+                AND r.business_date = %s
+                AND r.status NOT IN ('cancelled', 'deleted')
+            ORDER BY r.reservation_datetime
             """,
             (cast_id, target_date)
         )
-        
+
         rows = cursor.fetchall()
-        
+
         reservations = []
         for row in rows:
             reservation_data = {
@@ -112,12 +156,13 @@ def get_cast_reservations(db: psycopg.Connection, cast_id: int, target_date: str
                 'start_time': row[2].strftime('%H:%M') if row[2] else None,
                 'end_time': row[3].strftime('%H:%M') if row[3] else None,
                 'hotel_name': row[4],
-                'room_number': row[5]
+                'room_number': row[5],
+                'travel_time_minutes': row[6] if row[6] else 0
             }
             reservations.append(reservation_data)
-        
+
         return reservations
-    
+
     finally:
         cursor.close()
 

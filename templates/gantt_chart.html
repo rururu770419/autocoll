@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/gantt_chart.css') }}">
+<!-- flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
 
 {% block title %}タイムスケジュール - {{ date_display }}{% endblock %}
@@ -11,18 +14,25 @@
   <!-- ヘッダー -->
   <div class="gantt-header">
     <h1 class="gantt-title">タイムスケジュール</h1>
-    
-    <!-- 日付ナビゲーション -->
-    <div class="gantt-controls">
-      <a href="{{ url_for('gantt.gantt_chart', store=store, date=prev_date) }}" class="gantt-nav-btn">
-        ← 前日
-      </a>
-      <div class="gantt-date-display">
-        {{ date_display }}
-      </div>
-      <a href="{{ url_for('gantt.gantt_chart', store=store, date=next_date) }}" class="gantt-nav-btn">
-        翌日 →
-      </a>
+
+    <!-- カレンダーセクション -->
+    <div class="calendar-section">
+        <!-- 日付ピッカートリガー -->
+        <button class="calendar-date-item date-picker-trigger" id="date-picker-trigger">
+            {{ date_display }}
+        </button>
+
+        <button class="calendar-nav-btn" id="prev-week">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="calendar-dates" id="calendar-dates">
+            <!-- JavaScriptで動的に生成 -->
+        </div>
+
+        <button class="calendar-nav-btn" id="next-week">
+            <i class="fas fa-chevron-right"></i>
+        </button>
     </div>
   </div>
 
@@ -33,13 +43,13 @@
       <div class="gantt-cast-column">
         <div class="gantt-cast-header">キャスト</div>
         {% for cast in gantt_data.casts %}
-        <div class="gantt-cast-cell">
+        <div class="gantt-cast-cell {% if not cast.is_working %}cast-not-working{% endif %}">
           <span class="gantt-cast-name">{{ cast.cast_name }}</span>
           <span class="gantt-cast-time">
             {% if cast.start_time %}
               {{ cast.start_time[:5] }}～{{ cast.end_time[:5] }}
             {% else %}
-              出勤時間未設定
+              <span style="color: #999; font-style: italic;">未出勤</span>
             {% endif %}
           </span>
         </div>
@@ -77,33 +87,49 @@
             
             <!-- 予約バー -->
             {% for reservation in cast.reservations %}
-            <div class="gantt-reservation-bar" 
-                 data-start="{{ reservation.start_time[:5] }}"
-                 data-end="{{ reservation.end_time[:5] }}"
+            {% if reservation.start_time and reservation.end_time %}
+
+            <!-- 移動時間バー（往路） -->
+            {% if reservation.travel_time_minutes and reservation.travel_time_minutes > 0 %}
+            <div class="gantt-travel-bar gantt-travel-outbound"
+                 data-reservation-id="{{ reservation.reservation_id }}"
+                 data-end="{{ reservation.start_time }}"
+                 data-duration="{{ reservation.travel_time_minutes }}"
+                 title="往路 {{ reservation.travel_time_minutes }}分">
+              <div class="gantt-travel-content">
+                <i class="fas fa-car"></i> {{ reservation.travel_time_minutes }}分
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- 予約バー -->
+            <div class="gantt-reservation-bar"
+                 data-start="{{ reservation.start_time }}"
+                 data-end="{{ reservation.end_time }}"
                  data-reservation-id="{{ reservation.reservation_id }}">
               <div class="gantt-reservation-content">
                 <!-- 編集ボタン + お客様名 -->
                 <div class="gantt-reservation-header">
-                  <a href="{{ url_for('reservation.edit_reservation', store=store, reservation_id=reservation.reservation_id) }}" 
+                  <a href="{{ url_for('reservation.edit_reservation', store=store, reservation_id=reservation.reservation_id) }}"
                      class="gantt-edit-btn"
                      onclick="event.stopPropagation()">
                     編集
                   </a>
                   <span class="gantt-reservation-customer">{{ reservation.customer_name }}様</span>
                 </div>
-                
+
                 <!-- 予約時間 -->
-                <div class="gantt-reservation-time">{{ reservation.start_time[:5] }}～{{ reservation.end_time[:5] }}</div>
-                
+                <div class="gantt-reservation-time">{{ reservation.start_time }}～{{ reservation.end_time }}</div>
+
                 <!-- ホテル + 部屋番号入力 -->
                 {% if reservation.hotel_name %}
                 <div class="gantt-reservation-hotel-row">
                   <span class="gantt-hotel-name">{{ reservation.hotel_name }}</span>
-                  <input type="text" 
-                         class="gantt-room-number-input" 
+                  <input type="text"
+                         class="gantt-room-number-input"
                          value="{{ reservation.room_number or '' }}"
-                         maxlength="3"
-                         placeholder="___"
+                         maxlength="4"
+                         placeholder="____"
                          data-reservation-id="{{ reservation.reservation_id }}"
                          onclick="event.stopPropagation()"
                          onchange="updateRoomNumber(this)"
@@ -112,6 +138,21 @@
                 {% endif %}
               </div>
             </div>
+
+            <!-- 移動時間バー（復路） -->
+            {% if reservation.travel_time_minutes and reservation.travel_time_minutes > 0 %}
+            <div class="gantt-travel-bar gantt-travel-return"
+                 data-reservation-id="{{ reservation.reservation_id }}"
+                 data-start="{{ reservation.end_time }}"
+                 data-duration="{{ reservation.travel_time_minutes }}"
+                 title="復路 {{ reservation.travel_time_minutes }}分">
+              <div class="gantt-travel-content">
+                <i class="fas fa-car"></i> {{ reservation.travel_time_minutes }}分
+              </div>
+            </div>
+            {% endif %}
+
+            {% endif %}
             {% endfor %}
             
             <!-- グリッドはJavaScriptで動的生成 -->
@@ -124,8 +165,8 @@
 </div>
 
 <!-- 営業時間設定をJavaScriptに渡す -->
-<div id="ganttConfig" 
-     data-start-hour="{{ schedule_settings.start_time.split(':')[0] }}" 
+<div id="ganttConfig"
+     data-start-time="{{ schedule_settings.start_time }}"
      data-end-hour="{% if schedule_settings.end_time.split(':')[0]|int < schedule_settings.start_time.split(':')[0]|int %}{{ schedule_settings.end_time.split(':')[0]|int + 24 }}{% else %}{{ schedule_settings.end_time.split(':')[0] }}{% endif %}"
      data-interval="10"
      style="display: none;">
@@ -134,5 +175,14 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+<script>
+    // 初期日付をJavaScriptに渡す
+    window.initialDate = '{{ target_date }}';
+    window.storeName = '{{ store }}';
+</script>
 <script src="{{ url_for('static', filename='js/gantt_chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gantt_calendar.js') }}"></script>
 {% endblock %}

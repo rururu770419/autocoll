@@ -1,5 +1,5 @@
 # database/reservation_db.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from database.connection import get_connection
 
@@ -437,10 +437,10 @@ def create_reservation(
         end_datetime = None
         total_minutes = (course_time_minutes or 0) + (extension_minutes or 0)
         if total_minutes > 0:
-            cursor.execute("""
-                SELECT %s::timestamp + INTERVAL '%s minutes'
-            """, (reservation_datetime, total_minutes))
-            end_datetime = cursor.fetchone()[0]
+            # reservation_datetimeを解析してtimedeltaで計算
+            reservation_dt = datetime.strptime(reservation_datetime, '%Y-%m-%d %H:%M')
+            end_dt = reservation_dt + timedelta(minutes=total_minutes)
+            end_datetime = end_dt
 
         # ステータスを設定
         status = '成約' if contract_type == 'contract' else 'キャンセル'
@@ -948,10 +948,10 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         end_datetime = None
         total_minutes = (course_time_minutes or 0) + (extension_minutes or 0)
         if total_minutes > 0:
-            cursor.execute("""
-                SELECT %s::timestamp + INTERVAL '%s minutes'
-            """, (reservation_datetime, total_minutes))
-            end_datetime = cursor.fetchone()[0]
+            # reservation_datetimeを解析してtimedeltaで計算
+            reservation_dt = datetime.strptime(reservation_datetime, '%Y-%m-%d %H:%M')
+            end_dt = reservation_dt + timedelta(minutes=total_minutes)
+            end_datetime = end_dt
 
         # ステータスを設定
         status = '成約' if contract_type == 'contract' else 'キャンセル'
