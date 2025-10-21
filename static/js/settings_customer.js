@@ -79,6 +79,9 @@ function renderCustomerFields() {
     customerFieldData.categories.forEach(category => {
         const options = customerFieldData.options[category.field_key] || [];
 
+        // ポイント設定と紐づいているカテゴリかチェック（会員種別のみ）
+        const needsPointWarning = category.field_label === '会員種別';
+
         html += `
             <div class="customer-field-section">
                 <div class="customer-field-header">
@@ -88,6 +91,11 @@ function renderCustomerFields() {
                         名前を変更
                     </button>
                 </div>
+                ${needsPointWarning ? `
+                <p class="customer-field-point-warning" style="color: #d32f2f; font-size: 14px; margin: 5px 0 10px 0;">
+                    ⚠️ ポイント設定と紐づいています。変更・削除はポイント設定にも影響します。
+                </p>
+                ` : ''}
 
                 <div class="customer-field-options-list">
                     ${options.map((option, index) => renderOptionItem(category.field_key, option, index, options.length)).join('')}

@@ -1,0 +1,192 @@
+/* ポイント履歴CSS - デザイン規約準拠 */
+
+/* コンテナ */
+.point-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ヘッダー */
+.point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.point-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.point-back-btn {
+  padding: 10px 20px;
+  background-color: #00BCD4; /* メインカラー */
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.point-back-btn:hover {
+  background-color: #0097A7;
+  color: white;
+}
+
+/* 顧客情報カード */
+.point-customer-card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.point-customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.point-customer-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.point-customer-details {
+  display: flex;
+  gap: 30px;
+  font-size: 14px;
+  color: #666;
+}
+
+.point-customer-current strong {
+  color: #00BCD4;
+  font-size: 16px;
+}
+
+/* テーブルコンテナ */
+.point-table-container {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* テーブル */
+.point-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.point-table thead {
+  background-color: #5a5a5a;
+}
+
+.point-table thead th {
+  padding: 12px;
+  text-align: left;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.point-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.point-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.point-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.point-table tbody td {
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* バッジ（追加/消費） */
+.point-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.point-badge-add {
+  background-color: #28a745; /* 緑 */
+}
+
+.point-badge-consume {
+  background-color: #dc3545; /* 赤 */
+}
+
+/* ポイント数 */
+.point-change {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.point-change-positive {
+  color: #28a745; /* 緑 */
+}
+
+.point-change-negative {
+  color: #dc3545; /* 赤 */
+}
+
+/* 残高 */
+.point-balance {
+  font-weight: bold;
+  color: #00BCD4; /* メインカラー */
+}
+
+/* 理由 */
+.point-reason {
+  color: #666;
+}
+
+/* データなし */
+.point-no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+  .point-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .point-customer-details {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .point-table {
+    font-size: 12px;
+  }
+
+  .point-table thead th,
+  .point-table tbody td {
+    padding: 8px 6px;
+  }
+}

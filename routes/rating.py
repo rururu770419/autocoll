@@ -1,11 +1,12 @@
 from flask import render_template, request, jsonify, session, redirect, url_for
 from database.rating_db import (
-    get_all_rating_items, 
-    add_rating_item, 
+    get_all_rating_items,
+    add_rating_item,
     update_rating_item,
     delete_rating_item,
     update_item_order,
-    get_rating_item_by_id
+    get_rating_item_by_id,
+    check_textarea_exists
 )
 from database.db_access import get_db
 import json
@@ -84,24 +85,29 @@ def add_rating_item_endpoint(store):
     db = get_db(store)
     try:
         data = request.get_json()
-        
+
         item_name = data.get('item_name')
         item_type = data.get('item_type')
         options = data.get('options', [])
-        
+
         if not item_name or not item_type:
             return jsonify({'success': False, 'error': '必須項目が入力されていません'})
-        
+
+        # テキストエリアタイプの場合、既存チェック
+        if item_type == 'textarea':
+            if check_textarea_exists(db):
+                return jsonify({'success': False, 'error': 'テキストエリアは１つしか作成できません。既に登録されています。'})
+
         # options を JSON 文字列に変換
         options_json = json.dumps(options, ensure_ascii=False)
-        
+
         success = add_rating_item(db, item_name, item_type, options_json)
-        
+
         if success:
             return jsonify({'success': True, 'message': '評価項目を登録しました'})
         else:
             return jsonify({'success': False, 'error': '登録に失敗しました'})
-            
+
     except Exception as e:
         print(f"Error in add_rating_item: {e}")
         import traceback
@@ -118,26 +124,31 @@ def update_rating_item_endpoint(store):
     db = get_db(store)
     try:
         data = request.get_json()
-        
+
         item_id = data.get('item_id')
         item_name = data.get('item_name')
         item_type = data.get('item_type')
         options = data.get('options', [])
         is_active = data.get('is_active', True)
-        
+
         if not item_id or not item_name or not item_type:
             return jsonify({'success': False, 'error': '必須項目が入力されていません'})
-        
+
+        # テキストエリアタイプに変更する場合、既存チェック（自分以外）
+        if item_type == 'textarea':
+            if check_textarea_exists(db, exclude_item_id=item_id):
+                return jsonify({'success': False, 'error': 'テキストエリアは１つしか作成できません。既に登録されています。'})
+
         # options を JSON 文字列に変換
         options_json = json.dumps(options, ensure_ascii=False)
-        
+
         success = update_rating_item(db, item_id, item_name, item_type, options_json, is_active)
-        
+
         if success:
             return jsonify({'success': True, 'message': '評価項目を更新しました'})
         else:
             return jsonify({'success': False, 'error': '更新に失敗しました'})
-            
+
     except Exception as e:
         print(f"Error in update_rating_item: {e}")
         return jsonify({'success': False, 'error': f'エラー: {str(e)}'})

@@ -8,9 +8,12 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Customer edit page initialized');
-    
+
     // 選択肢を読み込む（完了を待つ）
     await loadCustomerFieldOptions();
+
+    // ポイント操作理由を読み込む
+    await loadPointReasons();
     
     // 顧客データを読み込む
     await loadCustomerData();
@@ -46,26 +49,58 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function loadCustomerFieldOptions() {
     const store = getStoreCode();
-    
+
     try {
         const response = await fetch(`/${store}/api/customer_fields/options`);
         const result = await response.json();
-        
+
         if (result.success && result.options) {
             // 会員種別
             populateSelect('member_type', result.options.member_type || []);
-            
+
             // ステータス
             populateSelect('status', result.options.status || []);
-            
+
             // WEB会員
             populateSelect('web_member', result.options.web_member || []);
-            
+
             // 募集媒体
             populateSelect('recruitment_source', result.options.recruitment_source || []);
         }
     } catch (error) {
         console.error('選択肢の読み込みエラー:', error);
+    }
+}
+
+/**
+ * ポイント操作理由を読み込む
+ */
+async function loadPointReasons() {
+    const store = getStoreCode();
+
+    try {
+        const response = await fetch(`/${store}/point_settings/api/reasons`);
+        const result = await response.json();
+
+        if (result.success && result.reasons) {
+            const select = document.getElementById('point_reason');
+            if (!select) return;
+
+            // 既存のoptionを削除（「選択してください」は残す）
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // 理由を追加
+            result.reasons.forEach(reason => {
+                const option = document.createElement('option');
+                option.value = reason.reason_name;
+                option.textContent = reason.reason_name;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('ポイント操作理由の読み込みエラー:', error);
     }
 }
 
@@ -380,7 +415,32 @@ async function handleFormSubmit(e) {
     // 🔧 修正: 空の日付フィールドをnullに変換
     const birthdayValue = getValue('birthday');
     const ageValue = getValue('age');
-    
+
+    // ポイント操作のバリデーション
+    const pointOperation = getValue('point_operation');
+    const pointAmount = getValue('point_amount');
+    const pointReason = getValue('point_reason');
+
+    // ポイント操作のバリデーション
+    if (pointOperation && !pointAmount) {
+        showMessage('操作が選択されている場合は、ポイント数を入力してください', 'error');
+        return;
+    }
+
+    if (pointAmount && !pointOperation) {
+        showMessage('ポイント数が入力されている場合は、操作を選択してください', 'error');
+        return;
+    }
+
+    if (pointOperation === 'consume' && pointAmount) {
+        const currentPoints = parseInt(getValue('current_points')) || 0;
+        const consumePoints = parseInt(pointAmount);
+        if (consumePoints > currentPoints) {
+            showMessage(`消費ポイント（${consumePoints}PT）が所持ポイント（${currentPoints}PT）を超えています`, 'error');
+            return;
+        }
+    }
+
     const data = {
         name: getValue('name'),
         furigana: getValue('furigana'),
@@ -402,11 +462,15 @@ async function handleFormSubmit(e) {
         mypage_id: getValue('mypage_id'),
         mypage_password: getValue('mypage_password'),
         comment: getValue('comment'),
-        nickname: getValue('nickname') || getValue('name')  // ニックネームが空なら名前をコピー
+        nickname: getValue('nickname') || getValue('name'),  // ニックネームが空なら名前をコピー
+        // ポイント操作情報
+        point_operation: pointOperation || null,
+        point_amount: pointAmount ? parseInt(pointAmount) : null,
+        point_reason: pointReason || null
     };
-    
+
     console.log('送信データ:', data);
-    
+
     // 必須チェック
     if (!data.name) {
         showMessage('名前は必須です', 'error');

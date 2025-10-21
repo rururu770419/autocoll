@@ -339,10 +339,12 @@
 
 <script>
 // 顧客の現在のPTを初期値として設定
-// ログイン中のスタッフIDを設定
+// ログイン中のスタッフIDと顧客情報を設定（DOMContentLoaded前に設定）
+currentCustomerPT = {{ customer.get('current_points', 0) or 0 }};
+window.currentStaffId = {{ session.get('user_id', 'null') }};
+window.currentCustomerMemberType = '{{ customer.get('member_type', '通常会員') }}';
+
 window.addEventListener('DOMContentLoaded', function() {
-    currentCustomerPT = {{ customer.get('current_points', 0) or 0 }};
-    window.currentStaffId = {{ session.get('user_id', 'null') }};
     calculatePT(); // PT表示を初期化
 });
 </script>

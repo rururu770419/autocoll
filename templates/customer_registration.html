@@ -66,7 +66,7 @@
                     <label class="customer-label-white">所持PT</label>
                     <div class="customer-input-group">
                         <input type="number" name="current_points" id="current_points"
-                               class="customer-input form-input-white" value="0" min="0" step="1" inputmode="numeric">
+                               class="customer-input customer-input-readonly form-input-white" value="0" min="0" step="1" inputmode="numeric" readonly>
                         <span class="customer-input-suffix-white">pt</span>
                     </div>
                 </div>
@@ -225,7 +225,40 @@
                 </select>
             </div>
 
-            <!-- ========== 5行目：コメント（列1-3全幅） ========== -->
+            <!-- ========== 5行目：ポイント操作 ========== -->
+            <div class="form-full-width">
+                <div class="point-operation-container">
+                    <!-- 操作 -->
+                    <div class="point-field">
+                        <label>操作</label>
+                        <select name="point_operation" id="point_operation" class="form-select point-operation-select">
+                            <option value="">選択してください</option>
+                            <option value="add" {% if default_points > 0 %}selected{% endif %}>追加</option>
+                            <option value="consume">消費</option>
+                        </select>
+                    </div>
+
+                    <!-- ポイント数 -->
+                    <div class="point-field">
+                        <label>ポイント数</label>
+                        <div class="point-input-group">
+                            <input type="number" name="point_amount" id="point_amount" class="point-amount-input"
+                                   value="{% if default_points > 0 %}{{ default_points }}{% endif %}" placeholder="0" min="0" step="1" inputmode="numeric">
+                            <span class="point-suffix">PT</span>
+                        </div>
+                    </div>
+
+                    <!-- 理由 -->
+                    <div class="point-field">
+                        <label>理由（任意）</label>
+                        <select name="point_reason" id="point_reason" class="form-select point-reason-select">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== 6行目：コメント（列1-3全幅） ========== -->
             <div class="form-full-width">
                 <div class="form-group">
                     <label>コメント</label>

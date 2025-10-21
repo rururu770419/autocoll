@@ -490,6 +490,9 @@ function calculateTotal() {
         const course = coursesData.find(c => c.course_id == courseId);
         if (course && course.price) {
             total += course.price;
+
+            // コース選択時にポイントを自動計算
+            calculateReservationPoints(courseId, course.price);
         }
     }
 
@@ -587,6 +590,46 @@ function calculatePT() {
         } else {
             displayElement.style.color = '#333';
         }
+    }
+}
+
+// 予約時のポイント自動計算
+async function calculateReservationPoints(courseId, coursePrice) {
+    // 顧客の会員種別を使用（顧客編集ページで設定されたもの）
+    const memberType = window.currentCustomerMemberType;
+
+    // コースIDと会員種別が設定されていない場合は何もしない
+    if (!courseId || !memberType) {
+        return;
+    }
+
+    const store = getStoreFromUrl();
+
+    try {
+        const response = await fetch(`/${store}/point_settings/api/calculate_points`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                course_id: courseId,
+                member_type: memberType,
+                course_price: coursePrice
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.points !== undefined) {
+            // PT追加フィールドに自動入力
+            const ptAddInput = document.getElementById('pt_add');
+            if (ptAddInput) {
+                ptAddInput.value = result.points;
+                calculatePT(); // PT残高を再計算
+            }
+        }
+    } catch (error) {
+        console.error('ポイント計算エラー:', error);
     }
 }
 

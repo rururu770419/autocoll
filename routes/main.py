@@ -123,6 +123,21 @@ from .customer import (
     api_delete_customer_endpoint,
     api_search_customers_endpoint
 )
+# ポイント履歴を追加
+from .point import point_history_view
+# ポイント設定を追加
+from .point_settings import (
+    point_settings_view,
+    point_settings_save,
+    add_point_reason_endpoint,
+    update_point_reason_endpoint,
+    delete_point_reason_endpoint,
+    move_point_reason_up_endpoint,
+    move_point_reason_down_endpoint,
+    get_point_reasons_api,
+    calculate_reservation_points_api,
+    get_member_types_api
+)
 # 顧客情報設定APIを追加
 from .settings_customer_api import (
     api_get_customer_fields,
@@ -326,6 +341,20 @@ main_routes.add_url_rule('/<store>/api/rating_item/move', 'move_item_order', mov
 main_routes.add_url_rule('/<store>/customer_management', 'customer_management', customer_management_view, methods=['GET'])
 main_routes.add_url_rule('/<store>/customer_registration', 'customer_registration', customer_registration_view, methods=['GET'])
 main_routes.add_url_rule('/<store>/customer_edit/<int:customer_id>', 'edit_customer', customer_edit_view, methods=['GET'])
+# ポイント履歴
+main_routes.add_url_rule('/<store>/point_history', 'point_history', point_history_view, methods=['GET'])
+# ポイント設定
+main_routes.add_url_rule('/<store>/point_settings', 'point_settings', point_settings_view, methods=['GET'])
+main_routes.add_url_rule('/<store>/point_settings/save', 'point_settings_save', point_settings_save, methods=['POST'])
+# ポイント操作理由管理
+main_routes.add_url_rule('/<store>/point_settings/reason/add', 'add_point_reason', add_point_reason_endpoint, methods=['POST'])
+main_routes.add_url_rule('/<store>/point_settings/reason/update/<int:reason_id>', 'update_point_reason', update_point_reason_endpoint, methods=['POST'])
+main_routes.add_url_rule('/<store>/point_settings/reason/delete/<int:reason_id>', 'delete_point_reason', delete_point_reason_endpoint, methods=['POST'])
+main_routes.add_url_rule('/<store>/point_settings/reason/move_up/<int:reason_id>', 'move_point_reason_up', move_point_reason_up_endpoint, methods=['GET'])
+main_routes.add_url_rule('/<store>/point_settings/reason/move_down/<int:reason_id>', 'move_point_reason_down', move_point_reason_down_endpoint, methods=['GET'])
+main_routes.add_url_rule('/<store>/point_settings/api/reasons', 'get_point_reasons_api', get_point_reasons_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/point_settings/api/calculate_points', 'calculate_reservation_points_api', calculate_reservation_points_api, methods=['POST'])
+main_routes.add_url_rule('/<store>/point_settings/api/member_types', 'get_member_types_api', get_member_types_api, methods=['GET'])
 
 # 顧客管理（API）
 main_routes.add_url_rule('/<store>/api/customers', 'api_get_customers', api_get_customers_endpoint, methods=['GET'])

@@ -41,7 +41,7 @@
 }
 
 .customer-back-btn {
-    grid-column: 2;
+    grid-column: 3;
     padding: 8px 16px;
     background-color: #6c757d;
     color: white;
@@ -104,7 +104,7 @@
 /* フォームグループ（横並び・間なし） */
 .customer-form-group {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 0;
 }
 
@@ -580,6 +580,29 @@
     text-decoration: none;
 }
 
+/* PT履歴ボタン */
+.customer-btn-point-history {
+    grid-column: 2;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #00BCD4;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+}
+
+.customer-btn-point-history:hover {
+    background-color: #0097A7;
+    color: #fff;
+    text-decoration: none;
+}
+
 /* 操作アイコン（optionsページと同じスタイル） */
 .customer-action-btn {
     display: inline-block;
@@ -604,8 +627,8 @@
 /* ヘッダーボタンエリア - メインコンテナの幅に合わせる */
 .customer-header-buttons {
     display: grid;
-    grid-template-columns: 20% 1fr;  /* メインコンテナと同じ比率 */
-    gap: 20px;
+    grid-template-columns: auto auto 1fr;  /* 新規予約、PT履歴、一覧に戻る */
+    gap: 10px;
     align-items: center;
     padding-bottom: 15px;
     border-bottom: 1px solid #ddd;
@@ -665,18 +688,13 @@
     background: none;
     padding: 0;
     min-width: auto;
-    text-align: center;
+    text-align: left;
 }
 
 /* 左側メインカラーエリアのすべてのラベルを白に */
 .customer-info-card label {
     color: white !important;
-    text-align: center;
-}
-
-/* メインカラーエリア内のform-group labelは中央揃え */
-.customer-info-card .form-group label {
-    align-self: center;
+    text-align: left;
 }
 
 /* 白いinputフィールド */
@@ -809,7 +827,7 @@
 
 .form-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 10px;
     margin-top: 20px;
 }
@@ -877,4 +895,90 @@
     .customer-form-group[style*="grid-column: span 3"] {
         grid-column: 1 !important;
     }
+}
+
+/* ========================================
+   ポイント操作フィールド
+   ======================================== */
+
+/* ポイント操作全体のコンテナ（横並び） */
+.point-operation-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* 各ポイントフィールド */
+.point-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ポイント操作エリアのラベル（右側フォームと同じスタイル） */
+.point-field label {
+    display: inline-block;
+    width: auto;
+    align-self: flex-start;
+    background-color: #00BCD4;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* 操作selectは自動幅 */
+.point-operation-select {
+    width: auto;
+    min-width: 150px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* ポイント数入力は80px制限 */
+.point-amount-input {
+    max-width: 80px;
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* 理由selectは自動幅 */
+.point-reason-select {
+    width: auto;
+    min-width: 180px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* ポイント操作フィールドのフォーカス時スタイル */
+.point-operation-select:focus,
+.point-amount-input:focus,
+.point-reason-select:focus {
+    outline: none;
+    border-color: #00BCD4;
+    box-shadow: none;
+}
+
+/* ポイント数入力グループ（PT表示付き） */
+.point-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.point-suffix {
+    font-size: 14px;
+    font-weight: bold;
+    color: #00BCD4; /* メインカラー */
+    white-space: nowrap;
 }

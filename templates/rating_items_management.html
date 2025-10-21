@@ -30,6 +30,14 @@
     
     <!-- 評価項目一覧テーブル -->
     <h2 class="rating-section-title">評価項目一覧</h2>
+
+    <!-- テキストエリア制限の警告メッセージ -->
+    <div style="margin-bottom: 15px; padding: 10px 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+        <span style="color: #dc3545; font-weight: 600;">
+            <i class="fas fa-exclamation-triangle"></i> 仕様の為、テキストエリアは１つしか作成できません。
+        </span>
+    </div>
+
     <div class="rating-list-card">
         <div class="rating-table-wrapper">
             {% if items and items|length > 0 %}

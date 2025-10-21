@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/point_history.css') }}">
+{% endblock %}
+
+{% block title %}ポイント履歴 - {{ customer['name'] }}様{% endblock %}
+
+{% block content %}
+<div class="point-container">
+  <!-- ヘッダー -->
+  <div class="point-header">
+    <h1 class="point-title">ポイント履歴</h1>
+    <a href="{{ url_for('main_routes.edit_customer', store=store, customer_id=customer['customer_id']) }}" class="point-back-btn">
+      ← 顧客編集に戻る
+    </a>
+  </div>
+
+  <!-- 顧客情報カード -->
+  <div class="point-customer-card">
+    <div class="point-customer-info">
+      <h2 class="point-customer-name">{{ customer['name'] }}様</h2>
+      <div class="point-customer-details">
+        <span class="point-customer-id">顧客番号: {{ customer['customer_id'] }}</span>
+        <span class="point-customer-current">現在のポイント: <strong>{{ customer['current_points'] or 0 }}PT</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ポイント履歴テーブル -->
+  <div class="point-table-container">
+    {% if history %}
+    <table class="point-table">
+      <thead>
+        <tr>
+          <th>日時</th>
+          <th>種別</th>
+          <th>ポイント数</th>
+          <th>操作後の残高</th>
+          <th>理由</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in history %}
+        <tr>
+          <td>{{ item.created_at.strftime('%Y年%m月%d日 %H:%M:%S') }}</td>
+          <td>
+            {% if item.transaction_type == 'add' %}
+            <span class="point-badge point-badge-add">追加</span>
+            {% else %}
+            <span class="point-badge point-badge-consume">消費</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.point_change > 0 %}
+            <span class="point-change point-change-positive">+{{ item.point_change }}PT</span>
+            {% else %}
+            <span class="point-change point-change-negative">{{ item.point_change }}PT</span>
+            {% endif %}
+          </td>
+          <td class="point-balance">{{ item.balance_after }}PT</td>
+          <td class="point-reason">{{ item.reason or '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="point-no-data">
+      ポイント履歴がありません
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

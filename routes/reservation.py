@@ -119,7 +119,8 @@ def new_reservation(store):
             customer_id,
             name,
             phone,
-            current_points
+            current_points,
+            member_type
         FROM customers
         WHERE customer_id = %s
     """, (customer_id,))
@@ -140,6 +141,7 @@ def new_reservation(store):
         'name': customer['name'],
         'phone': customer['phone'],
         'current_points': customer['current_points'] or 0,
+        'member_type': customer['member_type'] or '通常会員',
         'visit_count': 0,  # TODO: 予約履歴から取得
         'last_visit_datetime': None,  # TODO: 予約履歴から取得
         'last_cast_name': '未設定',  # TODO: 予約履歴から取得

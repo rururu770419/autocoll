@@ -13,6 +13,28 @@ def get_all_rating_items(db):
         print(f"Error in get_all_rating_items: {e}")
         return []
 
+def check_textarea_exists(db, exclude_item_id=None):
+    """テキストエリアタイプの項目が既に存在するかチェック"""
+    try:
+        if exclude_item_id:
+            cursor = db.execute("""
+                SELECT COUNT(*) as count
+                FROM rating_items
+                WHERE item_type = 'textarea' AND item_id != %s
+            """, (exclude_item_id,))
+        else:
+            cursor = db.execute("""
+                SELECT COUNT(*) as count
+                FROM rating_items
+                WHERE item_type = 'textarea'
+            """)
+
+        result = cursor.fetchone()
+        return result['count'] > 0
+    except Exception as e:
+        print(f"Error in check_textarea_exists: {e}")
+        return False
+
 def add_rating_item(db, item_name, item_type, options_json):
     """新しい評価項目を追加"""
     try:

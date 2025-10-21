@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/point_settings.css') }}">
+<script src="{{ url_for('static', filename='js/point_settings.js') }}" defer></script>
+{% endblock %}
+
+{% block title %}ポイント設定 | {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="point-settings-container">
+    <h1 class="point-settings-title">ポイント設定</h1>
+
+    <!-- メッセージ表示エリア -->
+    <div id="messageArea"></div>
+
+    <!-- 事前設定の注意書き -->
+    <div class="point-settings-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>⚠️ 事前設定が必要です</strong><br>
+            コース設定（<a href="{{ url_for('main_routes.course_registration', store=store) }}">コース管理</a>）と会員種別設定（<a href="/{{ store }}/settings">顧客情報設定</a>）を先に登録してください。
+        </div>
+    </div>
+
+    <!-- ========================================
+         基本設定セクション
+         ======================================== -->
+    <h2 class="point-settings-section-title">基本設定</h2>
+    <div class="point-settings-form-card">
+        <div class="point-settings-form-group">
+            <label class="point-settings-form-label">新規顧客登録時のデフォルトポイント</label>
+            <div class="point-settings-input-with-unit">
+                <input type="number"
+                       id="new_customer_default_points"
+                       class="point-settings-form-input"
+                       value="{{ settings.new_customer_default_points }}"
+                       min="0"
+                       step="1"
+                       placeholder="0">
+                <span class="point-settings-unit">PT</span>
+            </div>
+            <small class="point-settings-form-hint">新しく顧客を登録した際に自動で付与されます</small>
+        </div>
+
+        <div class="point-settings-form-buttons">
+            <button type="button" class="point-settings-btn-submit" onclick="saveBasicSettings()">
+                <i class="fas fa-save"></i> 保存
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================
+         顧客情報でのポイント操作理由セクション
+         ======================================== -->
+    <h2 class="point-settings-section-title">顧客情報でのポイント操作理由</h2>
+
+    <div class="point-settings-two-column-layout">
+        <!-- 左：理由登録フォーム（40%） -->
+        <div class="point-settings-form-card">
+            <form id="reasonForm" onsubmit="submitReasonForm(event); return false;">
+                <div class="point-settings-form-group">
+                    <label class="point-settings-form-label">理由名 <span class="point-settings-required">*</span></label>
+                    <input type="text"
+                           id="reason_name"
+                           name="reason_name"
+                           class="point-settings-form-input"
+                           placeholder="例：新規登録特典"
+                           required>
+                    <div id="reason-edit-message" class="point-settings-edit-message" style="display: none;">
+                        💡 編集モード：内容を変更して更新ボタンを押してください
+                    </div>
+                </div>
+
+                <div class="point-settings-form-group">
+                    <label class="point-settings-form-label">状態</label>
+                    <div class="point-settings-toggle-wrapper">
+                        <span class="point-settings-toggle-label">無効</span>
+                        <label class="point-settings-toggle-switch">
+                            <input type="checkbox"
+                                   id="reason_is_active"
+                                   name="reason_is_active"
+                                   class="point-settings-toggle-checkbox"
+                                   checked>
+                            <span class="point-settings-toggle-slider"></span>
+                        </label>
+                        <span class="point-settings-toggle-label">有効</span>
+                    </div>
+                </div>
+
+                <div class="point-settings-form-buttons">
+                    <button type="button"
+                            onclick="resetReasonForm()"
+                            class="point-settings-btn-reset">
+                        リセット
+                    </button>
+                    <button type="submit" class="point-settings-btn-submit" id="reason-submit-btn">
+                        登録
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 右：理由一覧（60%） -->
+        <div class="point-settings-list-card">
+            <table class="point-settings-table">
+                <thead>
+                    <tr>
+                        <th class="point-settings-th-sort">並び順</th>
+                        <th class="point-settings-th-name">理由名</th>
+                        <th class="point-settings-th-status">状態</th>
+                        <th class="point-settings-th-edit">編集</th>
+                        <th class="point-settings-th-delete">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if point_reasons %}
+                        {% for reason in point_reasons %}
+                        <tr>
+                            <td class="point-settings-td-center">
+                                <a href="{{ url_for('main_routes.move_point_reason_up', store=store, reason_id=reason['reason_id']) }}" class="point-settings-sort-btn {% if loop.first %}point-settings-sort-btn-disabled{% endif %}" {% if loop.first %}onclick="return false;"{% endif %} title="上に移動"><i class="fas fa-chevron-up"></i></a><a href="{{ url_for('main_routes.move_point_reason_down', store=store, reason_id=reason['reason_id']) }}" class="point-settings-sort-btn {% if loop.last %}point-settings-sort-btn-disabled{% endif %}" {% if loop.last %}onclick="return false;"{% endif %} title="下に移動"><i class="fas fa-chevron-down"></i></a>
+                            </td>
+                            <td class="point-settings-td-center">{{ reason['reason_name'] }}</td>
+                            <td class="point-settings-td-center">
+                                {% if reason['is_active'] %}
+                                    <span class="point-settings-status-active">有効</span>
+                                {% else %}
+                                    <span class="point-settings-status-inactive">無効</span>
+                                {% endif %}
+                            </td>
+                            <td class="point-settings-td-center">
+                                <button onclick="editReason({{ reason['reason_id'] }}, '{{ reason['reason_name'] }}', {{ 'true' if reason['is_active'] else 'false' }})"
+                                        class="point-settings-action-btn">
+                                    <i class="fas fa-pencil-alt point-settings-edit-icon"></i>
+                                </button>
+                            </td>
+                            <td class="point-settings-td-center">
+                                <button onclick="deleteReason({{ reason['reason_id'] }}, '{{ reason['reason_name'] }}')"
+                                        class="point-settings-action-btn">
+                                    <i class="fas fa-trash-alt point-settings-delete-icon"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="point-settings-td-empty">
+                                理由が登録されていません
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <div class="point-settings-table-note">
+                💡 編集ボタンを押すと、左側が編集画面になります
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         予約時のポイント付与設定セクション
+         ======================================== -->
+    <h2 class="point-settings-section-title">予約時のポイント付与設定</h2>
+    <div class="point-settings-form-card">
+        <div class="point-settings-radio-group">
+            <label class="point-settings-radio-label">
+                <input type="radio"
+                       name="point_method"
+                       value="percentage"
+                       {% if settings.point_method == 'percentage' %}checked{% endif %}
+                       onchange="togglePointMethod()">
+                <span>料金パーセンテージ方式</span>
+            </label>
+            <label class="point-settings-radio-label">
+                <input type="radio"
+                       name="point_method"
+                       value="course_based"
+                       {% if settings.point_method == 'course_based' %}checked{% endif %}
+                       onchange="togglePointMethod()">
+                <span>コース・会員種別固定ポイント方式</span>
+            </label>
+        </div>
+
+        <div class="point-settings-form-buttons">
+            <button type="button" class="point-settings-btn-submit" onclick="savePointMethod()">
+                <i class="fas fa-save"></i> 保存
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================
+         パーセンテージ方式設定エリア
+         ======================================== -->
+    <div id="percentageSettingsArea" class="point-settings-method-area" style="display: {% if settings.point_method == 'percentage' %}block{% else %}none{% endif %};">
+        <h2 class="point-settings-section-title">パーセンテージ設定</h2>
+
+        {% if not courses or not member_types %}
+        <div class="point-settings-alert point-settings-alert-warning">
+            <i class="fas fa-info-circle"></i> コースまたは会員種別が登録されていません。先にマスタ設定を行ってください。
+        </div>
+        {% else %}
+        <div class="point-settings-form-card">
+            <!-- 一括設定 -->
+            <div class="point-settings-bulk-setting">
+                <label class="point-settings-form-label">一括設定</label>
+                <div class="point-settings-bulk-input-group">
+                    <span>全コース・全会員種別:</span>
+                    <input type="number"
+                           id="bulkPercentage"
+                           class="point-settings-bulk-input"
+                           min="0"
+                           max="100"
+                           step="1"
+                           placeholder="5">
+                    <span class="point-settings-unit">%</span>
+                    <button type="button" class="point-settings-btn-secondary" onclick="applyBulkPercentage()">
+                        <i class="fas fa-copy"></i> 一括適用
+                    </button>
+                </div>
+            </div>
+
+            <!-- マトリックス表 -->
+            <div class="point-settings-table-wrapper">
+                <table class="point-settings-matrix-table">
+                    <thead>
+                        <tr>
+                            <th class="point-settings-matrix-header-corner">コース \ 会員種別</th>
+                            {% for member_type in member_types %}
+                            <th class="point-settings-matrix-header">{{ member_type }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td class="point-settings-matrix-course-name">
+                                {{ course.course_name }}
+                                {% if course.category_name %}
+                                <span class="point-settings-course-category">({{ course.category_name }})</span>
+                                {% endif %}
+                            </td>
+                            {% for member_type in member_types %}
+                            {% set key = course.course_id|string + '_' + member_type %}
+                            <td class="point-settings-matrix-cell">
+                                <input type="number"
+                                       class="point-settings-matrix-input percentage-input"
+                                       data-course-id="{{ course.course_id }}"
+                                       data-member-type="{{ member_type }}"
+                                       value="{{ percentage_dict.get(key, '') }}"
+                                       min="0"
+                                       max="100"
+                                       step="1"
+                                       placeholder="%">
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="point-settings-form-buttons">
+                <button type="button" class="point-settings-btn-submit" onclick="savePercentageSettings()">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ========================================
+         固定ポイント方式設定エリア
+         ======================================== -->
+    <div id="fixedPointSettingsArea" class="point-settings-method-area" style="display: {% if settings.point_method == 'course_based' %}block{% else %}none{% endif %};">
+        <h2 class="point-settings-section-title">固定ポイント設定</h2>
+
+        {% if not courses or not member_types %}
+        <div class="point-settings-alert point-settings-alert-warning">
+            <i class="fas fa-info-circle"></i> コースまたは会員種別が登録されていません。先にマスタ設定を行ってください。
+        </div>
+        {% else %}
+        <div class="point-settings-form-card">
+            <!-- 一括設定 -->
+            <div class="point-settings-bulk-setting">
+                <label class="point-settings-form-label">一括設定</label>
+                <div class="point-settings-bulk-input-group">
+                    <span>全コース・全会員種別:</span>
+                    <input type="number"
+                           id="bulkFixedPoint"
+                           class="point-settings-bulk-input"
+                           min="0"
+                           step="1"
+                           placeholder="100">
+                    <span class="point-settings-unit">PT</span>
+                    <button type="button" class="point-settings-btn-secondary" onclick="applyBulkFixedPoint()">
+                        <i class="fas fa-copy"></i> 一括適用
+                    </button>
+                </div>
+            </div>
+
+            <!-- マトリックス表 -->
+            <div class="point-settings-table-wrapper">
+                <table class="point-settings-matrix-table">
+                    <thead>
+                        <tr>
+                            <th class="point-settings-matrix-header-corner">コース \ 会員種別</th>
+                            {% for member_type in member_types %}
+                            <th class="point-settings-matrix-header">{{ member_type }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td class="point-settings-matrix-course-name">
+                                {{ course.course_name }}
+                                {% if course.category_name %}
+                                <span class="point-settings-course-category">({{ course.category_name }})</span>
+                                {% endif %}
+                            </td>
+                            {% for member_type in member_types %}
+                            {% set key = course.course_id|string + '_' + member_type %}
+                            <td class="point-settings-matrix-cell">
+                                <input type="number"
+                                       class="point-settings-matrix-input fixed-point-input"
+                                       data-course-id="{{ course.course_id }}"
+                                       data-member-type="{{ member_type }}"
+                                       value="{{ point_dict.get(key, '') }}"
+                                       min="0"
+                                       step="1"
+                                       placeholder="PT">
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="point-settings-form-buttons">
+                <button type="button" class="point-settings-btn-submit" onclick="saveFixedPointSettings()">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ページ読み込み時の初期化
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if success %}
+            showMessage('{{ success }}', 'success');
+        {% elif error %}
+            showMessage('{{ error }}', 'error');
+        {% endif %}
+    });
+</script>
+{% endblock %}

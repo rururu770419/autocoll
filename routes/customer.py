@@ -4,6 +4,7 @@ from database.customer_db import (
     add_customer, get_all_customers, get_customer_by_id,
     update_customer, delete_customer, search_customers
 )
+from database.point_db import add_point_transaction
 from datetime import datetime
 
 # ========================================
@@ -20,7 +21,21 @@ def customer_registration_view(store):
     """顧客登録画面"""
     if 'store' not in session:
         return redirect(url_for('main_routes.index', store=store))
-    return render_template('customer_registration.html', store=store)
+
+    # ポイント設定からデフォルトポイントを取得
+    try:
+        from database.connection import get_store_id
+        from database.point_settings_db import get_store_point_settings
+
+        store_code = session['store']
+        store_id = get_store_id(store_code)
+        point_settings = get_store_point_settings(store_id)
+        default_points = point_settings.get('new_customer_default_points', 0)
+    except Exception as e:
+        print(f"デフォルトポイント取得エラー: {e}")
+        default_points = 0
+
+    return render_template('customer_registration.html', store=store, default_points=default_points)
 
 def customer_edit_view(store, customer_id):
     """顧客編集画面"""
@@ -138,9 +153,34 @@ def api_add_customer_endpoint(store):
         # 数値型の変換
         if data.get('current_points'):
             data['current_points'] = int(data['current_points'])
-        
+
+        # ポイント操作情報を取得
+        point_operation = data.get('point_operation')
+        point_amount = data.get('point_amount')
+        point_reason = data.get('point_reason')
+
         customer_id = add_customer(store_code, data)
-        
+
+        # ポイント操作がある場合、ポイントを追加/消費
+        if point_operation and point_amount:
+            if point_operation == 'add':
+                point_change = int(point_amount)
+            elif point_operation == 'consume':
+                point_change = -int(point_amount)
+            else:
+                point_change = 0
+
+            if point_change != 0:
+                success = add_point_transaction(
+                    store_code,
+                    customer_id,
+                    point_change,
+                    point_operation,
+                    point_reason
+                )
+                if not success:
+                    return jsonify({'success': False, 'message': 'ポイント処理に失敗しました'}), 500
+
         return jsonify({
             'success': True,
             'message': '顧客を登録しました',
@@ -173,9 +213,34 @@ def api_update_customer_endpoint(store, customer_id):
         # 数値型の変換
         if data.get('current_points'):
             data['current_points'] = int(data['current_points'])
-        
+
+        # ポイント操作情報を取得
+        point_operation = data.get('point_operation')
+        point_amount = data.get('point_amount')
+        point_reason = data.get('point_reason')
+
         update_customer(store_code, customer_id, data)
-        
+
+        # ポイント操作がある場合、ポイントを追加/消費
+        if point_operation and point_amount:
+            if point_operation == 'add':
+                point_change = int(point_amount)
+            elif point_operation == 'consume':
+                point_change = -int(point_amount)
+            else:
+                point_change = 0
+
+            if point_change != 0:
+                success = add_point_transaction(
+                    store_code,
+                    customer_id,
+                    point_change,
+                    point_operation,
+                    point_reason
+                )
+                if not success:
+                    return jsonify({'success': False, 'message': 'ポイント処理に失敗しました'}), 500
+
         return jsonify({
             'success': True,
             'message': '顧客情報を更新しました'
