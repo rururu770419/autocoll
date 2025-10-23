@@ -77,10 +77,15 @@ def get_reservations_api(store):
                 if isinstance(value, datetime):
                     reservation[key] = value.isoformat()
 
+        # お釣り機能の設定を取得
+        from database.settings_db import get_change_feature_setting
+        use_change_feature = get_change_feature_setting(store_id)
+
         return jsonify({
             'success': True,
             'data': reservations,
-            'date': target_date
+            'date': target_date,
+            'use_change_feature': use_change_feature
         })
 
     except Exception as e:
@@ -505,6 +510,10 @@ def edit_reservation(store):
 
     db.close()
 
+    # お釣り機能の設定を取得
+    from database.settings_db import get_change_feature_setting
+    use_change_feature = get_change_feature_setting(store_id)
+
     # datetime型、date型、Decimal型をJSON serializable に変換
     for key, value in reservation.items():
         if isinstance(value, datetime):
@@ -524,7 +533,8 @@ def edit_reservation(store):
         display_name=display_name,
         customer=customer_data,
         reservation=reservation,
-        reservation_json=reservation_json
+        reservation_json=reservation_json,
+        use_change_feature=use_change_feature
     )
 
 

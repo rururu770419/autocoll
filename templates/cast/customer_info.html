@@ -1,0 +1,196 @@
+{% extends "cast/cast_base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_customer_info.css') }}">
+{% endblock %}
+
+{% block title %}お客様情報 - キャストマイページ{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-user-circle"></i>
+お客様情報
+{% endblock %}
+
+{% block content %}
+<!-- お客様情報ヘッダー -->
+<div class="cci-header">
+    <h1 class="cci-customer-name">{{ customer.name }}様</h1>
+
+    <div class="cci-form-group">
+        <label class="cci-label">呼び方</label>
+        <textarea class="cci-textarea" rows="1" placeholder="例) やましたさん"></textarea>
+    </div>
+
+    <div class="cci-form-group">
+        <label class="cci-label">最終利用日時</label>
+        <div class="cci-text-display">{{ customer.last_visit_date }}</div>
+    </div>
+</div>
+
+<!-- アコーディオンセクション -->
+<div class="cci-accordion-container">
+    <!-- アコーディオン1: メモ -->
+    <div class="cci-accordion-section">
+        <div class="cci-accordion-header" onclick="toggleAccordion('memo')">
+            <span class="cci-accordion-title">
+                <i class="fas fa-edit"></i> メモ
+            </span>
+            <span class="cci-accordion-icon" id="icon-memo">▼</span>
+        </div>
+        <div class="cci-accordion-content" id="content-memo">
+            <form onsubmit="saveCustomerMemo(); return false;">
+                <!-- ルックス -->
+                <div class="cci-form-group">
+                    <label class="cci-label">ルックス</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="体型や特徴 例) 細身"></textarea>
+                </div>
+
+                <!-- 印象 -->
+                <div class="cci-form-group">
+                    <label class="cci-label">印象</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="例) 話しやすい、お酒弱い"></textarea>
+                </div>
+
+                <!-- 清潔感 -->
+                <div class="cci-form-group">
+                    <label class="cci-label">清潔感</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="例) とても良い"></textarea>
+                </div>
+
+                <!-- 接客 -->
+                <div class="cci-form-group">
+                    <label class="cci-label">接客</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="好きな話題 例) プロレス・野球"></textarea>
+                </div>
+
+                <!-- 好きなプレイ -->
+                <div class="cci-form-group">
+                    <label class="cci-label">好きなプレイ</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="例) イチャイチャ"></textarea>
+                </div>
+
+                <!-- 好きなオプション -->
+                <div class="cci-form-group">
+                    <label class="cci-label">好きなオプション</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="例) 電マ"></textarea>
+                </div>
+
+                <!-- 性格 -->
+                <div class="cci-form-group">
+                    <label class="cci-label">性格</label>
+                    <textarea class="cci-textarea" rows="1" placeholder="例) 優しい"></textarea>
+                </div>
+
+                <!-- 備考欄 -->
+                <div class="cci-form-group">
+                    <label class="cci-label">備考欄</label>
+                    <textarea class="cci-textarea" rows="3"></textarea>
+                </div>
+
+                <!-- 保存ボタン -->
+                <button type="submit" class="cci-save-btn">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- アコーディオン2: 皆の評価 -->
+    <div class="cci-accordion-section">
+        <div class="cci-accordion-header" onclick="toggleAccordion('everyone-rating')">
+            <span class="cci-accordion-title">
+                <i class="fas fa-users"></i> 皆の評価
+            </span>
+            <span class="cci-accordion-icon" id="icon-everyone-rating">▼</span>
+        </div>
+        <div class="cci-accordion-content" id="content-everyone-rating">
+            <!-- 評価項目ごとの集計テーブル -->
+            {% for item in rating_items %}
+                {% if item.item_type == 'select' or item.item_type == 'radio' %}
+                    <div class="cci-rating-table-wrapper">
+                        <h3 class="cci-rating-table-title">{{ item.item_name }}</h3>
+                        <table class="cci-rating-table">
+                            <thead>
+                                <tr>
+                                    <th class="cci-table-header">選択肢</th>
+                                    <th class="cci-table-header-count">合計</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set item_ratings = everyone_ratings.get(item.item_id|string, []) %}
+                                {% for rating_data in item_ratings %}
+                                    <tr>
+                                        <td class="cci-table-cell">{{ rating_data.value }}</td>
+                                        <td class="cci-table-cell-count">{{ rating_data.count }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- 備考欄（テキストエリア）の内容 -->
+            {% if everyone_comments %}
+            <div class="cci-comments-section">
+                <h3 class="cci-comments-title">備考欄</h3>
+                {% for comment in everyone_comments %}
+                <div class="cci-comment-item">
+                    {{ comment.rating_value }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- アコーディオン3: 私の評価 -->
+    <div class="cci-accordion-section">
+        <div class="cci-accordion-header" onclick="toggleAccordion('my-rating')">
+            <span class="cci-accordion-title">
+                <i class="fas fa-star"></i> 私の評価
+                {% if not has_rating %}
+                <span class="cci-unregistered-badge">※未登録</span>
+                {% endif %}
+            </span>
+            <span class="cci-accordion-icon" id="icon-my-rating">▼</span>
+        </div>
+        <div class="cci-accordion-content" id="content-my-rating">
+            <form onsubmit="saveMyRating(); return false;">
+                {% for item in rating_items %}
+                <div class="cci-form-group">
+                    <label class="cci-label">{{ item.item_name }}</label>
+                    {% if item.item_type == 'select' or item.item_type == 'radio' %}
+                        <div class="cci-radio-group">
+                            {% set options_list = item.options|parse_json %}
+                            {% set saved_value = existing_ratings.get(item.item_id|string, '') %}
+                            {% for option in options_list %}
+                            <label class="cci-radio-label">
+                                {% if option is mapping %}
+                                    <input type="radio" name="rating_{{ item.item_id }}" value="{{ option.value }}" class="cci-radio-input" {% if saved_value == option.value %}checked{% endif %}>
+                                    <span class="cci-radio-text">{{ option.value }}</span>
+                                {% else %}
+                                    <input type="radio" name="rating_{{ item.item_id }}" value="{{ option }}" class="cci-radio-input" {% if saved_value == option %}checked{% endif %}>
+                                    <span class="cci-radio-text">{{ option }}</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    {% elif item.item_type == 'textarea' %}
+                        {% set saved_value = existing_ratings.get(item.item_id|string, '') %}
+                        <textarea class="cci-textarea" rows="3" name="rating_{{ item.item_id }}" placeholder="備考を入力してください">{{ saved_value }}</textarea>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="cci-placeholder-text">評価項目が登録されていません</p>
+                {% endfor %}
+
+                <!-- 評価登録ボタン -->
+                <button type="submit" class="cci-save-btn">評価登録</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cast_customer_info.js') }}"></script>
+{% endblock %}

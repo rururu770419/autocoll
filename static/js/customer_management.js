@@ -76,41 +76,49 @@ async function loadAllCustomers() {
 
 async function searchCustomers() {
     const store = getStoreCode();
-    const keyword = document.getElementById('searchKeyword').value.trim();
-    
+    let keyword = document.getElementById('searchKeyword').value.trim();
+
     if (!keyword) {
         showMessage('検索キーワードを入力してください', 'error');
         return;
     }
-    
-    if (keyword.length < 2) {
+
+    // ハイフンを削除（電話番号検索用）
+    const cleanKeyword = keyword.replace(/-/g, '');
+
+    if (cleanKeyword.length < 2) {
         showMessage('検索キーワードは2文字以上で入力してください', 'error');
         return;
     }
-    
+
     const searchType = detectSearchType(keyword);
-    
+
+    // 電話番号検索の場合はハイフンを削除したキーワードを使用
+    if (searchType === 'phone') {
+        keyword = cleanKeyword;
+    }
+
     try {
         let url = `/${store}/api/customers/search?keyword=${encodeURIComponent(keyword)}`;
-        
+
         if (searchType) {
             url += `&type=${searchType}`;
         }
-        
+
         const response = await fetch(url);
         const result = await response.json();
-        
+
         if (result.success) {
             allCustomers = result.customers || [];
             currentPage = 1;
             displayCustomersWithPagination();
-            
+
             if (allCustomers.length === 0) {
                 showMessage('該当する顧客が見つかりませんでした', 'info');
             } else {
-                const searchTypeText = searchType === 'phone' ? '電話番号' : 
-                                      searchType === 'furigana' ? 'フリガナ' : 
-                                      'フリガナ・電話番号';
+                const searchTypeText = searchType === 'phone' ? '電話番号' :
+                                      searchType === 'furigana' ? 'フリガナ' :
+                                      '電話番号・フリガナ・コメント';
                 showMessage(`${allCustomers.length}件の顧客が見つかりました（${searchTypeText}検索）`, 'success');
             }
         } else {
@@ -190,9 +198,9 @@ function displayCustomersWithPagination() {
             </td>
             <td class="customer-table-cell">${customer.customer_id}</td>
             <td class="customer-table-cell">${escapeHtml(customer.name || '')}</td>
-            <td class="customer-table-cell">${escapeHtml(customer.furigana || '')}</td>
             <td class="customer-table-cell">${escapeHtml(customer.phone || '')}</td>
             <td class="customer-table-cell">${customer.age ? customer.age + '歳' : ''}</td>
+            <td class="customer-table-cell">${escapeHtml(customer.last_visit_date || '')}</td>
             <td class="customer-table-cell">
                 ${renderBadge('member_type', customer.member_type || '通常会員')}
             </td>
@@ -200,7 +208,7 @@ function displayCustomersWithPagination() {
                 ${renderBadge('status', customer.status || '普通')}
             </td>
             <td class="customer-table-cell">${customer.current_points || 0} pt</td>
-            <td class="customer-table-cell">${escapeHtml(customer.comment || '')}</td>
+            <td class="customer-table-cell customer-table-cell-comment">${escapeHtml(customer.comment || '')}</td>
         </tr>
     `).join('');
     

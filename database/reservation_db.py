@@ -414,14 +414,6 @@ def create_reservation(
         # 小計を計算
         subtotal = course_price + nomination_fee + extension_fee + transportation_fee + options_total
 
-        # カード手数料を計算
-        card_fee_rate = 0
-        card_fee = 0
-        if payment_method == 'card':
-            # カード手数料率を取得（例: 3%）
-            card_fee_rate = 0.03
-            card_fee = int(subtotal * card_fee_rate)
-
         # 割引を適用（複数割引の合計）
         discount_amount = 0
         for disc in discount_list:
@@ -430,8 +422,18 @@ def create_reservation(
             elif disc['discount_type'] == 'fixed' and disc['value']:
                 discount_amount += int(disc['value'])
 
-        # 合計金額を計算
-        total_amount = subtotal + card_fee - discount_amount
+        # 合計金額を計算（割引適用後）
+        total_amount = subtotal - discount_amount
+
+        # カード手数料を計算（割引適用後の金額に対して）
+        card_fee_rate = 0
+        card_fee = 0
+        if payment_method and payment_method.lower() in ['カード', 'card']:
+            from database.settings_db import get_card_fee_rate
+            card_fee_rate = get_card_fee_rate(store_id)
+            if card_fee_rate > 0:
+                card_fee = int(total_amount * (card_fee_rate / 100))
+                total_amount += card_fee
 
         # 終了時刻を計算（コース時間 + 延長時間）
         end_datetime = None
@@ -618,63 +620,65 @@ def get_reservations_by_date(store_id: int, target_date: str) -> List[Dict]:
     try:
         cursor.execute("""
             SELECT
-                reservation_id,
-                store_id,
-                customer_id,
-                customer_name,
-                customer_phone,
-                cast_id,
-                cast_name,
-                business_date,
-                reservation_datetime,
-                end_datetime,
-                status,
-                course_id,
-                course_name,
-                course_time_minutes,
-                course_price,
-                nomination_type_id,
-                nomination_type_name,
-                nomination_fee,
-                extension_id,
-                extension_name,
-                extension_minutes,
-                extension_fee,
-                extension_quantity,
-                discount_id,
-                discount_type,
-                discount_name,
-                discount_badge_name,
-                discount_value,
-                discount_amount,
-                reservation_method_id,
-                reservation_method_name,
-                meeting_place_id,
-                meeting_place_name,
-                area_id,
-                area_name,
-                hotel_id,
-                hotel_name,
-                room_number,
-                transportation_fee,
-                payment_method,
-                card_fee_rate,
-                card_fee,
-                options_total,
-                subtotal,
-                total_amount,
-                staff_id,
-                staff_name,
-                points_to_grant,
-                customer_comment,
-                staff_memo,
-                created_at,
-                updated_at,
-                cancellation_reason_id
-            FROM reservations
-            WHERE store_id = %s
-            AND business_date = %s
-            ORDER BY reservation_datetime ASC
+                r.reservation_id,
+                r.store_id,
+                r.customer_id,
+                r.customer_name,
+                r.customer_phone,
+                r.cast_id,
+                r.cast_name,
+                r.business_date,
+                r.reservation_datetime,
+                r.end_datetime,
+                r.status,
+                r.course_id,
+                r.course_name,
+                r.course_time_minutes,
+                r.course_price,
+                r.nomination_type_id,
+                COALESCE(nt.type_name, r.nomination_type_name) as nomination_type_name,
+                r.nomination_fee,
+                r.extension_id,
+                r.extension_name,
+                r.extension_minutes,
+                r.extension_fee,
+                r.extension_quantity,
+                r.discount_id,
+                r.discount_type,
+                r.discount_name,
+                r.discount_badge_name,
+                r.discount_value,
+                r.discount_amount,
+                r.reservation_method_id,
+                r.reservation_method_name,
+                r.meeting_place_id,
+                r.meeting_place_name,
+                r.area_id,
+                r.area_name,
+                r.hotel_id,
+                r.hotel_name,
+                r.room_number,
+                r.transportation_fee,
+                r.payment_method,
+                r.card_fee_rate,
+                r.card_fee,
+                r.options_total,
+                r.subtotal,
+                r.total_amount,
+                r.amount_received,
+                r.staff_id,
+                r.staff_name,
+                r.points_to_grant,
+                r.customer_comment,
+                r.staff_memo,
+                r.created_at,
+                r.updated_at,
+                r.cancellation_reason_id
+            FROM reservations r
+            LEFT JOIN nomination_types nt ON r.nomination_type_id = nt.nomination_type_id AND r.store_id = nt.store_id
+            WHERE r.store_id = %s
+            AND r.business_date = %s
+            ORDER BY r.reservation_datetime ASC
         """, (store_id, target_date))
 
         columns = [desc[0] for desc in cursor.description]
@@ -887,14 +891,9 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
         # カード手数料を計算
         card_fee_rate = 0
         card_fee = 0
-        if payment_method and payment_method.lower() == 'カード':
-            cursor.execute("""
-                SELECT card_fee_percentage FROM reservation_settings
-                WHERE store_id = %s
-            """, (store_id,))
-            result = cursor.fetchone()
-            if result and result[0]:
-                card_fee_rate = result[0]
+        if payment_method and payment_method.lower() in ['カード', 'card']:
+            from database.settings_db import get_card_fee_rate
+            card_fee_rate = get_card_fee_rate(store_id)
 
         # オプション情報を取得
         option_ids = data.getlist('options[]')

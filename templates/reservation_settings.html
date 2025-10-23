@@ -4,6 +4,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/point_settings.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reservation_settings.css') }}">
 {% endblock %}
 
@@ -25,6 +26,7 @@
   <div class="settings-tabs">
     <button class="settings-tab-btn active" onclick="switchTab('reservation_management')">予約管理</button>
     <button class="settings-tab-btn" onclick="switchTab('ng_settings')">キャストNG設定</button>
+    <button class="settings-tab-btn" onclick="switchTab('change_settings')">お釣り設定</button>
   </div>
   
   <!-- タブコンテンツ -->
@@ -226,6 +228,36 @@
       </div>
     </div>
 
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- お釣り設定タブ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="change_settings" class="settings-tab-content">
+      <h2 class="point-settings-section-title">お釣り設定</h2>
+      <div class="point-settings-form-card">
+        <div class="point-settings-form-group">
+          <label class="point-settings-form-label">お釣り機能</label>
+
+          <div class="point-settings-toggle-wrapper">
+            <label class="point-settings-toggle-switch">
+              <input type="checkbox" id="use-change-feature" class="point-settings-toggle-checkbox">
+              <span class="point-settings-toggle-slider"></span>
+            </label>
+            <span class="point-settings-toggle-label">お釣り機能を使用する</span>
+          </div>
+
+          <small class="point-settings-form-hint">
+            チェックを入れると、現金払いの予約でお預かり金額とお釣りの入力・表示が可能になります
+          </small>
+        </div>
+
+        <div class="point-settings-form-buttons">
+          <button type="button" id="save-change-feature-btn" class="point-settings-btn-submit">
+            <i class="fas fa-save"></i> 保存
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -410,6 +442,7 @@ window.reservationSettingsUrls = {
   meetingPlaces: "/{{ store }}/reservation-settings/meeting_places",
   reservationMethods: "/{{ store }}/reservation-settings/reservation_methods",
   cardFeeRate: "/{{ store }}/reservation-settings/card_fee_rate",
+  changeFeature: "/{{ store }}/reservation-settings/change_feature",
   ngAreas: "/{{ store }}/reservation-settings/ng_areas",
   ngAges: "/{{ store }}/reservation-settings/ng_ages"
 };

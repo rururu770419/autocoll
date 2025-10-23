@@ -64,7 +64,13 @@
         if (saveCardFeeBtn) {
             saveCardFeeBtn.addEventListener('click', saveCardFeeRate);
         }
-        
+
+        // お釣り機能保存ボタン
+        const saveChangeFeatureBtn = document.getElementById('save-change-feature-btn');
+        if (saveChangeFeatureBtn) {
+            saveChangeFeatureBtn.addEventListener('click', saveChangeFeatureSetting);
+        }
+
         // NGエリア追加ボタン
         const addNgAreaBtn = document.getElementById('add-ng-area-btn');
         if (addNgAreaBtn) {
@@ -90,10 +96,15 @@
         document.querySelectorAll('.settings-tab-content').forEach(content => {
             content.classList.remove('active');
         });
-        
+
         // 選択されたタブをアクティブに
         event.currentTarget.classList.add('active');
         document.getElementById(tabId).classList.add('active');
+
+        // タブ切り替え時に必要なデータを読み込む
+        if (tabId === 'change_settings') {
+            loadChangeFeatureSetting();
+        }
     };
     
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -555,6 +566,53 @@
         });
     }
     
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // お釣り機能設定
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    function loadChangeFeatureSetting() {
+        fetch(`/${storeId}/reservation-settings/change_feature`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const checkbox = document.getElementById('use-change-feature');
+                    if (checkbox) {
+                        checkbox.checked = data.use_change_feature || false;
+                    }
+                } else {
+                    console.error('Failed to load change feature setting');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading change feature setting:', error);
+            });
+    }
+
+    function saveChangeFeatureSetting() {
+        const checkbox = document.getElementById('use-change-feature');
+        const useChange = checkbox.checked;
+
+        fetch(`/${storeId}/reservation-settings/change_feature`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ use_change_feature: useChange })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+            } else {
+                showMessage(data.message || '保存に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving change feature setting:', error);
+            showMessage('保存中にエラーが発生しました', 'error');
+        });
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // NGエリア管理
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

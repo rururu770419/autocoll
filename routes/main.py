@@ -121,7 +121,9 @@ from .customer import (
     api_add_customer_endpoint,
     api_update_customer_endpoint,
     api_delete_customer_endpoint,
-    api_search_customers_endpoint
+    api_search_customers_endpoint,
+    get_usage_history_api,
+    get_cast_usage_api
 )
 # ポイント履歴を追加
 from .point import point_history_view
@@ -363,6 +365,8 @@ main_routes.add_url_rule('/<store>/api/customers/add', 'api_add_customer', api_a
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>/update', 'api_update_customer', api_update_customer_endpoint, methods=['POST'])
 main_routes.add_url_rule('/<store>/api/customers/<int:customer_id>/delete', 'api_delete_customer', api_delete_customer_endpoint, methods=['POST'])
 main_routes.add_url_rule('/<store>/api/customers/search', 'api_search_customers', api_search_customers_endpoint, methods=['GET'])
+main_routes.add_url_rule('/<store>/api/customer/<int:customer_id>/usage_history', 'get_usage_history', get_usage_history_api, methods=['GET'])
+main_routes.add_url_rule('/<store>/api/customer/<int:customer_id>/cast_usage', 'get_cast_usage', get_cast_usage_api, methods=['GET'])
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 顧客情報設定API

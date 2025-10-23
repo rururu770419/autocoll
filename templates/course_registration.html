@@ -132,23 +132,35 @@
                 <div>
                     <div class="course-form-group">
                         <label class="course-form-label">コース名 <span class="course-required">*</span></label>
-                        <input type="text" 
-                               name="course_name" 
-                               class="course-form-input" 
-                               placeholder="例：90分コース" 
+                        <input type="text"
+                               name="course_name"
+                               class="course-form-input"
+                               placeholder="例：90分コース"
                                required>
                     </div>
 
                     <div class="course-form-group">
                         <label class="course-form-label">料金 <span class="course-required">*</span></label>
-                        <input type="number" 
-                               name="price" 
-                               class="course-form-input" 
-                               placeholder="例：15000" 
+                        <input type="number"
+                               name="price"
+                               class="course-form-input"
+                               placeholder="例：15000"
                                required
                                step="1"
                                min="0">
                         <small class="course-form-hint">金額は円単位で入力してください</small>
+                    </div>
+
+                    <div class="course-form-group">
+                        <label class="course-form-label">バック</label>
+                        <input type="number"
+                               name="cast_back_amount"
+                               class="course-form-input"
+                               placeholder="0"
+                               step="100"
+                               min="0"
+                               value="0">
+                        <small class="course-form-hint">キャストバック額を入力してください</small>
                     </div>
                 </div>
 
@@ -168,31 +180,30 @@
 
                     <div class="course-form-group">
                         <label class="course-form-label">時間（分） <span class="course-required">*</span></label>
-                        <input type="number" 
-                               name="duration_minutes" 
-                               class="course-form-input" 
-                               placeholder="例：90" 
+                        <input type="number"
+                               name="duration_minutes"
+                               class="course-form-input"
+                               placeholder="例：90"
                                required
                                step="1"
                                min="1">
                         <small class="course-form-hint">コースの時間を入力してください</small>
                     </div>
-                </div>
-            </div>
 
-            <!-- 状態トグル（全幅） -->
-            <div class="course-form-group">
-                <label class="course-form-label">状態</label>
-                <div class="course-toggle-wrapper">
-                    <span class="course-toggle-label">無効</span>
-                    <label class="course-toggle-switch">
-                        <input type="checkbox" 
-                               name="is_active" 
-                               class="course-toggle-checkbox" 
-                               checked>
-                        <span class="course-toggle-slider"></span>
-                    </label>
-                    <span class="course-toggle-label">有効</span>
+                    <div class="course-form-group">
+                        <label class="course-form-label">状態</label>
+                        <div class="course-toggle-wrapper">
+                            <span class="course-toggle-label">無効</span>
+                            <label class="course-toggle-switch">
+                                <input type="checkbox"
+                                       name="is_active"
+                                       class="course-toggle-checkbox"
+                                       checked>
+                                <span class="course-toggle-slider"></span>
+                            </label>
+                            <span class="course-toggle-label">有効</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -218,8 +229,9 @@
                         <th class="course-th-sort-course">並び順</th>
                         <th class="course-th-category">カテゴリ</th>
                         <th class="course-th-course-name">コース名</th>
-                        <th class="course-th-price">料金</th>
                         <th class="course-th-time">時間</th>
+                        <th class="course-th-price">料金</th>
+                        <th class="course-th-back">バック</th>
                         <th class="course-th-status">状態</th>
                         <th class="course-th-edit">編集</th>
                         <th class="course-th-delete">削除</th>
@@ -234,8 +246,9 @@
                             </td>
                             <td class="course-td-center">{{ course['category_name'] or '未分類' }}</td>
                             <td class="course-td-center">{{ course['name'] }}</td>
-                            <td class="course-td-center">¥{{ "{:,}".format(course['price']) }}</td>
                             <td class="course-td-center">{{ course['time_minutes'] }}分</td>
+                            <td class="course-td-center">¥{{ "{:,}".format(course['price']) }}</td>
+                            <td class="course-td-center">¥{{ "{:,}".format(course['cast_back_amount'] or 0) }}</td>
                             <td class="course-td-center">
                                 {% if course['is_active'] %}
                                     <span class="course-status-active">有効</span>
@@ -244,13 +257,13 @@
                                 {% endif %}
                             </td>
                             <td class="course-td-center">
-                                <button onclick="openEditCourseModal({{ course['course_id'] }}, '{{ course['name'] }}', {{ course['category_id'] }}, {{ course['price'] }}, {{ course['time_minutes'] }}, {{ 'true' if course['is_active'] else 'false' }})" 
+                                <button onclick="openEditCourseModal({{ course['course_id'] }}, '{{ course['name'] }}', {{ course['category_id'] }}, {{ course['price'] }}, {{ course['time_minutes'] }}, {{ course['cast_back_amount'] or 0 }}, {{ 'true' if course['is_active'] else 'false' }})"
                                         class="course-action-btn">
                                     <i class="fas fa-pencil-alt course-edit-icon"></i>
                                 </button>
                             </td>
                             <td class="course-td-center">
-                                <button onclick="deleteCourse({{ course['course_id'] }}, '{{ course['name'] }}')" 
+                                <button onclick="deleteCourse({{ course['course_id'] }}, '{{ course['name'] }}')"
                                         class="course-action-btn">
                                     <i class="fas fa-trash-alt course-delete-icon"></i>
                                 </button>
@@ -259,7 +272,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="8" class="course-td-empty">
+                            <td colspan="9" class="course-td-empty">
                                 コースが登録されていません
                             </td>
                         </tr>
@@ -280,62 +293,82 @@
             <form id="editCourseForm" onsubmit="updateCourse(event); return false;">
                 <div class="course-modal-body">
                     <input type="hidden" id="edit_course_id">
-                    
-                    <div class="course-modal-group">
-                        <label for="edit_course_name" class="course-modal-label">コース名 <span class="course-required">*</span></label>
-                        <input type="text" 
-                               class="course-modal-input" 
-                               id="edit_course_name" 
-                               required>
-                    </div>
 
-                    <div class="course-modal-group">
-                        <label for="edit_category_id" class="course-modal-label">カテゴリ <span class="course-required">*</span></label>
-                        <select class="course-modal-input" 
-                                id="edit_category_id" 
-                                required>
-                            <option value="">選択してください</option>
-                            {% for cat in categories %}
-                                {% if cat['is_active'] %}
-                                    <option value="{{ cat['category_id'] }}">{{ cat['category_name'] }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <!-- 2列グリッド -->
+                    <div class="course-modal-grid">
+                        <!-- 左列 -->
+                        <div>
+                            <div class="course-modal-group">
+                                <label for="edit_course_name" class="course-modal-label">コース名 <span class="course-required">*</span></label>
+                                <input type="text"
+                                       class="course-modal-input"
+                                       id="edit_course_name"
+                                       required>
+                            </div>
 
-                    <div class="course-modal-group">
-                        <label for="edit_price" class="course-modal-label">料金 <span class="course-required">*</span></label>
-                        <input type="number" 
-                               class="course-modal-input" 
-                               id="edit_price" 
-                               required 
-                               min="0" 
-                               step="1">
-                        <small class="course-modal-hint">金額は円単位で入力してください</small>
-                    </div>
+                            <div class="course-modal-group">
+                                <label for="edit_price" class="course-modal-label">料金 <span class="course-required">*</span></label>
+                                <input type="number"
+                                       class="course-modal-input"
+                                       id="edit_price"
+                                       required
+                                       min="0"
+                                       step="1">
+                                <small class="course-modal-hint">金額は円単位で入力してください</small>
+                            </div>
 
-                    <div class="course-modal-group">
-                        <label for="edit_duration_minutes" class="course-modal-label">時間（分） <span class="course-required">*</span></label>
-                        <input type="number" 
-                               class="course-modal-input" 
-                               id="edit_duration_minutes" 
-                               required 
-                               min="1" 
-                               step="1">
-                        <small class="course-modal-hint">コースの時間を入力してください</small>
-                    </div>
+                            <div class="course-modal-group">
+                                <label for="edit_cast_back_amount" class="course-modal-label">バック</label>
+                                <input type="number"
+                                       class="course-modal-input"
+                                       id="edit_cast_back_amount"
+                                       min="0"
+                                       step="100"
+                                       value="0">
+                                <small class="course-modal-hint">キャストバック額を入力してください</small>
+                            </div>
+                        </div>
 
-                    <div class="course-modal-group">
-                        <label class="course-modal-label">状態</label>
-                        <div class="course-toggle-wrapper">
-                            <span class="course-toggle-label">無効</span>
-                            <label class="course-toggle-switch">
-                                <input type="checkbox" 
-                                       class="course-toggle-checkbox" 
-                                       id="edit_is_active">
-                                <span class="course-toggle-slider"></span>
-                            </label>
-                            <span class="course-toggle-label">有効</span>
+                        <!-- 右列 -->
+                        <div>
+                            <div class="course-modal-group">
+                                <label for="edit_category_id" class="course-modal-label">カテゴリ <span class="course-required">*</span></label>
+                                <select class="course-modal-input"
+                                        id="edit_category_id"
+                                        required>
+                                    <option value="">選択してください</option>
+                                    {% for cat in categories %}
+                                        {% if cat['is_active'] %}
+                                            <option value="{{ cat['category_id'] }}">{{ cat['category_name'] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="course-modal-group">
+                                <label for="edit_duration_minutes" class="course-modal-label">時間（分） <span class="course-required">*</span></label>
+                                <input type="number"
+                                       class="course-modal-input"
+                                       id="edit_duration_minutes"
+                                       required
+                                       min="1"
+                                       step="1">
+                                <small class="course-modal-hint">コースの時間を入力してください</small>
+                            </div>
+
+                            <div class="course-modal-group">
+                                <label class="course-modal-label">状態</label>
+                                <div class="course-toggle-wrapper">
+                                    <span class="course-toggle-label">無効</span>
+                                    <label class="course-toggle-switch">
+                                        <input type="checkbox"
+                                               class="course-toggle-checkbox"
+                                               id="edit_is_active">
+                                        <span class="course-toggle-slider"></span>
+                                    </label>
+                                    <span class="course-toggle-label">有効</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

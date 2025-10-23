@@ -191,13 +191,7 @@ function loadMasterData() {
         .then(data => populateSelect('reservation_method', data, 'method_id', 'method_name'))
         .catch(error => console.error('Error loading reservation methods:', error));
 
-    // 支払い方法（固定値）
-    const paymentMethods = [
-        { method_id: 'cash', method_name: '現金' },
-        { method_id: 'card', method_name: 'カード' },
-        { method_id: 'deferred', method_name: '後払い' }
-    ];
-    populateSelect('payment_method', paymentMethods, 'method_id', 'method_name');
+    // 支払い方法はHTMLに直接記載されているため、JavaScriptでの追加は不要
 
     // 待ち合わせ場所
     fetch(`/${store}/reservation-settings/meeting_places`)
@@ -919,6 +913,8 @@ function loadExistingReservationData() {
         if (paymentSelect) {
             paymentSelect.value = reservation.payment_method;
             console.log('支払い方法設定後の値:', paymentSelect.value);
+            // 支払い方法に応じてお釣りエリアを表示
+            handlePaymentMethodChange();
         }
     }
 
@@ -964,11 +960,28 @@ function loadExistingReservationData() {
         document.getElementById('comment').value = reservation.customer_comment;
     }
 
+    // 預かり金額
+    if (reservation.amount_received && reservation.amount_received > 0) {
+        const amountReceivedInput = document.getElementById('amount_received');
+        if (amountReceivedInput) {
+            amountReceivedInput.value = '¥' + reservation.amount_received.toLocaleString();
+        }
+    }
+
     // 料金を再計算
     setTimeout(() => {
         calculateTotal();
         calculatePT();
         updateCourseColors(); // キャスト選択に基づいてコースの色を更新
+        handlePaymentMethodChange(); // お釣りエリアの表示を更新
+
+        // お釣りを計算して表示
+        if (reservation.amount_received && reservation.amount_received > 0) {
+            const totalAmountText = document.getElementById('total_amount').value;
+            const totalAmount = parseFloat(totalAmountText.replace(/[^\d]/g, '')) || 0;
+            const change = reservation.amount_received - totalAmount;
+            document.getElementById('change_amount').value = '¥' + change.toLocaleString();
+        }
     }, 700);
 }
 
@@ -1007,3 +1020,62 @@ function deleteReservation() {
         alert('エラーが発生しました');
     });
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// お釣り機能
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * 支払い方法変更時の処理
+ */
+function handlePaymentMethodChange() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const changeArea = document.getElementById('change_input_area');
+
+    // お釣り機能がONかつ現金払いの場合のみ表示
+    if (window.useChangeFeature && paymentMethod === 'cash') {
+        changeArea.style.display = 'flex';
+    } else {
+        changeArea.style.display = 'none';
+        // 非表示の場合は値をクリア
+        document.getElementById('amount_received').value = '';
+        document.getElementById('change_amount').value = '0円';
+    }
+
+    // 料金総額も再計算
+    calculateTotal();
+}
+
+/**
+ * お釣りを自動計算
+ */
+function calculateChange() {
+    const totalAmountText = document.getElementById('total_amount').value;
+    const totalAmount = parseFloat(totalAmountText.replace(/[^\d]/g, '')) || 0;
+    const amountReceived = parseInt(document.getElementById('amount_received').value) || 0;
+
+    const change = amountReceived - totalAmount;
+
+    document.getElementById('change_amount').value = change.toLocaleString() + '円';
+}
+
+/**
+ * フォームバリデーション（送信前チェック）
+ */
+function validateReservationForm() {
+    // 預かり金額はキャストが入力するため、ここではバリデーション不要
+    return true;
+}
+
+// フォーム送信時にバリデーションを追加
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reservation_edit_form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateReservationForm()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+});

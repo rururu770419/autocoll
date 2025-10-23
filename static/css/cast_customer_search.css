@@ -1,0 +1,524 @@
+/* =========================================
+   キャスト顧客検索ページ専用CSS
+   スマホ最適化 + ピンク系デザイン
+   ========================================= */
+
+/* ==== タブ切り替え ==== */
+
+.ccs-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 8px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+}
+
+.ccs-tab {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: #f5f5f5;
+    color: #666;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.ccs-tab:hover {
+    background: #ffe6f0;
+}
+
+.ccs-tab-active {
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+}
+
+.ccs-tab-content {
+    display: none;
+}
+
+.ccs-tab-content-active {
+    display: block;
+}
+
+/* ==== 検索ボックス ==== */
+
+.ccs-search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.ccs-search-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ccs-search-icon {
+    position: absolute;
+    left: 14px;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+.ccs-search-input {
+    width: 100%;
+    padding: 12px 42px 12px 42px;
+    border: 2px solid #ffe6f0;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.3s;
+}
+
+.ccs-search-input:focus {
+    outline: none;
+    border-color: #ff99bb;
+    box-shadow: 0 0 0 3px rgba(255, 153, 187, 0.1);
+}
+
+.ccs-clear-btn {
+    position: absolute;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #ff99bb;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.ccs-clear-btn:hover {
+    background: #ff7799;
+}
+
+.ccs-filter-btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ccs-filter-btn:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+    transform: translateY(-1px);
+}
+
+/* ==== 結果情報 ==== */
+
+.ccs-result-info {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(255, 153, 187, 0.1);
+}
+
+.ccs-result-note {
+    font-size: 0.85rem;
+    font-weight: normal;
+    color: #999;
+    margin-left: 8px;
+}
+
+/* ==== 顧客カード ==== */
+
+.ccs-customer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ccs-customer-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+    position: relative;
+    transition: all 0.3s;
+}
+
+.ccs-customer-card:active {
+    transform: scale(0.98);
+}
+
+/* 情報ボタン（右上） */
+.ccs-info-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.ccs-info-btn:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+    transform: translateY(-1px);
+}
+
+/* 顧客名 */
+.ccs-customer-name {
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 12px;
+    padding-right: 70px;
+}
+
+/* 情報行 */
+.ccs-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.ccs-info-row i {
+    width: 20px;
+    text-align: center;
+    color: #ff99bb;
+}
+
+.ccs-info-row-reservation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ccs-info-row-reservation-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: #555;
+    flex: 1;
+}
+
+.ccs-reservation-btn {
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ccs-reservation-btn:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+}
+
+/* メモ表示 */
+.ccs-memo-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ffe6f0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.ccs-memo-row i {
+    width: 20px;
+    text-align: center;
+    color: #ff99bb;
+    margin-top: 2px;
+}
+
+.ccs-memo-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+/* ==== 空状態 ==== */
+
+.ccs-empty {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.ccs-empty-icon {
+    font-size: 4rem;
+    color: #ffe6f0;
+    margin-bottom: 16px;
+}
+
+.ccs-empty-text {
+    font-size: 1rem;
+    color: #999;
+}
+
+/* ==== ページネーション ==== */
+
+.ccs-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 16px;
+}
+
+.ccs-page-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ccs-page-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+    transform: translateY(-1px);
+}
+
+.ccs-page-btn:disabled {
+    background: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.ccs-page-info {
+    font-size: 0.95rem;
+    color: #666;
+    font-weight: 600;
+}
+
+/* ==== フィルターモーダル ==== */
+
+.ccs-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: none;
+}
+
+.ccs-modal-show {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.ccs-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.ccs-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.ccs-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.ccs-modal-header h2 {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.ccs-modal-close-icon {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f5f5f5;
+    color: #666;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.ccs-modal-close-icon:hover {
+    background: #ffe6f0;
+    color: #ff99bb;
+}
+
+.ccs-modal-body {
+    margin-bottom: 20px;
+}
+
+.ccs-filter-section {
+    margin-bottom: 24px;
+}
+
+.ccs-filter-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.ccs-filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ccs-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f8f8;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ccs-filter-option:hover {
+    background: #ffe6f0;
+}
+
+.ccs-filter-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.ccs-filter-option span {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.ccs-modal-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.ccs-modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ccs-modal-btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.ccs-modal-btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.ccs-modal-btn-primary {
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+}
+
+.ccs-modal-btn-primary:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+    transform: translateY(-1px);
+}
+
+/* ==== レスポンシブ ==== */
+
+@media (max-width: 768px) {
+    /* 顧客検索の下部余白（スマホのみ） */
+    .ccs-customer-list {
+        padding-bottom: 100px;
+    }
+
+    .ccs-pagination {
+        padding-bottom: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ccs-tabs {
+        padding: 6px;
+    }
+
+    .ccs-tab {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .ccs-customer-name {
+        font-size: 1.05rem;
+    }
+
+    .ccs-info-row {
+        font-size: 0.9rem;
+    }
+}

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python fix_reservation_end_datetime.py)"
+      "Bash(python fix_reservation_end_datetime.py)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

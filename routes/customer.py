@@ -51,18 +51,41 @@ def api_get_customers_endpoint(store):
     """顧客一覧取得API"""
     if 'store' not in session:
         return jsonify({'success': False, 'message': '未ログイン'}), 401
-    
+
     try:
+        from database.connection import get_db, get_store_id
+
         store_code = session['store']
         customers = get_all_customers(store_code)
-        
+
         print(f"API: 取得した顧客数: {len(customers)}")
-        
+
+        # 最終利用日を取得
+        db = get_db(store_code)
+        store_id = get_store_id(store_code)
+
         # dict_rowをそのままリストに
         customers_list = []
         for customer in customers:
             # dict_row を dict に安全に変換
             customer_id = customer['customer_id']
+
+            # 最終利用日を取得（どのステータスでも最新の予約日時を取得）
+            last_visit_date = None
+            try:
+                cursor = db.execute("""
+                    SELECT reservation_datetime
+                    FROM reservations
+                    WHERE customer_id = %s AND store_id = %s
+                    ORDER BY reservation_datetime DESC
+                    LIMIT 1
+                """, (customer_id, store_id))
+                result = cursor.fetchone()
+                if result and result['reservation_datetime']:
+                    last_visit_date = result['reservation_datetime'].strftime('%Y年%m月%d日')
+            except Exception as e:
+                print(f"[ERROR] 最終利用日取得エラー (customer_id={customer_id}): {e}")
+
             customer_dict = {
                 'customer_id': customer_id,
                 'customer_number': customer_id,  # 顧客番号 = 顧客ID
@@ -82,13 +105,14 @@ def api_get_customers_endpoint(store):
                 'web_member': customer.get('web_member', 'web会員'),
                 'comment': customer.get('comment'),
                 'nickname': customer.get('nickname'),
+                'last_visit_date': last_visit_date,
                 'created_at': customer['created_at'].isoformat() if customer.get('created_at') else None,
                 'updated_at': customer['updated_at'].isoformat() if customer.get('updated_at') else None
             }
             customers_list.append(customer_dict)
-        
+
         print(f"API: 変換後の顧客数: {len(customers_list)}")
-        
+
         return jsonify({'success': True, 'customers': customers_list})
     except Exception as e:
         print(f"顧客一覧取得エラー: {e}")
@@ -313,6 +337,52 @@ def api_search_customers_endpoint(store):
         })
     except Exception as e:
         print(f"検索エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+def get_usage_history_api(store, customer_id):
+    """顧客の利用履歴を取得するAPI"""
+    try:
+        from database.customer_db import get_customer_usage_history
+
+        history = get_customer_usage_history(store, customer_id, limit=10)
+
+        # datetime型を文字列に変換
+        for item in history:
+            if item.get('reservation_datetime'):
+                item['reservation_datetime'] = item['reservation_datetime'].isoformat()
+
+        return jsonify({
+            'success': True,
+            'data': history
+        })
+    except Exception as e:
+        print(f"利用履歴取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+def get_cast_usage_api(store, customer_id):
+    """顧客の利用キャスト統計を取得するAPI"""
+    try:
+        from database.customer_db import get_customer_cast_usage
+
+        cast_usage = get_customer_cast_usage(store, customer_id)
+
+        # datetime型を文字列に変換
+        for item in cast_usage:
+            if item.get('latest_datetime'):
+                item['latest_datetime'] = item['latest_datetime'].isoformat()
+
+        return jsonify({
+            'success': True,
+            'data': cast_usage
+        })
+    except Exception as e:
+        print(f"利用キャスト取得エラー: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500

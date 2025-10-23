@@ -77,8 +77,9 @@ def course_registration(store):
             category_id = request.form.get("category_id")
             duration_minutes_str = request.form.get("duration_minutes", "").strip()
             price_str = request.form.get("price", "").strip()
+            cast_back_amount_str = request.form.get("cast_back_amount", "0").strip()
             is_active = request.form.get("is_active") == "on"
-            
+
             # バリデーションチェック
             error_msg = None
             if not course_name:
@@ -89,7 +90,7 @@ def course_registration(store):
                 error_msg = "時間を入力してください。"
             elif not price_str:
                 error_msg = "料金を入力してください。"
-            
+
             if error_msg:
                 courses = get_all_courses()
                 categories = get_all_course_categories()
@@ -101,17 +102,20 @@ def course_registration(store):
                     categories=categories,
                     error=error_msg
                 )
-            
+
             # 数値変換チェック
             try:
                 duration_minutes = int(duration_minutes_str)
                 price = int(price_str)
-                
+                cast_back_amount = int(cast_back_amount_str) if cast_back_amount_str else 0
+
                 if duration_minutes <= 0:
                     raise ValueError("時間は正の整数で入力してください。")
                 if price < 0:
                     raise ValueError("料金は0以上で入力してください。")
-                    
+                if cast_back_amount < 0:
+                    raise ValueError("バック額は0以上で入力してください。")
+
             except ValueError as e:
                 courses = get_all_courses()
                 categories = get_all_course_categories()
@@ -123,9 +127,9 @@ def course_registration(store):
                     categories=categories,
                     error=str(e)
                 )
-            
+
             # コース登録
-            if add_course(course_name, category_id, duration_minutes, price, 0, is_active, store_id=1):
+            if add_course(course_name, category_id, duration_minutes, price, cast_back_amount, is_active, store_id=1):
                 return redirect(url_for('main_routes.course_registration', store=store, success="コースを登録しました。"))
             else:
                 courses = get_all_courses()
@@ -362,30 +366,34 @@ def update_course_endpoint(store):
     """コースを更新するAPI"""
     try:
         data = request.get_json()
-        
+
         course_id = data.get('course_id')
         course_name = data.get('course_name')
         category_id = data.get('category_id')
         price = data.get('price')
         duration_minutes = data.get('duration_minutes')
+        cast_back_amount = data.get('cast_back_amount', 0)
         is_active = data.get('is_active', True)
-        
+
         # バリデーション
         if not course_id or not course_name or not category_id:
             return jsonify({'success': False, 'error': '必須項目が入力されていません'})
-        
+
         if not isinstance(price, int) or price < 0:
             return jsonify({'success': False, 'error': '料金は0以上で入力してください'})
-        
+
         if not isinstance(duration_minutes, int) or duration_minutes <= 0:
             return jsonify({'success': False, 'error': '時間は正の整数で入力してください'})
-        
+
+        if not isinstance(cast_back_amount, int) or cast_back_amount < 0:
+            return jsonify({'success': False, 'error': 'バック額は0以上で入力してください'})
+
         # コースを更新
-        if update_course(course_id, course_name, category_id, duration_minutes, price, 0, is_active):
+        if update_course(course_id, course_name, category_id, duration_minutes, price, cast_back_amount, is_active):
             return jsonify({'success': True, 'message': 'コース情報を更新しました'})
         else:
             return jsonify({'success': False, 'error': 'コース更新に失敗しました'})
-        
+
     except Exception as e:
         print(f"Error in update_course_endpoint: {e}")
         return jsonify({'success': False, 'error': f'エラー: {str(e)}'})

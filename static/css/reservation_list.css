@@ -189,6 +189,19 @@
     font-weight: bold;
 }
 
+/* カード支払いバッジ */
+.payment-card-badge {
+    display: block;
+    padding: 3px 10px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
 /* 部屋番号入力 */
 .room-number-input-list {
     width: 60px;
@@ -249,6 +262,43 @@
 .reservation-table td:first-child {
     width: 60px;
     text-align: center;
+}
+
+/* コース列の幅を調整 */
+.reservation-table th:nth-child(4),
+.reservation-table td:nth-child(4) {
+    min-width: 100px;
+    white-space: nowrap;
+}
+
+/* キャスト列の幅を調整 */
+.reservation-table th:nth-child(3),
+.reservation-table td:nth-child(3) {
+    white-space: nowrap;
+}
+
+/* お客様列の幅を調整 */
+.reservation-table th:nth-child(5),
+.reservation-table td:nth-child(5) {
+    white-space: nowrap;
+}
+
+/* 指名列の幅を調整 */
+.reservation-table th:nth-child(6),
+.reservation-table td:nth-child(6) {
+    white-space: nowrap;
+}
+
+/* ホテル列の幅を調整 */
+.reservation-table th:nth-child(7),
+.reservation-table td:nth-child(7) {
+    white-space: nowrap;
+}
+
+/* 延長列の幅を調整 */
+.reservation-table th:nth-child(11),
+.reservation-table td:nth-child(11) {
+    white-space: nowrap;
 }
 
 /* バッジコンテナ */

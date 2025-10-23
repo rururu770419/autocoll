@@ -106,14 +106,15 @@ function moveCategoryDown(categoryId) {
 // ========================================
 // コース編集モーダル
 // ========================================
-function openEditCourseModal(courseId, courseName, categoryId, price, timeMinutes, isActive) {
+function openEditCourseModal(courseId, courseName, categoryId, price, timeMinutes, castBackAmount, isActive) {
     document.getElementById('edit_course_id').value = courseId;
     document.getElementById('edit_course_name').value = courseName;
     document.getElementById('edit_category_id').value = categoryId;
     document.getElementById('edit_price').value = price;
     document.getElementById('edit_duration_minutes').value = timeMinutes;
+    document.getElementById('edit_cast_back_amount').value = castBackAmount;
     document.getElementById('edit_is_active').checked = isActive;
-    
+
     const modal = document.getElementById('editCourseModal');
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -127,19 +128,20 @@ function closeEditCourseModal() {
 
 function updateCourse(event) {
     event.preventDefault();
-    
+
     const courseId = document.getElementById('edit_course_id').value;
     const courseName = document.getElementById('edit_course_name').value.trim();
     const categoryId = document.getElementById('edit_category_id').value;
     const price = document.getElementById('edit_price').value;
     const durationMinutes = document.getElementById('edit_duration_minutes').value;
+    const castBackAmount = document.getElementById('edit_cast_back_amount').value;
     const isActive = document.getElementById('edit_is_active').checked;
-    
+
     if (!courseName || !categoryId || !price || !durationMinutes) {
         showMessage('全ての必須項目を入力してください', false);
         return;
     }
-    
+
     const url = `/${store}/api/course/update`;
     const data = {
         course_id: courseId,
@@ -147,9 +149,10 @@ function updateCourse(event) {
         category_id: parseInt(categoryId),
         price: parseInt(price),
         duration_minutes: parseInt(durationMinutes),
+        cast_back_amount: parseInt(castBackAmount) || 0,
         is_active: isActive
     };
-    
+
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

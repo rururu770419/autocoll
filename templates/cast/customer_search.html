@@ -1,0 +1,186 @@
+{% extends "cast/cast_base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_reservation.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_customer_search.css') }}">
+{% endblock %}
+
+{% block title %}顧客検索 - キャストマイページ{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-search"></i>
+顧客検索
+{% endblock %}
+
+{% block content %}
+<!-- タブ切り替え -->
+<div class="ccs-tabs">
+    <button class="ccs-tab ccs-tab-active" id="searchTab" onclick="switchTab('search')">
+        <i class="fas fa-search"></i>
+        検索
+    </button>
+    <button class="ccs-tab" id="listTab" onclick="switchTab('list')">
+        <i class="fas fa-list"></i>
+        一覧
+    </button>
+</div>
+
+<!-- 検索タブコンテンツ -->
+<div class="ccs-tab-content ccs-tab-content-active" id="searchContent">
+    <!-- 検索ボックス -->
+    <div class="ccs-search-box">
+        <div class="ccs-search-input-wrapper">
+            <i class="fas fa-search ccs-search-icon"></i>
+            <input type="text"
+                   class="ccs-search-input"
+                   id="searchInput"
+                   placeholder="名前(カタカナ)、ホテル、メモで検索"
+                   autocomplete="off">
+            <button class="ccs-clear-btn" id="clearSearchBtn" onclick="clearSearch()" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 検索結果件数 -->
+    <div class="ccs-result-info" id="searchResultInfo" style="display: none;">
+        検索結果 <span id="searchResultCount">0</span>件
+    </div>
+
+    <!-- 顧客カード一覧（検索結果） -->
+    <div class="ccs-customer-list" id="searchResultList">
+        <div class="ccs-empty">
+            <i class="fas fa-search ccs-empty-icon"></i>
+            <p class="ccs-empty-text">キーワードを入力して検索してください</p>
+        </div>
+    </div>
+</div>
+
+<!-- 一覧タブコンテンツ -->
+<div class="ccs-tab-content" id="listContent">
+    <!-- 検索ボックス + フィルター -->
+    <div class="ccs-search-box">
+        <div class="ccs-search-input-wrapper">
+            <i class="fas fa-search ccs-search-icon"></i>
+            <input type="text"
+                   class="ccs-search-input"
+                   id="listSearchInput"
+                   placeholder="名前(カタカナ)、ホテル、メモで検索"
+                   autocomplete="off">
+            <button class="ccs-clear-btn" id="clearListSearchBtn" onclick="clearListSearch()" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <button class="ccs-filter-btn" id="filterBtn" onclick="openFilterModal()">
+            <i class="fas fa-sliders-h"></i>
+        </button>
+    </div>
+
+    <!-- 件数表示 -->
+    <div class="ccs-result-info">
+        接客履歴 <span id="totalCustomerCount">{{ total_count or 0 }}</span>件
+        <span class="ccs-result-note">※最終利用日時の新しい順</span>
+    </div>
+
+    <!-- 顧客カード一覧 -->
+    <div class="ccs-customer-list" id="customerList">
+        <!-- JavaScriptで動的に生成 -->
+    </div>
+
+    <!-- ページネーション -->
+    <div class="ccs-pagination" id="pagination">
+        <!-- JavaScriptで動的に生成 -->
+    </div>
+</div>
+
+<!-- フィルターモーダル -->
+<div class="ccs-modal" id="filterModal">
+    <div class="ccs-modal-overlay" onclick="closeFilterModal()"></div>
+    <div class="ccs-modal-content">
+        <div class="ccs-modal-header">
+            <h2>絞り込み</h2>
+            <button class="ccs-modal-close-icon" onclick="closeFilterModal()">×</button>
+        </div>
+
+        <div class="ccs-modal-body">
+            <!-- 指名タイプ -->
+            <div class="ccs-filter-section">
+                <h3 class="ccs-filter-title">指名タイプ</h3>
+                <div class="ccs-filter-options">
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="nominationType" value="all" checked>
+                        <span>すべて</span>
+                    </label>
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="nominationType" value="main">
+                        <span>本指名のみ</span>
+                    </label>
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="nominationType" value="first">
+                        <span>初回利用のみ</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 来店時期 -->
+            <div class="ccs-filter-section">
+                <h3 class="ccs-filter-title">来店時期</h3>
+                <div class="ccs-filter-options">
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="visitPeriod" value="all" checked>
+                        <span>すべて</span>
+                    </label>
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="visitPeriod" value="3months">
+                        <span>3ヶ月以内</span>
+                    </label>
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="visitPeriod" value="6months">
+                        <span>半年以内</span>
+                    </label>
+                    <label class="ccs-filter-option">
+                        <input type="radio" name="visitPeriod" value="1year">
+                        <span>1年以内</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="ccs-modal-footer">
+            <button class="ccs-modal-btn ccs-modal-btn-secondary" onclick="clearFilter()">
+                クリア
+            </button>
+            <button class="ccs-modal-btn ccs-modal-btn-primary" onclick="applyFilter()">
+                適用
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 予約詳細モーダル（既存のcast_reservation.jsを使用） -->
+<div class="cr-modal" id="detailModal">
+    <div class="cr-modal-overlay" onclick="closeDetailModal()"></div>
+    <div class="cr-detail-modal-content">
+        <div class="cr-detail-header">
+            <h2>予約詳細</h2>
+            <button class="cr-modal-close-icon" onclick="closeDetailModal()">×</button>
+        </div>
+
+        <div class="cr-detail-body" id="detailBody">
+            <!-- JavaScriptで動的に生成 -->
+        </div>
+
+        <button class="cr-modal-close" onclick="closeDetailModal()">閉じる</button>
+    </div>
+</div>
+
+<script>
+    const store = '{{ store }}';
+</script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cast_reservation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cast_customer_search.js') }}"></script>
+{% endblock %}

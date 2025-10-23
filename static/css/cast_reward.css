@@ -1,0 +1,452 @@
+/* =========================================
+   キャスト報酬一覧専用CSS
+   ========================================= */
+
+/* ==== ページ全体のスクロール確保 ==== */
+body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==== セクションタイトル ==== */
+.crw-section-title {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ==== 報酬カードリスト ==== */
+.cr-reservation-list {
+    margin-bottom: 24px;
+}
+
+/* ==== 報酬カード ==== */
+.crw-reward-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+    margin-bottom: 12px;
+}
+
+.crw-customer-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.crw-customer-name i {
+    color: #ff99bb;
+}
+
+/* ==== 項目行（コース、指名、オプション） ==== */
+.crw-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    padding: 6px 0;
+    font-size: 0.95rem;
+}
+
+.crw-item-name {
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.crw-item-name i {
+    color: #ff99bb;
+}
+
+.crw-item-back {
+    font-weight: bold;
+    color: #333;
+    font-size: 1rem;
+}
+
+/* ==== 報酬合計行 ==== */
+.crw-reward-total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #ffe6f0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.crw-total-amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff99bb;
+}
+
+/* ==== お釣り行 ==== */
+.crw-change-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #ffe6f0;
+}
+
+.crw-change-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #666;
+}
+
+.crw-change-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ==== 報酬合計エリア ==== */
+.crw-summary-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+    margin-top: 24px;
+    margin-bottom: 80px;
+    overflow: hidden;
+}
+
+.crw-summary-title {
+    padding: 16px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.crw-summary-body {
+    padding: 16px;
+}
+
+.crw-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.crw-summary-row:last-child {
+    border-bottom: none;
+}
+
+.crw-summary-label {
+    font-size: 0.95rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.crw-summary-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ==== 入力行 ==== */
+.crw-input-row {
+    flex-wrap: wrap;
+}
+
+.crw-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.crw-adjustment-input {
+    width: 120px;
+    padding: 8px 12px;
+    border: 2px solid #ffe6f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: right;
+    transition: all 0.3s;
+}
+
+.crw-adjustment-input:focus {
+    outline: none;
+    border-color: #ff99bb;
+    box-shadow: 0 0 0 3px rgba(255, 153, 187, 0.1);
+}
+
+.crw-unit {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* ==== メモ行 ==== */
+.crw-memo-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.crw-memo-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ffe6f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    resize: vertical;
+    font-family: inherit;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.crw-memo-input:focus {
+    outline: none;
+    border-color: #ff99bb;
+    box-shadow: 0 0 0 3px rgba(255, 153, 187, 0.1);
+}
+
+/* ==== 登録ボタン ==== */
+.crw-save-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.crw-save-btn:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+    transform: translateY(-1px);
+}
+
+.crw-save-btn:active {
+    transform: translateY(0);
+}
+
+/* ==== 合計行 ==== */
+.crw-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0 0 0;
+    border-top: 2px solid #ff99bb;
+    margin-top: 8px;
+}
+
+.crw-total-label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.crw-total-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #ff99bb;
+}
+
+/* ==== 月間サマリー ==== */
+.crw-month-summary {
+    padding: 16px;
+    background: #fff3f5;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.crw-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.crw-summary-item-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.crw-summary-item-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ff99bb;
+}
+
+/* ==== カレンダーのスタイル調整（報酬一覧専用） ==== */
+
+/* 報酬がある日のスタイル（予約一覧と同じピンクの背景） */
+.cr-day-has-rewards {
+    background: linear-gradient(135deg, #ffb3cc 0%, #ffccdd 100%);
+    color: white;
+    font-weight: 700;
+}
+
+.cr-day-has-rewards:hover {
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+}
+
+/* 報酬額の表示（白文字、背景なし） */
+.cr-day-reward {
+    font-size: 0.65rem;
+    color: white;
+    border-radius: 8px;
+    padding: 1px 4px;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+/* カレンダーモーダル内の月間サマリーのフォントサイズ調整 */
+.cr-modal .crw-month-summary .crw-summary-item-label {
+    font-size: 1rem;
+}
+
+.cr-modal .crw-month-summary .crw-summary-item-value {
+    font-size: 1.1rem;
+}
+
+/* ==== 日別報酬リスト ==== */
+.crw-daily-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-top: 16px;
+    border-top: 2px solid #ffe6f0;
+    padding-top: 8px;
+}
+
+.crw-daily-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 12px;
+    border-bottom: 1px solid #ffe6f0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.crw-daily-item:hover {
+    background: #fff5f8;
+    transform: translateX(2px);
+}
+
+.crw-daily-item:active {
+    transform: scale(0.98);
+}
+
+.crw-daily-date {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.crw-daily-amount {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ff99bb;
+}
+
+/* ==== レスポンシブ ==== */
+@media (max-width: 768px) {
+    .crw-month-summary {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .crw-summary-item {
+        padding: 8px 0;
+    }
+
+    .crw-summary-item-label {
+        font-size: 0.85rem;
+    }
+
+    .crw-summary-item-value {
+        font-size: 0.95rem;
+    }
+
+    /* カレンダーモーダル内の月間サマリーのフォントサイズ調整（スマホ） */
+    .cr-modal .crw-month-summary .crw-summary-item-label {
+        font-size: 0.95rem;
+    }
+
+    .cr-modal .crw-month-summary .crw-summary-item-value {
+        font-size: 1.05rem;
+    }
+
+    /* 日別報酬リスト（スマホ） */
+    .crw-daily-list {
+        max-height: 45vh;
+    }
+
+    .crw-daily-item {
+        padding: 12px 8px;
+    }
+
+    .crw-daily-date {
+        font-size: 0.9rem;
+    }
+
+    .crw-daily-amount {
+        font-size: 0.95rem;
+    }
+
+    /* 予約件数バッジを少し大きく */
+    .cr-day-count {
+        font-size: 0.7rem !important;
+    }
+
+    /* 報酬額バッジも調整 */
+    .cr-day-reward {
+        font-size: 0.7rem;
+    }
+
+    /* 報酬一覧の下部余白（スマホのみ） */
+    .crw-summary-section {
+        margin-bottom: 150px;
+    }
+
+    /* 報酬カードの余白調整 */
+    .crw-reward-card {
+        margin-bottom: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .crw-adjustment-input {
+        width: 100px;
+    }
+
+    .crw-total-value {
+        font-size: 1.2rem;
+    }
+}

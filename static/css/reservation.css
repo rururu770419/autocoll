@@ -688,3 +688,42 @@
         width: 100%;
     }
 }
+
+/* ========================================
+   お釣り入力欄
+======================================== */
+.change-input-group {
+    display: flex;
+    align-items: center;
+}
+
+.change-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.change-input-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.change-input-item label {
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.change-input-item input {
+    width: 150px;
+}
+
+.change-unit {
+    font-size: 0.95em;
+    color: #fff;
+    margin-left: 8px;
+}

@@ -254,8 +254,11 @@
             <!-- 支払い方法 -->
             <div class="form-group">
                 <label>支払い方法</label>
-                <select id="payment_method" name="payment_method" class="form-select" onchange="calculateTotal()">
+                <select id="payment_method" name="payment_method" class="form-select" onchange="handlePaymentMethodChange()">
                     <option value="">選択してください</option>
+                    <option value="cash">現金</option>
+                    <option value="card">カード</option>
+                    <option value="deferred">後払い</option>
                 </select>
             </div>
 
@@ -321,6 +324,25 @@
                 <input type="text" id="total_amount" name="total_amount" class="form-input" readonly value="0円">
             </div>
 
+            <!-- お釣り入力欄（2列分、現金時のみ表示） -->
+            <div class="form-group change-input-group" id="change_input_area" style="grid-column: span 2; display: none;">
+                <div class="change-row">
+                    <div class="change-input-item">
+                        <label>預かり金額</label>
+                        <div style="display: flex; align-items: center;">
+                            <input type="text" id="amount_received" name="amount_received"
+                                   class="form-input" placeholder="0" readonly>
+                            <span class="change-unit">円</span>
+                        </div>
+                    </div>
+
+                    <div class="change-input-item">
+                        <label>お釣り</label>
+                        <input type="text" id="change_amount" class="form-input" readonly value="0円">
+                    </div>
+                </div>
+            </div>
+
             <!-- ========== 8行目: コメント（列1-3全幅） ========== -->
             <div class="form-full-width">
                 <div class="form-group">
@@ -342,6 +364,8 @@
 <script>
 // 予約データをJavaScriptに渡す
 window.reservationData = {{ reservation_json|safe }};
+// お釣り機能の設定
+window.useChangeFeature = {{ 'true' if use_change_feature else 'false' }};
 // 顧客の現在のPTを初期値として設定
 // ログイン中のスタッフIDを設定
 window.addEventListener('DOMContentLoaded', function() {

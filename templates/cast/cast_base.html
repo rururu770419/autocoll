@@ -33,25 +33,22 @@
                     <span>トップ</span>
                 </a>
             </li>
-            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
-                <a href="#" class="cm-sidebar-link">
+            <li class="cm-sidebar-menu-item {% if active_page == 'reservation_list' %}cm-sidebar-menu-item-active{% endif %}">
+                <a href="{{ url_for('cast_mypage.reservation_list', store=store) }}" class="cm-sidebar-link">
                     <i class="fas fa-calendar-check"></i>
                     <span>予約一覧</span>
-                    <span class="cm-badge-soon">準備中</span>
                 </a>
             </li>
-            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
-                <a href="#" class="cm-sidebar-link">
+            <li class="cm-sidebar-menu-item {% if active_page == 'customer_search' %}cm-sidebar-menu-item-active{% endif %}">
+                <a href="{{ url_for('cast_mypage.customer_search', store=store) }}" class="cm-sidebar-link">
                     <i class="fas fa-users"></i>
                     <span>顧客情報</span>
-                    <span class="cm-badge-soon">準備中</span>
                 </a>
             </li>
-            <li class="cm-sidebar-menu-item cm-sidebar-menu-item-disabled">
-                <a href="#" class="cm-sidebar-link">
+            <li class="cm-sidebar-menu-item {% if active_page == 'reward_list' %}cm-sidebar-menu-item-active{% endif %}">
+                <a href="{{ url_for('cast_mypage.cast_reward_list', store=store) }}" class="cm-sidebar-link">
                     <i class="fas fa-yen-sign"></i>
-                    <span>委託費用</span>
-                    <span class="cm-badge-soon">準備中</span>
+                    <span>報酬確認</span>
                 </a>
             </li>
             <li class="cm-sidebar-menu-item {% if active_page == 'blog_drafts' %}cm-sidebar-menu-item-active{% endif %}">
@@ -80,6 +77,9 @@
             <h1 class="cm-header-title">
                 {% block header_title %}{% endblock %}
             </h1>
+            <div class="cm-header-user">
+                {{ cast_name }}さん
+            </div>
             {% endblock %}
         </header>
 

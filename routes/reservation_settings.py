@@ -725,6 +725,73 @@ def register_reservation_settings_routes(app):
 
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # お釣り機能設定
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    @app.route('/<store>/reservation-settings/change_feature', methods=['GET'], endpoint='rs_get_change_feature')
+    @admin_required
+    def get_change_feature_api(store):
+        """お釣り機能の設定を取得"""
+        try:
+            from database.settings_db import get_change_feature_setting
+            from database.connection import get_store_id
+
+            store_id = get_store_id(store)
+            use_change = get_change_feature_setting(store_id)
+
+            return jsonify({
+                'success': True,
+                'use_change_feature': use_change
+            })
+
+        except Exception as e:
+            print(f"Error in get_change_feature_api: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': 'お釣り設定の取得に失敗しました'
+            }), 500
+
+
+    @app.route('/<store>/reservation-settings/change_feature', methods=['POST'], endpoint='rs_save_change_feature')
+    @admin_required
+    def save_change_feature_api(store):
+        """お釣り機能の設定を保存"""
+        try:
+            from database.settings_db import save_change_feature_setting
+            from database.connection import get_store_id
+
+            data = request.get_json()
+            use_change = data.get('use_change_feature', False)
+
+            store_id = get_store_id(store)
+            updated_by = session.get('user_name', 'unknown')
+
+            success = save_change_feature_setting(store_id, use_change, updated_by)
+
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': 'お釣り設定を保存しました'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'お釣り設定の保存に失敗しました'
+                }), 500
+
+        except Exception as e:
+            print(f"Error in save_change_feature_api: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'message': 'お釣り設定の保存に失敗しました'
+            }), 500
+
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # 待ち合わせ場所管理
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -1,0 +1,376 @@
+/* =========================================
+   キャストお客様情報ページ専用CSS
+   スマホ最適化 + ピンク系デザイン
+   ========================================= */
+
+/* ==== コンテナ ==== */
+.cci-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ==== ヘッダー ==== */
+.cci-header {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 0 0 20px 0;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+    text-align: left;
+}
+
+.cci-customer-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 20px 0;
+}
+
+/* ==== アコーディオンコンテナ ==== */
+.cci-accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ==== アコーディオンセクション ==== */
+.cci-accordion-section {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
+}
+
+/* ==== アコーディオンヘッダー ==== */
+.cci-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s;
+}
+
+.cci-accordion-header:hover {
+    background: linear-gradient(135deg, #ff7799 0%, #ff99bb 100%);
+}
+
+.cci-accordion-header:active {
+    transform: scale(0.98);
+}
+
+.cci-accordion-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cci-unregistered-badge {
+    font-size: 0.75rem;
+    background-color: #ff5252;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: normal;
+}
+
+.cci-accordion-icon {
+    font-size: 1rem;
+    transition: transform 0.3s;
+}
+
+/* ==== アコーディオンコンテンツ ==== */
+/* アコーディオンコンテンツ（閉じている時） */
+.cci-accordion-content {
+    display: none;
+}
+
+/* アコーディオンコンテンツ（開いている時） */
+.cci-accordion-content.active {
+    display: block;
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #ffd6e0;
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* フェードインアニメーション */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ==== フォーム ==== */
+.cci-form-group {
+    margin-bottom: 16px;
+}
+
+.cci-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.cci-label {
+    display: block;
+    font-weight: bold;
+    color: #ff99bb;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.cci-text-display {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: #333;
+    min-height: 1.5em;
+    text-align: left;
+}
+
+.cci-textarea {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    color: #333;
+    box-sizing: border-box;
+    transition: border-bottom-color 0.3s;
+}
+
+.cci-textarea:focus {
+    border-bottom: 1px solid #ff99bb;
+}
+
+.cci-textarea::placeholder {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.cci-select {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    color: #333;
+    box-sizing: border-box;
+    transition: border-bottom-color 0.3s;
+    cursor: pointer;
+}
+
+.cci-select:focus {
+    border-bottom: 1px solid #ff99bb;
+}
+
+/* ==== ラジオボタングループ ==== */
+.cci-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cci-radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding-bottom: 8px;
+}
+
+.cci-radio-label:last-child {
+    border-bottom: 1px solid #f5f5f5;
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+}
+
+.cci-radio-label:hover {
+    background-color: #fef9fa;
+}
+
+.cci-radio-input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #ff99bb;
+}
+
+.cci-radio-text {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* ==== 保存ボタン ==== */
+.cci-save-btn {
+    width: 100%;
+    height: 48px;
+    background: #00BCD4;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.cci-save-btn:hover {
+    background: #0097A7;
+}
+
+.cci-save-btn:active {
+    transform: scale(0.98);
+}
+
+/* ==== 皆の評価：テーブル ==== */
+.cci-rating-table-wrapper {
+    margin-bottom: 24px;
+}
+
+.cci-rating-table-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ff99bb;
+    margin-bottom: 8px;
+}
+
+.cci-rating-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid #ffccdd;
+}
+
+.cci-table-header,
+.cci-table-header-count {
+    background: linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%);
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.cci-table-header {
+    width: 50%;
+    border-right: 1px solid #ffccdd;
+}
+
+.cci-table-header-count {
+    text-align: center;
+    width: 50%;
+}
+
+.cci-table-cell,
+.cci-table-cell-count {
+    padding: 10px;
+    border-bottom: 1px solid #ffccdd;
+    border-right: 1px solid #ffccdd;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.cci-table-cell {
+    background: #fff5f8;
+    width: 50%;
+}
+
+.cci-table-cell-count {
+    text-align: center;
+    font-weight: bold;
+    color: #ff99bb;
+    width: 50%;
+    border-right: none;
+}
+
+.cci-rating-table tbody tr:last-child .cci-table-cell,
+.cci-rating-table tbody tr:last-child .cci-table-cell-count {
+    border-bottom: none;
+}
+
+/* ==== 皆の評価：備考欄 ==== */
+.cci-comments-section {
+    margin-top: 24px;
+}
+
+.cci-comments-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ff99bb;
+    margin-bottom: 12px;
+}
+
+.cci-comment-item {
+    background: white;
+    border: 1px solid #ffccdd;
+    padding: 10px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.5;
+    text-align: left !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.cci-comment-item:last-child {
+    margin-bottom: 0;
+}
+
+/* ==== プレースホルダーテキスト ==== */
+.cci-placeholder-text {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+    margin: 0;
+}
+
+/* ==== レスポンシブ ==== */
+@media (max-width: 768px) {
+    /* 顧客情報の下部余白（スマホのみ） */
+    .cci-accordion-container {
+        padding-bottom: 100px;
+    }
+
+    .cci-container {
+        padding: 10px;
+    }
+
+    .cci-header {
+        padding: 16px;
+    }
+
+    .cci-customer-name {
+        font-size: 1.3rem;
+    }
+
+    .cci-accordion-header {
+        padding: 14px;
+    }
+
+    .cci-accordion-content {
+        padding: 16px;
+    }
+}

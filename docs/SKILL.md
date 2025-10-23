@@ -201,6 +201,55 @@ cursor.execute("SELECT * FROM customers WHERE store_id = %s", (store_id,))
 
 ---
 
+
+---
+
+### 🎨 CSS設計原則（重要）
+
+**共通クラスは安易に修正しない**
+
+ページごとに必要なスタイルが異なるため、**各ページ専用のCSSファイル**で個別に設定する。
+
+#### ❌ 間違い：共通クラスを修正
+```css
+/* base.css や common.css */
+@media (max-width: 768px) {
+    .cm-main {
+        padding-bottom: 200px;  /* 全ページに影響してしまう */
+    }
+}
+```
+
+**問題点：**
+- blog-draftsなど、元々適切な余白のページにも影響
+- 他の開発者が意図しない変更を受ける
+- デバッグが困難になる
+
+#### ✅ 正しい：ページ専用クラスで設定
+```css
+/* cast_reservation.css */
+@media (max-width: 768px) {
+    .cr-reservation-list {
+        padding-bottom: 150px;  /* 予約一覧のみ */
+    }
+}
+
+/* cast_reward.css */
+@media (max-width: 768px) {
+    .crw-summary-section {
+        margin-bottom: 150px;  /* 報酬一覧のみ */
+    }
+}
+```
+
+**ルール：**
+1. 共通クラス（`.cm-main`, `.cm-container`など）は**原則修正禁止**
+2. ページ固有のスタイルは各ページ専用のCSSファイルで設定
+3. クラス名は`ページプレフィックス-要素名`形式（例：`.cr-reservation-list`）
+4. スコープを限定することで、他ページへの影響を防ぐ
+
+---
+
 ### 🎯 デザイン統一の手順
 
 1. **既存の類似ページを確認**（例：オプション管理）

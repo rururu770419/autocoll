@@ -356,29 +356,30 @@ def search_customers(store_code, keyword, search_type=None):
                 cursor.execute(sql, (f'%{search_keyword}%',))
                 
             else:
-                # タイプ指定なし：フリガナと電話番号の両方で検索（OR検索）
+                # タイプ指定なし：フリガナ・電話番号・コメントで検索（OR検索）
                 clean_keyword = keyword.replace('-', '')
-                
+
                 # ひらがなが含まれている場合はカタカナに変換
                 search_keyword = keyword
                 if any('\u3041' <= c <= '\u3096' for c in keyword):
                     search_keyword = ''.join(
-                        chr(ord(c) + 0x60) if '\u3041' <= c <= '\u3096' else c 
+                        chr(ord(c) + 0x60) if '\u3041' <= c <= '\u3096' else c
                         for c in keyword
                     )
-                
+
                 sql = """
-                    SELECT 
+                    SELECT
                         customer_id, name, furigana, phone, birthday, age,
                         prefecture, city, address_detail, recruitment_source,
                         mypage_id, current_points, member_type, status,
                         web_member, comment, nickname, created_at, updated_at
-                    FROM customers 
-                    WHERE furigana LIKE %s 
+                    FROM customers
+                    WHERE furigana LIKE %s
                        OR REPLACE(phone, '-', '') LIKE %s
+                       OR comment LIKE %s
                     ORDER BY customer_id DESC
                 """
-                cursor.execute(sql, (f'%{search_keyword}%', f'%{clean_keyword}%'))
+                cursor.execute(sql, (f'%{search_keyword}%', f'%{clean_keyword}%', f'%{keyword}%'))
             
             return cursor.fetchall()
     finally:
@@ -659,6 +660,101 @@ def delete_customer_field_option(option_id, store_id):
         conn.rollback()
         print(f"Error deleting option: {e}")
         return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_customer_usage_history(store_code, customer_id, limit=10):
+    """
+    顧客の利用履歴を取得（成約済みの予約）
+
+    Args:
+        store_code (str): 店舗コード
+        customer_id (int): 顧客ID
+        limit (int): 取得件数（デフォルト10件）
+
+    Returns:
+        list: 利用履歴のリスト
+    """
+    from database.connection import get_connection, get_store_id
+
+    store_id = get_store_id(store_code)
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                reservation_id,
+                status,
+                reservation_datetime,
+                cast_name,
+                hotel_name,
+                room_number
+            FROM reservations
+            WHERE customer_id = %s
+                AND store_id = %s
+                AND status = '成約'
+            ORDER BY reservation_datetime DESC
+            LIMIT %s
+        """, (customer_id, store_id, limit))
+
+        columns = [desc[0] for desc in cursor.description]
+        result = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return result
+
+    except Exception as e:
+        print(f"Error getting customer usage history: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_customer_cast_usage(store_code, customer_id):
+    """
+    顧客の利用キャスト統計を取得
+
+    Args:
+        store_code (str): 店舗コード
+        customer_id (int): 顧客ID
+
+    Returns:
+        list: キャスト利用統計のリスト
+    """
+    from database.connection import get_connection, get_store_id
+
+    store_id = get_store_id(store_code)
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT
+                cast_name,
+                COUNT(*) as usage_count,
+                MAX(reservation_datetime) as latest_datetime
+            FROM reservations
+            WHERE customer_id = %s
+                AND store_id = %s
+                AND status = '成約'
+                AND cast_name IS NOT NULL
+            GROUP BY cast_name
+            ORDER BY usage_count DESC, latest_datetime DESC
+        """, (customer_id, store_id))
+
+        columns = [desc[0] for desc in cursor.description]
+        result = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return result
+
+    except Exception as e:
+        print(f"Error getting customer cast usage: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
     finally:
         cursor.close()
         conn.close()

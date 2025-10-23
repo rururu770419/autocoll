@@ -341,7 +341,7 @@
 .cm-main {
     min-height: 100vh;
     padding-top: 80px;
-    padding-bottom: 40px;
+    padding-bottom: 20px;
 }
 
 .cm-header {
@@ -366,6 +366,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex: 1;
+}
+
+.cm-header-user {
+    font-size: 0.9rem;
+    color: #666;
+    white-space: nowrap;
+    font-weight: 500;
 }
 
 .cm-back-btn {
@@ -560,6 +568,13 @@
 }
 
 /* ==== レスポンシブ調整 ==== */
+
+@media (max-width: 768px) {
+    /* ダッシュボード（お知らせ一覧）の下部余白（スマホのみ） */
+    .cm-container {
+        padding-bottom: 100px;
+    }
+}
 
 @media (max-width: 480px) {
     .cm-login-container {
@@ -1126,6 +1141,7 @@
 @media (max-width: 768px) {
     .cm-drafts-container {
         padding: 15px;
+        padding-bottom: 100px;
     }
     
     .cm-drafts-grid {

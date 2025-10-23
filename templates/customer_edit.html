@@ -281,6 +281,52 @@
                 <button type="button" onclick="deleteCustomer()" class="btn-reset">削除</button>
             </div>
         </form>
+
+        <!-- ========== 利用履歴・利用キャストエリア ========== -->
+        <div class="customer-usage-container">
+            <!-- 利用履歴 -->
+            <div class="customer-usage-section">
+                <h2 class="usage-section-title">利用履歴</h2>
+                <div class="usage-table-container">
+                    <table class="usage-table" id="usage-history-table">
+                        <thead>
+                            <tr>
+                                <th>成約種別</th>
+                                <th>予約日時</th>
+                                <th>キャスト名</th>
+                                <th>ホテル名</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usage-history-tbody">
+                            <tr>
+                                <td colspan="4" class="loading-cell">読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 利用キャスト -->
+            <div class="customer-usage-section">
+                <h2 class="usage-section-title">利用キャスト</h2>
+                <div class="usage-table-container">
+                    <table class="usage-table" id="cast-usage-table">
+                        <thead>
+                            <tr>
+                                <th>キャスト名</th>
+                                <th>利用回数</th>
+                                <th>最新日時</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cast-usage-tbody">
+                            <tr>
+                                <td colspan="3" class="loading-cell">読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

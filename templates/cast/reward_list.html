@@ -1,0 +1,211 @@
+{% extends "cast/cast_base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_reservation.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cast_reward.css') }}">
+{% endblock %}
+
+{% block title %}報酬一覧 - キャストマイページ{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-yen-sign"></i>
+報酬一覧
+{% endblock %}
+
+{% block content %}
+<!-- 日付ナビゲーション -->
+<div class="cr-date-nav">
+    <button class="cr-nav-btn" id="prevDayBtn" onclick="changeDate(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <button class="cr-calendar-btn" id="calendarBtn" onclick="openCalendarModal()">
+        <i class="far fa-calendar-alt"></i>
+    </button>
+
+    <button class="cr-today-btn" id="todayBtn" onclick="goToToday()">
+        本日
+    </button>
+
+    <div class="cr-date-display" id="dateDisplay">
+        <span class="cr-date-text">
+            {{ selected_date.month }}/{{ selected_date.day }}
+            ({{ ['月', '火', '水', '木', '金', '土', '日'][selected_date.weekday()] }})
+        </span>
+    </div>
+
+    <button class="cr-nav-btn" id="nextDayBtn" onclick="changeDate(1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+
+<!-- 予約別報酬内訳 -->
+<div class="crw-section-title">
+    <i class="fas fa-list"></i>
+    予約別内訳（{{ rewards|length }}件）
+</div>
+
+<div class="cr-reservation-list">
+    {% if rewards %}
+        {% for reward in rewards %}
+        <div class="crw-reward-card">
+            <!-- 時間帯 -->
+            <div class="cr-time">
+                <i class="far fa-clock"></i>
+                <span>
+                {% if reward.reservation_datetime and reward.end_datetime %}
+                    {{ reward.reservation_datetime.strftime('%H:%M') }}～{{ reward.end_datetime.strftime('%H:%M') }}
+                {% elif reward.reservation_datetime %}
+                    {{ reward.reservation_datetime.strftime('%H:%M') }}
+                {% else %}
+                    時間未設定
+                {% endif %}
+                </span>
+            </div>
+
+            <!-- 顧客名 -->
+            <div class="crw-customer-name">
+                <i class="fas fa-user"></i>
+                <span>{{ reward.customer_name or '名前なし' }}様</span>
+            </div>
+
+            <!-- コース -->
+            {% if reward.course_name %}
+            <div class="crw-item-row">
+                <span class="crw-item-name">{{ reward.course_time_minutes }}分コース</span>
+                <span class="crw-item-back">¥{{ '{:,}'.format(reward.course_back|int) }}</span>
+            </div>
+            {% endif %}
+
+            <!-- 指名 -->
+            {% if reward.nomination_type_name %}
+            <div class="crw-item-row">
+                <span class="crw-item-name">{{ reward.nomination_type_name }}</span>
+                <span class="crw-item-back">¥{{ '{:,}'.format(reward.nomination_back|int) }}</span>
+            </div>
+            {% endif %}
+
+            <!-- オプション -->
+            {% for option in reward.options %}
+            <div class="crw-item-row">
+                <span class="crw-item-name">{{ option.option_name }}</span>
+                <span class="crw-item-back">¥{{ '{:,}'.format(option.cast_back_amount|int) }}</span>
+            </div>
+            {% endfor %}
+
+            <!-- 報酬合計 -->
+            <div class="crw-reward-total">
+                報酬合計: <span class="crw-total-amount">¥{{ '{:,}'.format(reward.total_reward|int) }}</span>
+            </div>
+
+            <!-- お釣り -->
+            <div class="crw-change-row">
+                <span class="crw-change-label">お釣り:</span>
+                <span class="crw-change-value">
+                    {% if reward.payment_method in ['card', 'deferred'] %}
+                        ¥0
+                    {% else %}
+                        ¥{{ '{:,}'.format(reward.change_amount|int) if reward.change_amount else '0' }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="cm-empty">
+            <i class="fas fa-yen-sign cm-empty-icon"></i>
+            <p class="cm-empty-text">この日の報酬はありません</p>
+        </div>
+    {% endif %}
+</div>
+
+{% if rewards %}
+<!-- 報酬合計エリア -->
+<div class="crw-summary-section">
+    <div class="crw-summary-title">
+        <i class="fas fa-calculator"></i>
+        報酬合計
+    </div>
+
+    <div class="crw-summary-body">
+        <!-- 報酬合計 -->
+        <div class="crw-summary-row">
+            <span class="crw-summary-label">報酬合計:</span>
+            <span class="crw-summary-value">¥{{ '{:,}'.format(total_reward|int) }}</span>
+        </div>
+
+        <!-- 交通費 -->
+        <div class="crw-summary-row">
+            <span class="crw-summary-label">交通費:</span>
+            <span class="crw-summary-value">¥{{ '{:,}'.format(transportation_fee|int) }}</span>
+        </div>
+
+        <!-- お釣り -->
+        <div class="crw-summary-row">
+            <span class="crw-summary-label">お釣り:</span>
+            <span class="crw-summary-value">
+                ¥{{ '{:,}'.format(total_change|int) if total_change else '0' }}
+            </span>
+        </div>
+
+        <!-- 合計 -->
+        <div class="crw-total-row">
+            <span class="crw-total-label">合計:</span>
+            <span class="crw-total-value">¥{{ '{:,}'.format(final_total|int) }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- カレンダーモーダル -->
+<div class="cr-modal" id="calendarModal">
+    <div class="cr-modal-overlay" onclick="closeCalendarModal()"></div>
+    <div class="cr-modal-content">
+        <div class="cr-modal-header">
+            <button class="cr-month-nav" onclick="changeMonth(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h2 class="cr-month-title" id="monthTitle">2025年3月</h2>
+            <button class="cr-month-nav" onclick="changeMonth(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- 月間サマリー -->
+        <div class="crw-month-summary" id="monthSummary">
+            <div class="crw-summary-item">
+                <span class="crw-summary-item-label">今月の報酬:</span>
+                <span class="crw-summary-item-value" id="monthlyReward">¥0</span>
+            </div>
+            <div class="crw-summary-item">
+                <span class="crw-summary-item-label">出勤日数:</span>
+                <span class="crw-summary-item-value" id="workDays">0日</span>
+            </div>
+            <div class="crw-summary-item">
+                <span class="crw-summary-item-label">接客件数:</span>
+                <span class="crw-summary-item-value" id="totalReservations">0件</span>
+            </div>
+        </div>
+
+        <!-- 日別報酬リスト -->
+        <div class="crw-daily-list" id="dailyList">
+            <!-- リストはJavaScriptで生成 -->
+        </div>
+
+        <button class="cr-modal-close" onclick="closeCalendarModal()">
+            閉じる
+        </button>
+    </div>
+</div>
+
+<script>
+    // 選択中の日付を JavaScript に渡す
+    const currentDate = new Date('{{ selected_date.strftime('%Y-%m-%d') }}');
+    const store = '{{ store }}';
+</script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cast_reward.js') }}"></script>
+{% endblock %}

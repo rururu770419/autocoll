@@ -609,3 +609,130 @@ function handleCompositionEnd(input) {
     // 変換確定後に変換処理を実行
     convertToKatakana(input);
 }
+
+// ============================================
+// 利用履歴・利用キャスト
+// ============================================
+
+/**
+ * URLから店舗コードを取得
+ */
+function getStoreFromUrl() {
+    const pathParts = window.location.pathname.split('/');
+    return pathParts[1]; // /nagano/customer_edit/20 の場合、pathParts[1]が'nagano'
+}
+
+/**
+ * 利用履歴を取得して表示
+ */
+async function loadUsageHistory() {
+    const customerId = document.getElementById('customerId').value;
+    const store = getStoreFromUrl();
+
+    try {
+        const response = await fetch(`/${store}/api/customer/${customerId}/usage_history`);
+        const data = await response.json();
+
+        const tbody = document.getElementById('usage-history-tbody');
+
+        if (data.success && data.data.length > 0) {
+            tbody.innerHTML = '';
+            data.data.forEach(item => {
+                const row = document.createElement('tr');
+
+                // 成約種別
+                const statusCell = document.createElement('td');
+                statusCell.textContent = item.status || '-';
+                row.appendChild(statusCell);
+
+                // 予約日時
+                const dateCell = document.createElement('td');
+                if (item.reservation_datetime) {
+                    const date = new Date(item.reservation_datetime);
+                    dateCell.textContent = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                } else {
+                    dateCell.textContent = '-';
+                }
+                row.appendChild(dateCell);
+
+                // キャスト名
+                const castCell = document.createElement('td');
+                castCell.textContent = item.cast_name || '-';
+                row.appendChild(castCell);
+
+                // ホテル名
+                const hotelCell = document.createElement('td');
+                hotelCell.textContent = item.hotel_name || '-';
+                row.appendChild(hotelCell);
+
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="no-data-cell">利用履歴がありません</td></tr>';
+        }
+    } catch (error) {
+        console.error('利用履歴取得エラー:', error);
+        const tbody = document.getElementById('usage-history-tbody');
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data-cell">データの取得に失敗しました</td></tr>';
+    }
+}
+
+/**
+ * 利用キャストを取得して表示
+ */
+async function loadCastUsage() {
+    const customerId = document.getElementById('customerId').value;
+    const store = getStoreFromUrl();
+
+    try {
+        const response = await fetch(`/${store}/api/customer/${customerId}/cast_usage`);
+        const data = await response.json();
+
+        const tbody = document.getElementById('cast-usage-tbody');
+
+        if (data.success && data.data.length > 0) {
+            tbody.innerHTML = '';
+            data.data.forEach(item => {
+                const row = document.createElement('tr');
+
+                // キャスト名
+                const castCell = document.createElement('td');
+                castCell.textContent = item.cast_name || '-';
+                row.appendChild(castCell);
+
+                // 利用回数
+                const countCell = document.createElement('td');
+                countCell.textContent = `${item.usage_count}回`;
+                row.appendChild(countCell);
+
+                // 最新日時
+                const dateCell = document.createElement('td');
+                if (item.latest_datetime) {
+                    const date = new Date(item.latest_datetime);
+                    dateCell.textContent = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+                } else {
+                    dateCell.textContent = '-';
+                }
+                row.appendChild(dateCell);
+
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3" class="no-data-cell">利用キャストがありません</td></tr>';
+        }
+    } catch (error) {
+        console.error('利用キャスト取得エラー:', error);
+        const tbody = document.getElementById('cast-usage-tbody');
+        tbody.innerHTML = '<tr><td colspan="3" class="no-data-cell">データの取得に失敗しました</td></tr>';
+    }
+}
+
+// ページ読み込み時に利用履歴と利用キャストを取得
+document.addEventListener('DOMContentLoaded', function() {
+    // 顧客IDが存在する場合のみ（編集画面の場合）
+    const customerId = document.getElementById('customerId')?.value;
+    if (customerId) {
+        loadUsageHistory();
+        loadCastUsage();
+    }
+});

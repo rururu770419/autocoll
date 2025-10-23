@@ -6,6 +6,7 @@
 let currentDate = null;
 const DAYS_TO_SHOW = 7;
 let datePickerInstance = null;
+let useChangeFeature = false; // お釣り機能の設定
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
@@ -161,22 +162,45 @@ function formatDateJP(dateStr) {
  */
 function loadReservations(date) {
     const tbody = document.getElementById('reservation-tbody');
-    tbody.innerHTML = '<tr><td colspan="16" class="loading-cell">読み込み中...</td></tr>';
+    const colspan = useChangeFeature ? '18' : '16';
+    tbody.innerHTML = `<tr><td colspan="${colspan}" class="loading-cell">読み込み中...</td></tr>`;
 
     // APIから予約データを取得
     fetch(`/${window.storeName}/reservations/api?date=${date}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // お釣り機能の設定を保存
+                useChangeFeature = data.use_change_feature || false;
+
+                // お釣り列の表示/非表示を制御
+                toggleChangeColumns();
+
                 renderReservations(data.data);
             } else {
-                tbody.innerHTML = `<tr><td colspan="16" class="no-data-cell">エラー: ${data.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="no-data-cell">エラー: ${data.message}</td></tr>`;
             }
         })
         .catch(error => {
             console.error('Error loading reservations:', error);
-            tbody.innerHTML = '<tr><td colspan="16" class="no-data-cell">予約データの取得に失敗しました</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="no-data-cell">予約データの取得に失敗しました</td></tr>`;
         });
+}
+
+/**
+ * お釣り列の表示/非表示を切り替え
+ */
+function toggleChangeColumns() {
+    const amountReceivedHeader = document.getElementById('amount-received-header');
+    const changeAmountHeader = document.getElementById('change-amount-header');
+
+    if (useChangeFeature) {
+        if (amountReceivedHeader) amountReceivedHeader.style.display = '';
+        if (changeAmountHeader) changeAmountHeader.style.display = '';
+    } else {
+        if (amountReceivedHeader) amountReceivedHeader.style.display = 'none';
+        if (changeAmountHeader) changeAmountHeader.style.display = 'none';
+    }
 }
 
 /**
@@ -184,9 +208,10 @@ function loadReservations(date) {
  */
 function renderReservations(reservations) {
     const tbody = document.getElementById('reservation-tbody');
+    const colspan = useChangeFeature ? '18' : '16';
 
     if (reservations.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="16" class="no-data-cell">この日の予約はありません</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="no-data-cell">この日の予約はありません</td></tr>`;
         return;
     }
 
@@ -307,8 +332,44 @@ function renderReservations(reservations) {
         // 合計金額（中央寄せ、ピンク色、太字）
         const totalCell = document.createElement('td');
         totalCell.className = 'center-align total-amount-cell';
-        totalCell.textContent = `¥${reservation.total_amount.toLocaleString()}`;
+
+        // カード支払いの場合はバッジを表示
+        if (reservation.payment_method && reservation.payment_method.toLowerCase() === 'card') {
+            const cardBadge = document.createElement('div');
+            cardBadge.className = 'payment-card-badge';
+            cardBadge.textContent = 'カード';
+            totalCell.appendChild(cardBadge);
+        }
+
+        const totalAmount = document.createElement('div');
+        totalAmount.textContent = `¥${reservation.total_amount.toLocaleString()}`;
+        totalCell.appendChild(totalAmount);
+
         row.appendChild(totalCell);
+
+        // お釣り機能がONの場合のみ、預かり金額とお釣りの列を追加
+        if (useChangeFeature) {
+            // 預かり金額（現金払いの場合のみ表示）
+            const amountReceivedCell = document.createElement('td');
+            amountReceivedCell.className = 'center-align change-column';
+            if (reservation.payment_method && reservation.payment_method.toLowerCase() === 'cash' && reservation.amount_received) {
+                amountReceivedCell.textContent = `¥${reservation.amount_received.toLocaleString()}`;
+            } else {
+                amountReceivedCell.textContent = '-';
+            }
+            row.appendChild(amountReceivedCell);
+
+            // お釣り（現金払いの場合のみ表示）
+            const changeAmountCell = document.createElement('td');
+            changeAmountCell.className = 'center-align change-column';
+            if (reservation.payment_method && reservation.payment_method.toLowerCase() === 'cash' && reservation.amount_received) {
+                const change = reservation.amount_received - reservation.total_amount;
+                changeAmountCell.textContent = `¥${change.toLocaleString()}`;
+            } else {
+                changeAmountCell.textContent = '-';
+            }
+            row.appendChild(changeAmountCell);
+        }
 
         // オプション
         const optionsCell = document.createElement('td');

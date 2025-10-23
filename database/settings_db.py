@@ -329,7 +329,6 @@ def save_card_fee_rate(store_id, rate, updated_by=None):
                 INSERT INTO store_settings (
                     setting_key,
                     setting_value,
-                    setting_name,
                     category,
                     setting_type,
                     display_order,
@@ -340,7 +339,6 @@ def save_card_fee_rate(store_id, rate, updated_by=None):
                 VALUES (
                     'card_fee_rate',
                     %s,
-                    'カード手数料率',
                     'payment',
                     'number',
                     100,
@@ -349,12 +347,134 @@ def save_card_fee_rate(store_id, rate, updated_by=None):
                     CURRENT_TIMESTAMP
                 )
             """, (str(rate), store_id))
-        
+
         conn.commit()
         return True
-        
+
     except Exception as e:
         print(f"Error in save_card_fee_rate: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# お釣り機能管理関数
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def get_change_feature_setting(store_id):
+    """
+    お釣り機能の設定を取得
+
+    Args:
+        store_id (int): 店舗ID
+
+    Returns:
+        bool: お釣り機能が有効ならTrue（デフォルト: False）
+    """
+    conn = get_db_connection()
+    cur = conn.cursor(row_factory=dict_row)
+
+    try:
+        cur.execute("""
+            SELECT setting_value
+            FROM store_settings
+            WHERE setting_key = 'use_change_feature' AND store_id = %s
+            LIMIT 1
+        """, (store_id,))
+
+        result = cur.fetchone()
+
+        if result and result['setting_value']:
+            return result['setting_value'].lower() in ['true', '1', 'yes']
+        else:
+            return False
+
+    except Exception as e:
+        print(f"Error in get_change_feature_setting: {e}")
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+def save_change_feature_setting(store_id, use_change, updated_by=None):
+    """
+    お釣り機能の設定を保存
+
+    Args:
+        store_id (int): 店舗ID
+        use_change (bool): お釣り機能を使用するか
+        updated_by (str, optional): 更新者のログインID
+
+    Returns:
+        bool: 成功したらTrue
+    """
+    conn = get_db_connection()
+    cur = conn.cursor(row_factory=dict_row)
+
+    try:
+        # bool値を文字列に変換
+        value = 'true' if use_change else 'false'
+
+        # 既存レコードの存在確認
+        cur.execute("""
+            SELECT setting_id
+            FROM store_settings
+            WHERE setting_key = 'use_change_feature' AND store_id = %s
+            LIMIT 1
+        """, (store_id,))
+        existing = cur.fetchone()
+
+        if existing:
+            # 更新
+            if updated_by:
+                cur.execute("""
+                    UPDATE store_settings
+                    SET setting_value = %s,
+                        updated_at = CURRENT_TIMESTAMP,
+                        updated_by = %s
+                    WHERE setting_key = 'use_change_feature' AND store_id = %s
+                """, (value, updated_by, store_id))
+            else:
+                cur.execute("""
+                    UPDATE store_settings
+                    SET setting_value = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE setting_key = 'use_change_feature' AND store_id = %s
+                """, (value, store_id))
+        else:
+            # 新規作成
+            cur.execute("""
+                INSERT INTO store_settings (
+                    setting_key,
+                    setting_value,
+                    category,
+                    setting_type,
+                    display_order,
+                    store_id,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    'use_change_feature',
+                    %s,
+                    'payment',
+                    'checkbox',
+                    101,
+                    %s,
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP
+                )
+            """, (value, store_id))
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        print(f"Error in save_change_feature_setting: {e}")
         conn.rollback()
         return False
     finally:
