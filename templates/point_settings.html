@@ -24,32 +24,6 @@
         </div>
     </div>
 
-    <!-- ========================================
-         基本設定セクション
-         ======================================== -->
-    <h2 class="point-settings-section-title">基本設定</h2>
-    <div class="point-settings-form-card">
-        <div class="point-settings-form-group">
-            <label class="point-settings-form-label">新規顧客登録時のデフォルトポイント</label>
-            <div class="point-settings-input-with-unit">
-                <input type="number"
-                       id="new_customer_default_points"
-                       class="point-settings-form-input"
-                       value="{{ settings.new_customer_default_points }}"
-                       min="0"
-                       step="1"
-                       placeholder="0">
-                <span class="point-settings-unit">PT</span>
-            </div>
-            <small class="point-settings-form-hint">新しく顧客を登録した際に自動で付与されます</small>
-        </div>
-
-        <div class="point-settings-form-buttons">
-            <button type="button" class="point-settings-btn-submit" onclick="saveBasicSettings()">
-                <i class="fas fa-save"></i> 保存
-            </button>
-        </div>
-    </div>
 
     <!-- ========================================
          顧客情報でのポイント操作理由セクション

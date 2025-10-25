@@ -5,7 +5,7 @@ from .auth import index, login, logout
 # スタッフ関連に新しい関数を追加（get_line_bot_idを追加）
 from .staff import register_staff, edit_staff, delete_staff, new_staff, save_staff, get_line_bot_info, get_line_bot_id, staff_sort, staff_notification, get_staff_api
 # キャスト関連（save_cast_ng_settingsを削除）
-from .cast import register_cast, cast_management, get_casts_api
+from .cast import register_cast, cast_management, get_casts_api, get_cast_ng_items_api
 from .cast import edit_cast, delete_cast
 # コース関連（move_course_up, move_course_down + カテゴリ管理関数を追加）
 from .course import (
@@ -184,6 +184,8 @@ main_routes.add_url_rule('/<store>/edit_cast/<int:cast_id>', 'edit_cast', edit_c
 main_routes.add_url_rule('/<store>/delete_cast/<int:cast_id>', 'delete_cast', delete_cast, methods=['GET'])
 # API: キャスト一覧取得（予約登録画面用）
 main_routes.add_url_rule('/<store>/casts/api', 'get_casts_api', get_casts_api, methods=['GET'])
+# API: キャストのNG項目取得（予約登録画面用）
+main_routes.add_url_rule('/<store>/casts/<int:cast_id>/ng-items', 'get_cast_ng_items_api', get_cast_ng_items_api, methods=['GET'])
 
 # コース管理（既存のルート + 並び順変更を追加）
 main_routes.add_url_rule('/<store>/course_registration', 'course_registration', course_registration, methods=['GET', 'POST'])

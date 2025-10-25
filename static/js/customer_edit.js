@@ -9,39 +9,82 @@
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Customer edit page initialized');
 
-    // 選択肢を読み込む（完了を待つ）
-    await loadCustomerFieldOptions();
+    // ローディング表示
+    showLoading();
 
-    // ポイント操作理由を読み込む
-    await loadPointReasons();
-    
-    // 顧客データを読み込む
-    await loadCustomerData();
-    
-    // フォーム送信イベント
-    document.getElementById('customerForm').addEventListener('submit', handleFormSubmit);
-    
-    // 年齢自動計算
-    const birthdayInput = document.getElementById('birthday');
-    if (birthdayInput) {
-        birthdayInput.addEventListener('change', calculateAge);
+    try {
+        // すべてのデータを並列で取得
+        await Promise.all([
+            loadCustomerFieldOptions(),
+            loadPointReasons(),
+            loadCustomerData()
+        ]);
+
+        // フォーム送信イベント
+        document.getElementById('customerForm').addEventListener('submit', handleFormSubmit);
+
+        // 年齢自動計算
+        const birthdayInput = document.getElementById('birthday');
+        if (birthdayInput) {
+            birthdayInput.addEventListener('change', calculateAge);
+        }
+
+        // 削除ボタン
+        const deleteBtn = document.getElementById('deleteBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', deleteCustomer);
+        }
+
+        // 入力制限を設定
+        setupInputRestrictions();
+
+        // セレクトボックスの変更イベント（色を反映）
+        setupSelectChangeEvents();
+
+        // 🆕 コメント欄の自動リサイズ機能
+        setupTextareaAutoResize();
+
+        // ローディングを非表示にしてコンテンツを表示
+        hideLoading();
+
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+        alert('データの読み込みに失敗しました。ページを再読み込みしてください。');
+        hideLoading();
     }
-    
-    // 削除ボタン
-    const deleteBtn = document.getElementById('deleteBtn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', deleteCustomer);
-    }
-    
-    // 入力制限を設定
-    setupInputRestrictions();
-    
-    // セレクトボックスの変更イベント（色を反映）
-    setupSelectChangeEvents();
-    
-    // 🆕 コメント欄の自動リサイズ機能
-    setupTextareaAutoResize();
 });
+
+/**
+ * ローディング表示
+ */
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+    if (overlay) overlay.classList.remove('hidden');
+    if (mainContent) {
+        mainContent.style.opacity = '0';
+        mainContent.style.pointerEvents = 'none';
+    }
+}
+
+/**
+ * ローディング非表示
+ */
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+
+    if (mainContent) {
+        // フェードイン効果
+        mainContent.style.transition = 'opacity 0.3s ease';
+        mainContent.style.opacity = '1';
+        mainContent.style.pointerEvents = 'auto';
+    }
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 選択肢データ読み込み

@@ -95,13 +95,14 @@ def point_settings_view(store):
             settings={
                 'point_method': 'percentage',
                 'default_percentage': 5,
-                'new_customer_default_points': 0,
+                'new_customer_default_points': 0,  # 機能削除により常に0
                 'is_active': True
             },
             courses=[],
             member_types=[],
             percentage_dict={},
             point_dict={},
+            point_reasons=[],
             error="設定の読み込みに失敗しました"
         )
 
@@ -127,7 +128,7 @@ def point_settings_save(store):
             settings_data = {
                 'point_method': data.get('point_method', 'percentage'),
                 'default_percentage': int(data.get('default_percentage', 5)),
-                'new_customer_default_points': int(data.get('new_customer_default_points', 0)),
+                'new_customer_default_points': 0,  # 機能削除により常に0を設定
                 'is_active': data.get('is_active', True)
             }
 

@@ -156,7 +156,7 @@ function showEmptyMessage() {
     const tbody = document.getElementById('customerTableBody');
     tbody.innerHTML = `
         <tr>
-            <td colspan="10" class="customer-empty-message">
+            <td colspan="11" class="customer-empty-message">
                 検索条件を入力して検索してください
             </td>
         </tr>
@@ -171,7 +171,7 @@ function displayCustomersWithPagination() {
     if (allCustomers.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="customer-empty-message">
+                <td colspan="11" class="customer-empty-message">
                     顧客データがありません
                 </td>
             </tr>
@@ -201,6 +201,7 @@ function displayCustomersWithPagination() {
             <td class="customer-table-cell">${escapeHtml(customer.phone || '')}</td>
             <td class="customer-table-cell">${customer.age ? customer.age + '歳' : ''}</td>
             <td class="customer-table-cell">${escapeHtml(customer.last_visit_date || '')}</td>
+            <td class="customer-table-cell">${customer.visit_count || 0}回</td>
             <td class="customer-table-cell">
                 ${renderBadge('member_type', customer.member_type || '通常会員')}
             </td>

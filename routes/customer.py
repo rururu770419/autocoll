@@ -86,6 +86,20 @@ def api_get_customers_endpoint(store):
             except Exception as e:
                 print(f"[ERROR] 最終利用日取得エラー (customer_id={customer_id}): {e}")
 
+            # 利用回数を取得
+            visit_count = 0
+            try:
+                cursor = db.execute("""
+                    SELECT COUNT(*) as count
+                    FROM reservations
+                    WHERE customer_id = %s AND store_id = %s
+                """, (customer_id, store_id))
+                result = cursor.fetchone()
+                if result:
+                    visit_count = result['count']
+            except Exception as e:
+                print(f"[ERROR] 利用回数取得エラー (customer_id={customer_id}): {e}")
+
             customer_dict = {
                 'customer_id': customer_id,
                 'customer_number': customer_id,  # 顧客番号 = 顧客ID
@@ -106,6 +120,7 @@ def api_get_customers_endpoint(store):
                 'comment': customer.get('comment'),
                 'nickname': customer.get('nickname'),
                 'last_visit_date': last_visit_date,
+                'visit_count': visit_count,
                 'created_at': customer['created_at'].isoformat() if customer.get('created_at') else None,
                 'updated_at': customer['updated_at'].isoformat() if customer.get('updated_at') else None
             }
@@ -303,23 +318,63 @@ def api_search_customers_endpoint(store):
     """顧客検索API（統合検索対応）"""
     if 'store' not in session:
         return jsonify({'success': False, 'message': '未ログイン'}), 401
-    
+
     try:
+        from database.connection import get_db, get_store_id
+
         store_code = session['store']
         keyword = request.args.get('keyword', '').strip()
         search_type = request.args.get('type', None)  # フロントエンドから送られる検索タイプ
-        
+
         if not keyword:
             return jsonify({'success': False, 'message': '検索キーワードを入力してください'}), 400
-        
+
         # 検索タイプに応じて検索を実行
         customers = search_customers(store_code, keyword, search_type)
-        
+
+        # 最終利用日と利用回数を取得
+        db = get_db(store_code)
+        store_id = get_store_id(store_code)
+
         # dict_rowを通常のdictに変換してからJSON対応形式に
         customers_list = []
         for customer in customers:
             customer_dict = dict(customer)
-            
+            customer_id = customer_dict['customer_id']
+
+            # 最終利用日を取得
+            last_visit_date = None
+            try:
+                cursor = db.execute("""
+                    SELECT reservation_datetime
+                    FROM reservations
+                    WHERE customer_id = %s AND store_id = %s
+                    ORDER BY reservation_datetime DESC
+                    LIMIT 1
+                """, (customer_id, store_id))
+                result = cursor.fetchone()
+                if result and result['reservation_datetime']:
+                    last_visit_date = result['reservation_datetime'].strftime('%Y年%m月%d日')
+            except Exception as e:
+                print(f"[ERROR] 最終利用日取得エラー (customer_id={customer_id}): {e}")
+
+            # 利用回数を取得
+            visit_count = 0
+            try:
+                cursor = db.execute("""
+                    SELECT COUNT(*) as count
+                    FROM reservations
+                    WHERE customer_id = %s AND store_id = %s
+                """, (customer_id, store_id))
+                result = cursor.fetchone()
+                if result:
+                    visit_count = result['count']
+            except Exception as e:
+                print(f"[ERROR] 利用回数取得エラー (customer_id={customer_id}): {e}")
+
+            customer_dict['last_visit_date'] = last_visit_date
+            customer_dict['visit_count'] = visit_count
+
             # date型をJSON対応形式に変換
             if customer_dict.get('birthday'):
                 customer_dict['birthday'] = customer_dict['birthday'].isoformat()
@@ -327,11 +382,11 @@ def api_search_customers_endpoint(store):
                 customer_dict['created_at'] = customer_dict['created_at'].isoformat()
             if customer_dict.get('updated_at'):
                 customer_dict['updated_at'] = customer_dict['updated_at'].isoformat()
-            
+
             customers_list.append(customer_dict)
-        
+
         return jsonify({
-            'success': True, 
+            'success': True,
             'customers': customers_list,
             'count': len(customers_list)
         })

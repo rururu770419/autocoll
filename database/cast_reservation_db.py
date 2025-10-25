@@ -17,6 +17,7 @@ def get_cast_reservations_by_date(db, cast_id, store_id, business_date):
         list: 予約一覧（辞書形式）
     """
     try:
+        # メイン予約情報を取得（料金情報も含む）
         cursor = db.execute("""
             SELECT
                 r.reservation_id,
@@ -26,9 +27,12 @@ def get_cast_reservations_by_date(db, cast_id, store_id, business_date):
                 r.status,
                 r.customer_name,
                 r.customer_phone,
+                r.course_id,
                 r.course_name,
                 r.course_time_minutes,
+                r.nomination_type_id,
                 r.nomination_type_name,
+                r.hotel_id,
                 r.hotel_name,
                 r.room_number,
                 r.transportation_fee,
@@ -36,23 +40,58 @@ def get_cast_reservations_by_date(db, cast_id, store_id, business_date):
                 r.payment_method,
                 r.amount_received,
                 r.change_amount,
-                STRING_AGG(o.name, ', ' ORDER BY o.name) as options_list
+                r.customer_comment,
+                r.staff_memo,
+                COALESCE(c.price, 0) as course_price,
+                COALESCE(nt.additional_fee, 0) as nomination_fee
             FROM reservations r
-            LEFT JOIN reservation_options ro ON r.reservation_id = ro.reservation_id
-            LEFT JOIN options o ON ro.option_id = o.option_id AND ro.store_id = o.store_id
+            LEFT JOIN courses c ON r.course_id = c.course_id AND r.store_id = c.store_id
+            LEFT JOIN nomination_types nt ON r.nomination_type_id = nt.nomination_type_id AND r.store_id = nt.store_id
             WHERE r.store_id = %s
               AND r.cast_id = %s
               AND r.business_date = %s
-            GROUP BY r.reservation_id, r.customer_id, r.reservation_datetime, r.end_datetime, r.status,
-                     r.customer_name, r.customer_phone, r.course_name, r.course_time_minutes,
-                     r.nomination_type_name, r.hotel_name, r.room_number, r.transportation_fee,
-                     r.total_amount, r.payment_method, r.amount_received, r.change_amount
             ORDER BY r.reservation_datetime ASC
         """, (store_id, cast_id, business_date))
 
-        return cursor.fetchall()
+        reservations = cursor.fetchall()
+
+        # 各予約にオプション情報を追加
+        for reservation in reservations:
+            # オプション取得
+            options_cursor = db.execute("""
+                SELECT ro.option_id, o.name, o.badge_name, o.price
+                FROM reservation_options ro
+                LEFT JOIN options o ON ro.option_id = o.option_id AND ro.store_id = o.store_id
+                WHERE ro.reservation_id = %s AND ro.store_id = %s
+                ORDER BY o.name
+            """, (reservation['reservation_id'], store_id))
+
+            options = options_cursor.fetchall()
+            reservation['options'] = [
+                {'option_id': opt['option_id'], 'name': opt['name'], 'badge_name': opt['badge_name'], 'price': opt['price']}
+                for opt in options
+            ]
+
+            # 割引取得
+            discounts_cursor = db.execute("""
+                SELECT rd.discount_id, d.name, d.badge_name, d.discount_type, d.value
+                FROM reservation_discounts rd
+                LEFT JOIN discounts d ON rd.discount_id = d.discount_id AND rd.store_id = d.store_id
+                WHERE rd.reservation_id = %s AND rd.store_id = %s
+            """, (reservation['reservation_id'], store_id))
+
+            discounts = discounts_cursor.fetchall()
+            reservation['discounts'] = [
+                {'discount_id': disc['discount_id'], 'name': disc['name'], 'badge_name': disc['badge_name'],
+                 'discount_type': disc['discount_type'], 'discount_value': disc['value']}
+                for disc in discounts
+            ]
+
+        return reservations
     except Exception as e:
         print(f"Error in get_cast_reservations_by_date: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 

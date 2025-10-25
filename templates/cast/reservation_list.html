@@ -12,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="cr-reservation-container">
 <!-- 日付ナビゲーション -->
 <div class="cr-date-nav">
     <button class="cr-nav-btn" id="prevDayBtn" onclick="changeDate(-1)">
@@ -42,9 +43,9 @@
 <div class="cr-reservation-list">
     {% if reservations %}
         {% for reservation in reservations %}
-        <div class="cr-reservation-card">
+        <div class="cr-reservation-card" data-reservation-id="{{ reservation.reservation_id }}">
             <!-- 詳細リンク（右上） -->
-            <a href="#" class="cr-detail-link-top" onclick="openDetailModal({{ reservation.reservation_id }}); return false;">詳細</a>
+            <a href="#" class="cr-detail-link-top" onclick="toggleDetail({{ reservation.reservation_id }}); return false;">詳細▼</a>
 
             <!-- 時間帯 -->
             <div class="cr-time">
@@ -58,6 +59,90 @@
                     時間未設定
                 {% endif %}
                 </span>
+            </div>
+
+            <!-- 詳細エリア（アコーディオン） -->
+            <div class="cr-accordion-detail" id="detail-{{ reservation.reservation_id }}" style="display: none;">
+                <div class="cr-accordion-content">
+                    <!-- 基本情報 -->
+                    <div class="cr-accordion-section">
+                        <h3>基本情報</h3>
+                        <div class="cr-accordion-item">
+                            <span class="cr-accordion-label-badge">お客様名</span>
+                            <span class="cr-accordion-value">{{ reservation.customer_name or '名前なし' }}様</span>
+                        </div>
+                        {% if reservation.nomination_type_name %}
+                        <div class="cr-accordion-item">
+                            <span class="cr-accordion-label-badge">指名</span>
+                            <span class="cr-accordion-value">{{ reservation.nomination_type_name }}/¥{{ '{:,}'.format(reservation.nomination_fee) if reservation.nomination_fee else '0' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- コース内容 -->
+                    <div class="cr-accordion-section">
+                        <h3>コース内容</h3>
+                        {% if reservation.course_name %}
+                        <div class="cr-accordion-item">
+                            <span class="cr-accordion-label-badge">コース</span>
+                            <span class="cr-accordion-value">{{ reservation.course_name }}/¥{{ '{:,}'.format(reservation.course_price) if reservation.course_price else '0' }}</span>
+                        </div>
+                        {% endif %}
+                        {% if reservation.discounts %}
+                        <div class="cr-accordion-item cr-accordion-item-vertical">
+                            <span class="cr-accordion-label-badge">割引</span>
+                            <span class="cr-accordion-value">
+                                {% for discount in reservation.discounts %}
+                                {{ discount.name or '割引' }}/¥{{ '{:,}'.format(discount.discount_value|int) if discount.discount_value else '0' }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if reservation.options %}
+                        <div class="cr-accordion-item cr-accordion-item-vertical">
+                            <span class="cr-accordion-label-badge">オプション</span>
+                            <span class="cr-accordion-value">
+                                {% for option in reservation.options %}
+                                {{ option.name }}/¥{{ '{:,}'.format(option.price) if option.price else '0' }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 場所・移動 -->
+                    {% if reservation.hotel_name %}
+                    <div class="cr-accordion-section">
+                        <h3>場所・移動</h3>
+                        <div class="cr-accordion-item">
+                            <span class="cr-accordion-label-badge">ホテル</span>
+                            <span class="cr-accordion-value">{{ reservation.hotel_name }}/¥{{ '{:,}'.format(reservation.transportation_fee) if reservation.transportation_fee else '0' }}{% if reservation.room_number %}　{{ reservation.room_number }}号室{% endif %}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- コメント -->
+                    {% if reservation.customer_comment or reservation.staff_memo %}
+                    <div class="cr-accordion-section">
+                        <h3>コメント</h3>
+                        {% if reservation.customer_comment %}
+                        <div class="cr-accordion-comment">{{ reservation.customer_comment }}</div>
+                        {% endif %}
+                        {% if reservation.staff_memo %}
+                        <div class="cr-accordion-comment">{{ reservation.staff_memo }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- 料金・支払い -->
+                    <div class="cr-accordion-section">
+                        <h3>料金・支払い</h3>
+                        <div class="cr-accordion-item">
+                            <span class="cr-accordion-label-badge">合計金額</span>
+                            <span class="cr-accordion-value">{% if reservation.payment_method and reservation.payment_method.lower() == 'card' %}カード{% else %}現金{% endif %}/¥{{ '{:,}'.format(reservation.total_amount) if reservation.total_amount else '0' }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 顧客情報 -->
@@ -127,18 +212,24 @@
                            placeholder="0"
                            {% if reservation.amount_received and reservation.amount_received > 0 %}disabled{% endif %}>
                     <span class="cr-change-unit">円</span>
-                    <button class="cr-save-amount-btn"
-                            data-reservation-id="{{ reservation.reservation_id }}"
-                            {% if reservation.amount_received and reservation.amount_received > 0 %}disabled{% endif %}>
-                        登録
+                    <button class="cr-save-amount-btn {% if reservation.amount_received and reservation.amount_received > 0 %}cr-edit-mode{% endif %}"
+                            data-reservation-id="{{ reservation.reservation_id }}">
+                        {% if reservation.amount_received and reservation.amount_received > 0 %}編集をする{% else %}登録{% endif %}
                     </button>
                 </div>
                 <div class="cr-change-row">
                     <span class="cr-change-label">お釣り:</span>
-                    <span class="cr-change-display">¥{{ '{:,}'.format((reservation.amount_received or 0) - reservation.total_amount) }}</span>
+                    <span class="cr-change-display">
+                        {% if reservation.amount_received and reservation.amount_received > 0 %}
+                            ¥{{ '{:,}'.format(reservation.amount_received - reservation.total_amount) }}
+                        {% else %}
+                            ¥0
+                        {% endif %}
+                    </span>
                 </div>
             </div>
             {% endif %}
+
         </div>
         {% endfor %}
     {% else %}
@@ -173,29 +264,12 @@
     </div>
 </div>
 
-<!-- 予約詳細モーダル -->
-<div class="cr-modal" id="detailModal">
-    <div class="cr-modal-overlay" onclick="closeDetailModal()"></div>
-    <div class="cr-detail-modal-content">
-        <div class="cr-detail-header">
-            <h2>予約詳細</h2>
-            <button class="cr-modal-close-icon" onclick="closeDetailModal()">×</button>
-        </div>
-
-        <div class="cr-detail-body" id="detailBody">
-            <!-- JavaScriptで動的に生成 -->
-        </div>
-
-        <button class="cr-modal-close" onclick="closeDetailModal()">閉じる</button>
-    </div>
-</div>
-
 <script>
     // 選択中の日付を JavaScript に渡す
     const currentDate = new Date('{{ selected_date.strftime('%Y-%m-%d') }}');
     const store = '{{ store }}';
 </script>
-
+</div>
 {% endblock %}
 
 {% block extra_js %}

@@ -135,9 +135,33 @@ def new_reservation(store):
         db.close()
         return "顧客が見つかりません。", 404
 
-    # TODO: 来店回数や最終来店情報を取得する機能は、
-    # 予約データを保存する新しいテーブル（reservations）を作成後に実装予定
-    # 現在は固定値/ダミーデータを使用
+    # 来店回数を取得（成約済みの予約のみカウント）
+    cursor.execute("""
+        SELECT COUNT(*) as visit_count
+        FROM reservations
+        WHERE customer_id = %s
+        AND store_id = %s
+        AND status = '成約'
+    """, (customer_id, store_id))
+    visit_count_result = cursor.fetchone()
+    visit_count = visit_count_result['visit_count'] if visit_count_result else 0
+
+    # 最終来店情報を取得
+    cursor.execute("""
+        SELECT
+            r.reservation_datetime,
+            c.name as cast_name,
+            h.name as hotel_name
+        FROM reservations r
+        LEFT JOIN casts c ON r.cast_id = c.cast_id AND r.store_id = c.store_id
+        LEFT JOIN hotels h ON r.hotel_id = h.hotel_id AND r.store_id = h.store_id
+        WHERE r.customer_id = %s
+        AND r.store_id = %s
+        AND r.status = '成約'
+        ORDER BY r.reservation_datetime DESC
+        LIMIT 1
+    """, (customer_id, store_id))
+    last_visit = cursor.fetchone()
 
     # 顧客データに追加情報を含める
     customer_data = {
@@ -147,10 +171,10 @@ def new_reservation(store):
         'phone': customer['phone'],
         'current_points': customer['current_points'] or 0,
         'member_type': customer['member_type'] or '通常会員',
-        'visit_count': 0,  # TODO: 予約履歴から取得
-        'last_visit_datetime': None,  # TODO: 予約履歴から取得
-        'last_cast_name': '未設定',  # TODO: 予約履歴から取得
-        'last_hotel_name': '未設定'  # TODO: 予約履歴から取得
+        'visit_count': visit_count,
+        'last_visit_datetime': last_visit['reservation_datetime'] if last_visit else None,
+        'last_cast_name': last_visit['cast_name'] if last_visit and last_visit['cast_name'] else '未設定',
+        'last_hotel_name': last_visit['hotel_name'] if last_visit and last_visit['hotel_name'] else '未設定'
     }
 
     db.close()
@@ -217,6 +241,7 @@ def register_reservation(store):
         pt_add = request.form.get('pt_add', type=int, default=0)
         comment = request.form.get('comment') or None
         cancellation_reason_id = request.form.get('cancellation_reason', type=int) or None
+        adjustment_amount = request.form.get('adjustment_amount', type=int, default=0)
 
         # オプション（複数選択可）
         option_ids = request.form.getlist('options[]', type=int)
@@ -252,7 +277,8 @@ def register_reservation(store):
             customer_comment=comment,
             staff_memo=None,
             cancellation_reason_id=cancellation_reason_id,
-            reservation_method_id=reservation_method_id
+            reservation_method_id=reservation_method_id,
+            adjustment_amount=adjustment_amount
         )
 
         if reservation_id:
@@ -476,6 +502,8 @@ def edit_reservation(store):
     customer_id = reservation.get('customer_id')
     store_id = get_store_id(store)
 
+    print(f"=== 予約編集ページ: reservation_id={reservation_id}, customer_id={customer_id}, store_id={store_id} ===")
+
     db = get_db()
     cursor = db.cursor()
 
@@ -491,9 +519,44 @@ def edit_reservation(store):
     """, (customer_id,))
     customer = cursor.fetchone()
 
+    print(f"=== 顧客情報取得: {customer} ===")
+
     if not customer:
         db.close()
         return "顧客が見つかりません。", 404
+
+    # 来店回数を取得（成約済みの予約のみカウント）
+    cursor.execute("""
+        SELECT COUNT(*) as visit_count
+        FROM reservations
+        WHERE customer_id = %s
+        AND store_id = %s
+        AND status = '成約'
+    """, (customer_id, store_id))
+    visit_count_result = cursor.fetchone()
+    visit_count = visit_count_result['visit_count'] if visit_count_result else 0
+
+    print(f"=== 顧客ID {customer_id} の来店回数: {visit_count} ===")
+
+    # 最終来店情報を取得（現在編集中の予約を除く）
+    cursor.execute("""
+        SELECT
+            r.reservation_datetime,
+            c.name as cast_name,
+            h.name as hotel_name
+        FROM reservations r
+        LEFT JOIN casts c ON r.cast_id = c.cast_id AND r.store_id = c.store_id
+        LEFT JOIN hotels h ON r.hotel_id = h.hotel_id AND r.store_id = h.store_id
+        WHERE r.customer_id = %s
+        AND r.store_id = %s
+        AND r.status = '成約'
+        AND r.reservation_id != %s
+        ORDER BY r.reservation_datetime DESC
+        LIMIT 1
+    """, (customer_id, store_id, reservation_id))
+    last_visit = cursor.fetchone()
+
+    print(f"=== 最終来店情報: {last_visit} ===")
 
     # 顧客データに追加情報を含める
     customer_data = {
@@ -502,10 +565,10 @@ def edit_reservation(store):
         'name': customer['name'],
         'phone': customer['phone'],
         'current_points': customer['current_points'] or 0,
-        'visit_count': 0,
-        'last_visit_datetime': None,
-        'last_cast_name': '未設定',
-        'last_hotel_name': '未設定'
+        'visit_count': visit_count,
+        'last_visit_datetime': last_visit['reservation_datetime'] if last_visit else None,
+        'last_cast_name': last_visit['cast_name'] if last_visit and last_visit['cast_name'] else '未設定',
+        'last_hotel_name': last_visit['hotel_name'] if last_visit and last_visit['hotel_name'] else '未設定'
     }
 
     db.close()
@@ -633,6 +696,149 @@ def delete_reservation_route(store):
 
     except Exception as e:
         print(f"Error in delete_reservation_route: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'エラーが発生しました: {str(e)}'
+        }), 500
+
+
+@reservation_bp.route('/<store>/reservation/customer_rating/<int:customer_id>', methods=['GET'])
+def get_customer_rating(store, customer_id):
+    """顧客評価を取得するAPI"""
+    try:
+        from database.rating_db import get_all_rating_items
+
+        db = get_db()
+        store_id = get_store_id(store)
+
+        # 評価項目を取得（アクティブな項目のみ）
+        all_rating_items = get_all_rating_items(db)
+        active_rating_items = [item for item in all_rating_items if item.get('is_active')]
+
+        # 評価件数を取得（この顧客を評価したキャストの数）
+        cursor = db.execute("""
+            SELECT COUNT(DISTINCT cast_id) as rating_count
+            FROM cast_customer_ratings
+            WHERE customer_id = %s AND store_id = %s
+        """, (customer_id, store_id))
+        rating_count_result = cursor.fetchone()
+        rating_count = rating_count_result['rating_count'] if rating_count_result else 0
+
+        # 皆の評価を集計（全キャストの評価）
+        # ラジオボタン/セレクト項目の集計
+        cursor = db.execute("""
+            SELECT r.item_id, r.rating_value, COUNT(*) as count
+            FROM cast_customer_ratings r
+            JOIN rating_items ri ON r.item_id = ri.item_id
+            WHERE r.customer_id = %s
+            AND r.store_id = %s
+            AND ri.item_type IN ('radio', 'select')
+            GROUP BY r.item_id, r.rating_value
+        """, (customer_id, store_id))
+        rating_counts = cursor.fetchall()
+
+        # 辞書形式に変換（item_id -> {option_value -> count}）
+        everyone_ratings_dict = {}
+        for row in rating_counts:
+            item_id = str(row['item_id'])
+            rating_value = row['rating_value']
+            count = row['count']
+
+            if item_id not in everyone_ratings_dict:
+                everyone_ratings_dict[item_id] = {}
+
+            everyone_ratings_dict[item_id][rating_value] = count
+
+        # 評価項目ごとの集計データを作成
+        import json
+        everyone_ratings = {}
+        for item in active_rating_items:
+            item_id = str(item['item_id'])
+            item_type = item['item_type']
+
+            # ラジオボタン、セレクトの場合のみ集計
+            if item_type not in ['radio', 'select']:
+                continue
+
+            # 選択肢を取得（JSON形式かカンマ区切りか判定）
+            options_raw = item.get('options', '')
+            options_list = []
+
+            if options_raw:
+                try:
+                    # JSON形式の場合
+                    options_parsed = json.loads(options_raw)
+                    if isinstance(options_parsed, list):
+                        for opt in options_parsed:
+                            if isinstance(opt, dict):
+                                options_list.append(opt.get('value', ''))
+                            else:
+                                options_list.append(str(opt))
+                    else:
+                        options_list = [str(options_parsed)]
+                except (json.JSONDecodeError, TypeError):
+                    # JSON形式でない場合はカンマ区切り
+                    options_list = [opt.strip() for opt in options_raw.split(',') if opt.strip()]
+
+            item_counts = []
+            for option_value in options_list:
+                if not option_value:
+                    continue
+
+                count = everyone_ratings_dict.get(item_id, {}).get(option_value, 0)
+                item_counts.append({
+                    'value': option_value,
+                    'count': count
+                })
+
+            everyone_ratings[item_id] = item_counts
+
+        # テキストエリア（備考欄）の評価を取得（新しい順）
+        cursor = db.execute("""
+            SELECT r.rating_value, c.name as cast_name, r.created_at
+            FROM cast_customer_ratings r
+            JOIN rating_items ri ON r.item_id = ri.item_id
+            JOIN casts c ON r.cast_id = c.cast_id
+            WHERE r.customer_id = %s
+            AND r.store_id = %s
+            AND ri.item_type = 'textarea'
+            AND r.rating_value != ''
+            ORDER BY r.created_at DESC
+        """, (customer_id, store_id))
+        everyone_comments = cursor.fetchall()
+
+        # datetime型を文字列に変換
+        comments_list = []
+        for comment in everyone_comments:
+            comments_list.append({
+                'rating_value': comment['rating_value'],
+                'cast_name': comment['cast_name'],
+                'created_at': comment['created_at'].strftime('%Y/%m/%d') if comment.get('created_at') else ''
+            })
+
+        # 評価項目を辞書形式に変換
+        rating_items_list = []
+        for item in active_rating_items:
+            rating_items_list.append({
+                'item_id': item['item_id'],
+                'item_name': item['item_name'],
+                'item_type': item['item_type']
+            })
+
+        db.close()
+
+        return jsonify({
+            'success': True,
+            'rating_count': rating_count,
+            'rating_items': rating_items_list,
+            'everyone_ratings': everyone_ratings,
+            'everyone_comments': comments_list
+        })
+
+    except Exception as e:
+        print(f"Error in get_customer_rating: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({

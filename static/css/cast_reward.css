@@ -124,7 +124,7 @@ body {
     border-radius: 16px;
     box-shadow: 0 2px 10px rgba(255, 153, 187, 0.1);
     margin-top: 24px;
-    margin-bottom: 80px;
+    margin-bottom: 10px;
     overflow: hidden;
 }
 
@@ -432,7 +432,7 @@ body {
 
     /* 報酬一覧の下部余白（スマホのみ） */
     .crw-summary-section {
-        margin-bottom: 150px;
+        margin-bottom: 200px;
     }
 
     /* 報酬カードの余白調整 */

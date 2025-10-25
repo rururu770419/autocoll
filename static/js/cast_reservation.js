@@ -235,174 +235,42 @@ function createDayElement(day, isOtherMonth) {
 }
 
 // ============================================
-// 予約詳細モーダル
+// 予約詳細アコーディオン
 // ============================================
 
 /**
- * 予約詳細モーダルを開く
+ * 予約詳細エリアの開閉（アコーディオン）
  * @param {number} reservationId - 予約ID
  */
-async function openDetailModal(reservationId) {
-    const modal = document.getElementById('detailModal');
-    const detailBody = document.getElementById('detailBody');
+function toggleDetail(reservationId) {
+    const detailArea = document.getElementById(`detail-${reservationId}`);
+    const button = document.querySelector(`.cr-reservation-card[data-reservation-id="${reservationId}"] .cr-detail-link-top`);
 
-    if (!modal || !detailBody) {
-        console.error('[ERROR] モーダル要素が見つかりません');
+    if (!detailArea) {
+        console.error(`[ERROR] 詳細エリアが見つかりません: detail-${reservationId}`);
         return;
     }
 
-    // 背景のスクロールを防ぐ
-    document.body.style.overflow = 'hidden';
+    // 現在の表示状態を確認
+    const isVisible = detailArea.style.display !== 'none';
 
-    // ローディング表示
-    detailBody.innerHTML = '<div class="cr-loading">読み込み中...</div>';
-    modal.classList.add('cr-modal-show');
+    // 全ての詳細エリアを閉じる＆ボタンテキストをリセット
+    document.querySelectorAll('.cr-accordion-detail').forEach(area => {
+        area.style.display = 'none';
+    });
+    document.querySelectorAll('.cr-detail-link-top').forEach(btn => {
+        btn.textContent = '詳細▼';
+    });
 
-    try {
-        // API呼び出し
-        const response = await fetch(`/${store}/cast/api/reservation_detail?reservation_id=${reservationId}`);
-        const data = await response.json();
-
-        if (data.success) {
-            renderDetailContent(data.detail, data.visit_count);
-        } else {
-            detailBody.innerHTML = `<div class="cr-loading" style="color: #ff4444;">${data.error || '予約詳細の取得に失敗しました'}</div>`;
-        }
-    } catch (error) {
-        console.error('[ERROR] 予約詳細取得エラー:', error);
-        detailBody.innerHTML = '<div class="cr-loading" style="color: #ff4444;">予約詳細の取得に失敗しました</div>';
+    // クリックした詳細エリアを開閉（トグル）
+    if (!isVisible) {
+        detailArea.style.display = 'block';
+        if (button) button.textContent = '詳細×';
+        console.log(`[INFO] 予約詳細を表示: ID=${reservationId}`);
+    } else {
+        console.log(`[INFO] 予約詳細を非表示: ID=${reservationId}`);
     }
 }
-
-/**
- * 予約詳細モーダルを閉じる
- */
-function closeDetailModal() {
-    // 背景のスクロールを復元
-    document.body.style.overflow = '';
-
-    const modal = document.getElementById('detailModal');
-    if (modal) {
-        modal.classList.remove('cr-modal-show');
-    }
-}
-
-/**
- * 詳細情報をレンダリング
- * @param {object} detail - 予約詳細データ
- * @param {number} visitCount - 接客回数
- */
-function renderDetailContent(detail, visitCount) {
-    const detailBody = document.getElementById('detailBody');
-
-    // 日時フォーマット
-    const businessDate = detail.business_date ? formatDateJP(detail.business_date) : '-';
-    const startTime = detail.reservation_datetime ? new Date(detail.reservation_datetime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '-';
-    const endTime = detail.end_datetime ? new Date(detail.end_datetime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '-';
-
-    // 支払い方法
-    const paymentMethod = detail.payment_method === 'card' ? 'カード' : detail.payment_method === 'cash' ? '現金' : detail.payment_method || '-';
-
-    const html = `
-        <!-- 基本情報 -->
-        <div class="cr-detail-section">
-            <h3>基本情報</h3>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">予約日</span>
-                <span class="cr-detail-value">${businessDate}</span>
-            </div>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">予約時間</span>
-                <span class="cr-detail-value">${startTime}～${endTime}</span>
-            </div>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">お客様名</span>
-                <span class="cr-detail-value">${detail.customer_name || '-'}様</span>
-            </div>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">接客回数</span>
-                <span class="cr-detail-value">${visitCount}回目</span>
-            </div>
-        </div>
-
-        <!-- サービス内容 -->
-        <div class="cr-detail-section">
-            <h3>サービス内容</h3>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">コース</span>
-                <span class="cr-detail-value">${detail.course_name || '-'}</span>
-            </div>
-            ${detail.options_list ? `
-            <div class="cr-detail-row-vertical">
-                <span class="cr-detail-label-badge">オプション</span>
-                <span class="cr-detail-value">${detail.options_list}</span>
-            </div>
-            ` : ''}
-        </div>
-
-        <!-- 場所・移動 -->
-        <div class="cr-detail-section">
-            <h3>場所・移動</h3>
-            ${detail.hotel_name ? `
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">ホテル</span>
-                <span class="cr-detail-value">${detail.hotel_name}${detail.room_number ? '　' + detail.room_number + '号室' : ''}</span>
-            </div>
-            ` : ''}
-        </div>
-
-        <!-- 料金・支払い -->
-        <div class="cr-detail-section">
-            <h3>料金・支払い</h3>
-            <div class="cr-detail-row">
-                <span class="cr-detail-label-badge">合計金額</span>
-                <span class="cr-detail-value">${detail.payment_method && detail.payment_method.toLowerCase() === 'card' ? 'カード' : '現金'}/¥${detail.total_amount ? detail.total_amount.toLocaleString() : '0'}</span>
-            </div>
-        </div>
-
-        <!-- コメント -->
-        ${detail.customer_comment || detail.staff_memo ? `
-        <div class="cr-detail-section">
-            <h3>コメント</h3>
-            ${detail.customer_comment ? `
-            <div style="margin-bottom: 12px;">
-                <div class="cr-detail-comment">${detail.customer_comment}</div>
-            </div>
-            ` : ''}
-            ${detail.staff_memo ? `
-            <div>
-                <div class="cr-detail-comment">${detail.staff_memo}</div>
-            </div>
-            ` : ''}
-        </div>
-        ` : ''}
-    `;
-
-    detailBody.innerHTML = html;
-}
-
-/**
- * 日付を日本語形式にフォーマット
- * @param {string} dateStr - 日付文字列
- * @returns {string} YYYY年MM月DD日(曜日)形式
- */
-function formatDateJP(dateStr) {
-    const date = new Date(dateStr);
-    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const dayOfWeek = weekDays[date.getDay()];
-
-    return `${year}年${month}月${day}日(${dayOfWeek})`;
-}
-
-// ESCキーで詳細モーダルを閉じる
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeDetailModal();
-    }
-});
 
 // ============================================
 // お釣り機能
@@ -447,10 +315,9 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[INFO] キャスト予約一覧ページ初期化');
     console.log('[INFO] 選択日:', currentDate);
 
-    // モーダルのタッチイベント制御（スマホ対応）
+    /* 削除：予約詳細モーダルのタッチイベント制御（アコーディオン化により不要）
     const detailModal = document.getElementById('detailModal');
     if (detailModal) {
-        // モーダル内のタッチイベントは伝播させない
         const modalContent = detailModal.querySelector('.cr-detail-modal-content');
         if (modalContent) {
             modalContent.addEventListener('touchmove', function(e) {
@@ -458,7 +325,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, { passive: true });
         }
 
-        // オーバーレイのタッチイベントは背景にスクロールさせない
         const overlay = detailModal.querySelector('.cr-modal-overlay');
         if (overlay) {
             overlay.addEventListener('touchmove', function(e) {
@@ -466,6 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, { passive: false });
         }
     }
+    */
 
     // お預かり金額入力の処理
     document.querySelectorAll('.cr-amount-received-input').forEach(input => {
@@ -473,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', function() {
             const totalAmount = parseInt(this.dataset.totalAmount);
             const amountReceived = parseInt(this.value) || 0;
-            const change = amountReceived - totalAmount;
+            const change = Math.max(0, amountReceived - totalAmount); // 負の値は0として表示
 
             const changeDisplay = this.closest('.cr-reservation-card')
                 .querySelector('.cr-change-display');
@@ -489,6 +356,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const reservationId = parseInt(this.dataset.reservationId);
             const card = this.closest('.cr-reservation-card');
             const input = card.querySelector('.cr-amount-received-input');
+            const changeDisplay = card.querySelector('.cr-change-display');
+
+            // 編集モードの場合、入力欄を有効化
+            if (this.classList.contains('cr-edit-mode')) {
+                input.disabled = false;
+                input.focus();
+                this.classList.remove('cr-edit-mode');
+                this.textContent = '登録';
+                return;
+            }
+
             const amountReceived = parseInt(input.value) || 0;
 
             if (amountReceived <= 0) {
@@ -504,9 +382,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const success = await saveAmountReceived(reservationId, amountReceived);
 
             if (success) {
-                // 保存成功時：入力欄とボタンを無効化
+                // 保存成功時：入力欄を無効化し、ボタンを編集モードに
                 input.disabled = true;
-                this.textContent = '登録済み';
+                this.disabled = false;
+                this.classList.add('cr-edit-mode');
+                this.textContent = '編集をする';
+
+                // お釣り表示を更新
+                const totalAmount = parseInt(input.dataset.totalAmount) || 0;
+                const change = amountReceived - totalAmount;
+                if (changeDisplay) {
+                    changeDisplay.textContent = '¥' + change.toLocaleString();
+                }
+
                 alert('お預かり金額を登録しました');
             } else {
                 // 保存失敗時：ボタンを元に戻す
@@ -515,6 +403,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // URLパラメータから予約IDを取得して該当予約を開く
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetReservationId = urlParams.get('reservation_id');
+    if (targetReservationId) {
+        // ページ読み込み後、少し待ってからアコーディオンを開く
+        setTimeout(() => {
+            const reservationId = parseInt(targetReservationId);
+            toggleDetail(reservationId);
+            // 該当予約までスクロール
+            const targetCard = document.querySelector(`.cr-reservation-card[data-reservation-id="${reservationId}"]`);
+            if (targetCard) {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500);
+    }
 });
 
 // ============================================
@@ -527,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function handleCheckin(reservationId) {
     // TODO: 入室処理の実装
-    // 現時点では予約詳細モーダルを開く
-    openDetailModal(reservationId);
+    // 現時点では予約詳細を開く（アコーディオン）
+    toggleDetail(reservationId);
+    console.log(`[INFO] 入室ボタンクリック: 予約ID=${reservationId}`);
 }

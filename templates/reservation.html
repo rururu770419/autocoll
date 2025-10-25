@@ -88,7 +88,7 @@
         </div>
 
         <!-- 顧客評価ボタン（新規追加） -->
-        <button type="button" class="customer-action-btn customer-rating-btn" onclick="alert('顧客評価ページは準備中です')">
+        <button type="button" class="customer-action-btn customer-rating-btn" id="customerRatingBtn" onclick="showCustomerRatingModal({{ customer.get('customer_id', '') }})">
             顧客評価
         </button>
 
@@ -107,27 +107,27 @@
 
             <!-- ========== 1行目 ========== -->
             <!-- 成約種別 -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>成約種別</label>
-                <select id="contract_type" name="contract_type" class="form-select" onchange="toggleCancellation()">
+                <select id="contract_type" name="contract_type" class="customer-field-select" onchange="toggleCancellation()">
                     <option value="contract" selected>成約</option>
                     <option value="cancel">キャンセル</option>
                 </select>
             </div>
 
             <!-- 予約日 -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>予約日</label>
                 <div class="date-select-group">
-                    <select id="year" class="form-select date-select">
+                    <select id="year" class="customer-field-select date-select">
                         <!-- JavaScriptで生成 -->
                     </select>
                     <span class="date-separator">年</span>
-                    <select id="month" class="form-select date-select">
+                    <select id="month" class="customer-field-select date-select">
                         <!-- JavaScriptで生成 -->
                     </select>
                     <span class="date-separator">月</span>
-                    <select id="day" class="form-select date-select">
+                    <select id="day" class="customer-field-select date-select">
                         <!-- JavaScriptで生成 -->
                     </select>
                     <span class="date-separator">日</span>
@@ -137,14 +137,14 @@
             </div>
 
             <!-- 予約時間 -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>予約時間</label>
                 <div class="time-select-group">
-                    <select id="hour" class="form-select time-select">
+                    <select id="hour" class="customer-field-select time-select">
                         <!-- JavaScriptで生成 -->
                     </select>
                     <span class="time-separator">:</span>
-                    <select id="minute" class="form-select time-select">
+                    <select id="minute" class="customer-field-select time-select">
                         <!-- JavaScriptで生成 -->
                     </select>
                 </div>
@@ -154,40 +154,79 @@
 
             <!-- ========== 2行目 ========== -->
             <!-- キャスト -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>キャスト</label>
-                <select id="cast_id" name="cast_id" class="form-select">
-                    <option value="">選択してください</option>
-                </select>
-            </div>
-
-            <!-- 予約方法 -->
-            <div class="form-group">
-                <label>予約方法</label>
-                <select id="reservation_method" name="reservation_method" class="form-select">
+                <select id="cast_id" name="cast_id" class="customer-field-select">
                     <option value="">選択してください</option>
                 </select>
             </div>
 
             <!-- 指名種類 -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>指名種類</label>
-                <select id="nomination_type" name="nomination_type" class="form-select" onchange="calculateTotal()">
+                <select id="nomination_type" name="nomination_type" class="customer-field-select" onchange="calculateTotal()">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 予約方法 -->
+            <div class="customer-form-field">
+                <label>予約方法</label>
+                <select id="reservation_method" name="reservation_method" class="customer-field-select">
                     <option value="">選択してください</option>
                 </select>
             </div>
 
             <!-- ========== 3行目 ========== -->
             <!-- コース -->
-            <div class="form-group">
+            <div class="customer-form-field">
                 <label>コース</label>
-                <select id="course_id" name="course_id" class="form-select" onchange="calculateTotal()">
+                <select id="course_id" name="course_id" class="customer-field-select" onchange="calculateTotal()">
                     <option value="">選択してください</option>
                 </select>
             </div>
 
+            <!-- ホテル名+部屋番号（横並び） -->
+            <div class="customer-form-field">
+                <label>ホテル名</label>
+                <div class="form-group-hotel-room">
+                    <select id="hotel_id" name="hotel_id" class="customer-field-select hotel-select">
+                        <option value="">選択してください</option>
+                    </select>
+                    <input type="text" id="room_number" name="room_number" class="customer-field-input room-number-input" placeholder="部屋番号">
+                </div>
+            </div>
+
+            <!-- 交通費 -->
+            <div class="customer-form-field">
+                <label>交通費</label>
+                <select id="transportation_fee" name="transportation_fee" class="customer-field-select" onchange="calculateTotal()">
+                    <option value="0" data-transportation-fee="0">なし</option>
+                </select>
+            </div>
+
+            <!-- ========== 4行目 ========== -->
+            <!-- 延長 -->
+            <div class="customer-form-field">
+                <label>延長</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="extension" name="extension" class="customer-field-select" onchange="calculateTotal()" style="flex: 1;">
+                        <option value="">なし</option>
+                    </select>
+                    <span style="white-space: nowrap;">回数:</span>
+                    <select name="extension_quantity" id="extension_quantity" class="customer-field-select" style="width: 80px;" onchange="calculateTotal()">
+                        <option value="0">0回</option>
+                        <option value="1">1回</option>
+                        <option value="2">2回</option>
+                        <option value="3">3回</option>
+                        <option value="4">4回</option>
+                        <option value="5">5回</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- オプション（チェックボックス） -->
-            <div class="form-group" style="overflow: visible;">
+            <div class="customer-form-field" style="overflow: visible;">
                 <label>オプション</label>
                 <div class="custom-select-wrapper">
                     <div class="custom-select" id="options-select">
@@ -202,80 +241,17 @@
                 </div>
             </div>
 
-            <!-- 延長 -->
-            <div class="form-group">
-                <label>延長</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <select id="extension" name="extension" class="form-select" onchange="calculateTotal()" style="flex: 1;">
-                        <option value="">なし</option>
-                    </select>
-                    <span style="white-space: nowrap;">回数:</span>
-                    <select name="extension_quantity" id="extension_quantity" class="form-select" style="width: 80px;" onchange="calculateTotal()">
-                        <option value="0">0回</option>
-                        <option value="1">1回</option>
-                        <option value="2">2回</option>
-                        <option value="3">3回</option>
-                        <option value="4">4回</option>
-                        <option value="5">5回</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- ========== 4行目 ========== -->
             <!-- 待ち合わせ場所 -->
-            <div class="form-group">
-                <label>待ち合わせ場所</label>
-                <select id="meeting_place" name="meeting_place" class="form-select">
+            <div class="customer-form-field">
+                <label>待ち合わせ</label>
+                <select id="meeting_place" name="meeting_place" class="customer-field-select">
                     <option value="">選択してください</option>
                 </select>
-            </div>
-
-            <!-- 交通費 -->
-            <div class="form-group">
-                <label>交通費</label>
-                <select id="transportation_fee" name="transportation_fee" class="form-select" onchange="calculateTotal()">
-                    <option value="0">なし</option>
-                </select>
-            </div>
-
-            <!-- ホテル名+部屋番号（横並び） -->
-            <div class="form-group">
-                <label>ホテル名・部屋番号</label>
-                <div class="form-group-hotel-room">
-                    <select id="hotel_id" name="hotel_id" class="form-select hotel-select">
-                        <option value="">選択してください</option>
-                    </select>
-                    <input type="text" id="room_number" name="room_number" class="form-input room-number-input" placeholder="部屋番号">
-                </div>
             </div>
 
             <!-- ========== 5行目 ========== -->
-            <!-- 支払い方法 -->
-            <div class="form-group">
-                <label>支払い方法</label>
-                <select id="payment_method" name="payment_method" class="form-select" onchange="calculateTotal()">
-                    <option value="">選択してください</option>
-                </select>
-            </div>
-
-            <!-- 担当スタッフ -->
-            <div class="form-group">
-                <label>担当スタッフ</label>
-                <select id="staff_id" name="staff_id" class="form-select">
-                </select>
-            </div>
-
-            <!-- キャンセル理由 -->
-            <div class="form-group">
-                <label>キャンセル理由</label>
-                <select id="cancellation_reason" name="cancellation_reason" class="form-select" disabled>
-                    <option value="">選択してください</option>
-                </select>
-            </div>
-
-            <!-- ========== 6行目 ========== -->
             <!-- 割引 -->
-            <div class="form-group" style="overflow: visible;">
+            <div class="customer-form-field" style="overflow: visible;">
                 <label>割引</label>
                 <div class="custom-select-wrapper">
                     <div class="custom-select" id="discount-select">
@@ -288,6 +264,46 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- 担当スタッフ -->
+            <div class="customer-form-field">
+                <label>スタッフ</label>
+                <select id="staff_id" name="staff_id" class="customer-field-select">
+                </select>
+            </div>
+
+            <!-- キャンセル理由 -->
+            <div class="customer-form-field">
+                <label>キャンセル</label>
+                <select id="cancellation_reason" name="cancellation_reason" class="customer-field-select" disabled>
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- ========== 6行目 ========== -->
+            <!-- 支払い方法 -->
+            <div class="customer-form-field">
+                <label>支払い方法</label>
+                <select id="payment_method" name="payment_method" class="customer-field-select" onchange="calculateTotal()">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <!-- 調整金 -->
+            <div class="customer-form-field">
+                <label>調整金</label>
+                <input type="number" id="adjustment_amount" name="adjustment_amount" class="customer-field-input" placeholder="0" value="0" oninput="calculateTotal()">
+            </div>
+
+            <!-- 空白セル（3列目を空ける） -->
+            <div></div>
+
+            <!-- ========== 7行目 ========== -->
+            <!-- 料金総額 -->
+            <div class="customer-form-field">
+                <label>料金総額</label>
+                <input type="text" id="total_amount" name="total_amount" class="customer-field-input" readonly value="0円">
             </div>
 
             <!-- PT関連（2-3列、2列分） -->
@@ -313,18 +329,11 @@
                 </div>
             </div>
 
-            <!-- ========== 7行目 ========== -->
-            <!-- 料金総額 -->
-            <div class="form-group">
-                <label>料金総額</label>
-                <input type="text" id="total_amount" name="total_amount" class="form-input" readonly value="0円">
-            </div>
-
             <!-- ========== 8行目: コメント（列1-3全幅） ========== -->
             <div class="form-full-width">
-                <div class="form-group">
+                <div class="customer-form-field">
                     <label>コメント</label>
-                    <textarea id="comment" name="comment" class="form-textarea" rows="3" placeholder="予約に関するコメントを入力"></textarea>
+                    <textarea id="comment" name="comment" class="customer-field-textarea" rows="3" placeholder="予約に関するコメントを入力"></textarea>
                 </div>
             </div>
 
@@ -337,15 +346,36 @@
     </div>
 </div>
 
+<!-- 顧客評価モーダル -->
+<div class="rating-modal" id="ratingModal" style="display: none;">
+    <div class="rating-modal-overlay" onclick="closeRatingModal()"></div>
+    <div class="rating-modal-content">
+        <div class="rating-modal-header">
+            <h2>みんなの評価</h2>
+            <button class="rating-modal-close" onclick="closeRatingModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="rating-modal-body" id="ratingModalBody">
+            <!-- JavaScriptで動的に生成 -->
+        </div>
+        <div class="rating-modal-footer">
+            <button class="rating-modal-close-btn" onclick="closeRatingModal()">閉じる</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // 顧客の現在のPTを初期値として設定
 // ログイン中のスタッフIDと顧客情報を設定（DOMContentLoaded前に設定）
 currentCustomerPT = {{ customer.get('current_points', 0) or 0 }};
 window.currentStaffId = {{ session.get('user_id', 'null') }};
 window.currentCustomerMemberType = '{{ customer.get('member_type', '通常会員') }}';
+window.currentCustomerId = {{ customer.get('customer_id', 'null') }};
 
 window.addEventListener('DOMContentLoaded', function() {
     calculatePT(); // PT表示を初期化
+    loadCustomerRatingCount(); // 顧客評価件数を取得
 });
 </script>
 <script src="{{ url_for('static', filename='js/reservation.js') }}"></script>

@@ -636,6 +636,18 @@ def get_cast_ng_age_patterns(db, cast_id, store_id):
     """, (cast_id, store_id))
     return cursor.fetchall()
 
+def get_cast_ng_extensions(db, cast_id, store_id):
+    """キャストのNG延長一覧を取得（store_idでフィルタ）"""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT e.extension_id, e.extension_name
+        FROM cast_ng_extensions ng
+        JOIN extensions e ON ng.extension_id = e.extension_id AND ng.store_id = e.store_id
+        WHERE ng.cast_id = %s AND ng.store_id = %s
+        ORDER BY e.sort_order, e.extension_name
+    """, (cast_id, store_id))
+    return cursor.fetchall()
+
 def update_cast_ng_items(db, cast_id, ng_type, item_ids, store_id):
     """キャストのNG項目を一括更新（store_idでフィルタ）"""
     try:
@@ -645,7 +657,8 @@ def update_cast_ng_items(db, cast_id, ng_type, item_ids, store_id):
             'hotels': ('cast_ng_hotels', 'hotel_id'),
             'courses': ('cast_ng_courses', 'course_id'),
             'options': ('cast_ng_options', 'option_id'),
-            'areas': ('cast_ng_areas', 'area_id')
+            'areas': ('cast_ng_areas', 'area_id'),
+            'extensions': ('cast_ng_extensions', 'extension_id')
         }
 
         if ng_type not in table_map:

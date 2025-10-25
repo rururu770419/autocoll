@@ -13,25 +13,207 @@ let extensionsData = [];
 let optionsData = [];
 let discountsData = [];
 let hotelsData = [];
+let areasData = []; // エリア一覧データ（フィルタリング用）
+let allHotelsData = []; // 全ホテルデータ（バックアップ用）
 
 // カード手数料率（デフォルト5%）
 let cardFeeRate = 5;
 
+// 預かり金額の登録状態（登録済みの場合は変更不可）
+let isAmountReceivedRegistered = false;
+
+// NG項目のID（グローバル変数）
+let ngCourseIds = [];
+let ngHotelIds = [];
+let ngOptionIds = [];
+let ngExtensionIds = [];
+
 // ページ読み込み時の初期化
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('=== DOMContentLoaded 開始 ===');
     console.log('予約データ:', window.reservationData);
 
-    loadMasterData();
-    loadCardFeeRate();
-    initializeCustomSelect();
-    initializeDateTimeSelects();
-    // 既存データをロード（マスタデータ読み込み後、十分な時間を確保）
-    setTimeout(() => {
-        console.log('=== loadExistingReservationData 実行 ===');
+    // お預かり金額が確定済みの場合、フォームを無効化
+    if (window.reservationData && window.reservationData.amount_received && window.reservationData.amount_received > 0) {
+        console.log('お預かり金額確定済み - フォーム編集を無効化');
+        disableFormEditing();
+    }
+
+    // ローディング表示
+    showLoading();
+
+    try {
+        // 全てのデータを並列で取得
+        await loadAllDataParallel();
+
+        // カスタムセレクトとタイムセレクトを初期化
+        initializeCustomSelect();
+        initializeDateTimeSelects();
+
+        // 既存データをロード
         loadExistingReservationData();
-    }, 1500);
+
+        // 既存データロード後にNG項目をハイライト
+        await highlightNgItems();
+
+        // ローディングを非表示にしてコンテンツを表示
+        hideLoading();
+
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+        alert('データの読み込みに失敗しました。ページを再読み込みしてください。');
+        hideLoading();
+    }
 });
+
+/**
+ * ローディング表示
+ */
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+    if (overlay) overlay.classList.remove('hidden');
+    if (mainContent) {
+        mainContent.style.opacity = '0';
+        mainContent.style.pointerEvents = 'none';
+    }
+}
+
+/**
+ * ローディング非表示
+ */
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+
+    if (mainContent) {
+        // フェードイン効果
+        mainContent.style.transition = 'opacity 0.3s ease';
+        mainContent.style.opacity = '1';
+        mainContent.style.pointerEvents = 'auto';
+    }
+}
+
+/**
+ * 全てのマスタデータを並列で取得
+ */
+async function loadAllDataParallel() {
+    const store = getStoreFromUrl();
+
+    // すべてのfetchを並列実行（一部が失敗しても続行）
+    const results = await Promise.allSettled([
+        fetch(`/${store}/casts/api`).then(r => r.json()),
+        fetch(`/${store}/courses/api`).then(r => r.json()),
+        fetch(`/${store}/nomination-types/api`).then(r => r.json()),
+        fetch(`/${store}/extensions/api`).then(r => r.json()),
+        fetch(`/${store}/options/api`).then(r => r.json()),
+        fetch(`/${store}/discount_management/api/list`).then(r => r.json()),
+        fetch(`/${store}/reservation-settings/cancellation_reasons`).then(r => r.json()),
+        fetch(`/${store}/settings/reservation_methods`).then(r => r.json()),
+        fetch(`/${store}/reservation-settings/meeting_places`).then(r => r.json()),
+        fetch(`/${store}/hotel-management/hotels`).then(r => r.json()),
+        fetch(`/${store}/hotel-management/areas`).then(r => r.json()),
+        fetch(`/${store}/staff/api`).then(r => r.json()),
+        fetch(`/${store}/reservation-settings/card_fee_rate`).then(r => r.json()).catch(() => ({ success: true, rate: 5 }))
+    ]);
+
+    // 結果を展開
+    const castsResponse = results[0].status === 'fulfilled' ? results[0].value : [];
+    const coursesResponse = results[1].status === 'fulfilled' ? results[1].value : [];
+    const nominationsResponse = results[2].status === 'fulfilled' ? results[2].value : [];
+    const extensionsResponse = results[3].status === 'fulfilled' ? results[3].value : [];
+    const optionsResponse = results[4].status === 'fulfilled' ? results[4].value : [];
+    const discountsResponse = results[5].status === 'fulfilled' ? results[5].value : { success: false };
+    const cancellationResponse = results[6].status === 'fulfilled' ? results[6].value : { success: false };
+    const methodsResponse = results[7].status === 'fulfilled' ? results[7].value : [];
+    const meetingPlacesResponse = results[8].status === 'fulfilled' ? results[8].value : { success: false };
+    const hotelsResponse = results[9].status === 'fulfilled' ? results[9].value : { success: false };
+    const areasResponse = results[10].status === 'fulfilled' ? results[10].value : { success: false };
+    const staffResponse = results[11].status === 'fulfilled' ? results[11].value : [];
+    const cardFeeResponse = results[12].status === 'fulfilled' ? results[12].value : { success: true, rate: 5 };
+
+    // データを保存
+    castsData = castsResponse;
+    coursesData = coursesResponse;
+    nominationsData = nominationsResponse;
+    extensionsData = extensionsResponse;
+    optionsData = optionsResponse;
+
+    // 割引データ
+    if (discountsResponse.success && discountsResponse.discounts) {
+        discountsData = discountsResponse.discounts;
+    }
+
+    // ホテルデータ
+    if (hotelsResponse.success && hotelsResponse.data) {
+        hotelsData = hotelsResponse.data;
+        allHotelsData = hotelsResponse.data;
+    }
+
+    // エリアデータ
+    if (areasResponse.success && areasResponse.data) {
+        areasData = areasResponse.data;
+    }
+
+    // カード手数料
+    if (cardFeeResponse.success) {
+        cardFeeRate = cardFeeResponse.rate || 5;
+    }
+
+    // 一括でDOMを更新
+    populateSelect('cast_id', castsData, 'cast_id', 'name');
+    populateSelect('course_id', coursesData, 'course_id', 'course_name');
+    populateSelect('nomination_type', nominationsData, 'nomination_type_id', 'type_name');
+    populateSelect('extension', extensionsData, 'extension_id', 'extension_name');
+    populateOptionsCheckboxes(optionsData);
+    populateDiscountsCheckboxes(discountsData);
+
+    if (cancellationResponse.success && cancellationResponse.data) {
+        populateSelect('cancellation_reason', cancellationResponse.data, 'reason_id', 'reason_name');
+    }
+
+    populateSelect('reservation_method', methodsResponse, 'method_id', 'method_name');
+
+    if (meetingPlacesResponse.success && meetingPlacesResponse.data) {
+        populateSelect('meeting_place', meetingPlacesResponse.data, 'place_id', 'place_name');
+    }
+
+    populateSelect('hotel_id', hotelsData, 'hotel_id', 'hotel_name');
+    populateTransportationFees(areasData);
+    populateSelect('staff_id', staffResponse, 'id', 'name');
+
+    // ログイン中のスタッフを自動選択
+    if (window.currentStaffId) {
+        const staffSelect = document.getElementById('staff_id');
+        staffSelect.value = window.currentStaffId;
+    }
+
+    // イベントリスナーを追加
+    document.getElementById('cast_id').addEventListener('change', function() {
+        updateCourseColors();
+        highlightNgItems();
+    });
+    document.getElementById('hotel_id').addEventListener('change', updateTransportationFeeFromHotel);
+    document.getElementById('transportation_fee').addEventListener('change', filterHotelsByArea);
+}
+
+/**
+ * 交通費セレクトにエリアを追加（ヘルパー関数）
+ */
+function populateTransportationFees(areas) {
+    const select = document.getElementById('transportation_fee');
+    areas.forEach(area => {
+        const option = document.createElement('option');
+        option.value = area.area_id;
+        option.setAttribute('data-transportation-fee', area.transportation_fee);
+        option.textContent = `${area.area_name} - ¥${area.transportation_fee.toLocaleString()}`;
+        select.appendChild(option);
+    });
+}
 
 // カスタムセレクトボックスの初期化
 function initializeCustomSelect() {
@@ -111,154 +293,7 @@ function updateSelectDisplay() {
     }
 }
 
-// マスタデータの読み込み
-function loadMasterData() {
-    const store = getStoreFromUrl();
-
-    // キャスト一覧
-    fetch(`/${store}/casts/api`)
-        .then(response => response.json())
-        .then(data => {
-            castsData = data;
-            populateSelect('cast_id', data, 'cast_id', 'name');
-            // キャスト選択時のイベントリスナーを追加
-            document.getElementById('cast_id').addEventListener('change', updateCourseColors);
-        })
-        .catch(error => console.error('Error loading casts:', error));
-
-    // コース一覧
-    fetch(`/${store}/courses/api`)
-        .then(response => response.json())
-        .then(data => {
-            coursesData = data;
-            populateSelect('course_id', data, 'course_id', 'course_name');
-        })
-        .catch(error => console.error('Error loading courses:', error));
-
-    // 指名種類
-    fetch(`/${store}/nomination-types/api`)
-        .then(response => response.json())
-        .then(data => {
-            nominationsData = data;
-            populateSelect('nomination_type', data, 'nomination_type_id', 'type_name');
-        })
-        .catch(error => console.error('Error loading nomination types:', error));
-
-    // 延長
-    fetch(`/${store}/extensions/api`)
-        .then(response => response.json())
-        .then(data => {
-            extensionsData = data;
-            populateSelect('extension', data, 'extension_id', 'extension_name');
-        })
-        .catch(error => console.error('Error loading extensions:', error));
-
-    // オプション（チェックボックス）
-    fetch(`/${store}/options/api`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('オプションデータ取得成功:', data);
-            console.log('オプション件数:', data.length);
-            optionsData = data;
-            populateOptionsCheckboxes(data);
-        })
-        .catch(error => console.error('Error loading options:', error));
-
-    // 割引
-    fetch(`/${store}/discount_management/api/list`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.discounts) {
-                discountsData = data.discounts;
-                populateDiscountsCheckboxes(data.discounts);
-            }
-        })
-        .catch(error => console.error('Error loading discounts:', error));
-
-    // キャンセル理由
-    fetch(`/${store}/reservation-settings/cancellation_reasons`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                populateSelect('cancellation_reason', data.data, 'reason_id', 'reason_name');
-            }
-        })
-        .catch(error => console.error('Error loading cancellation reasons:', error));
-
-    // 予約方法
-    fetch(`/${store}/settings/reservation_methods`)
-        .then(response => response.json())
-        .then(data => populateSelect('reservation_method', data, 'method_id', 'method_name'))
-        .catch(error => console.error('Error loading reservation methods:', error));
-
-    // 支払い方法はHTMLに直接記載されているため、JavaScriptでの追加は不要
-
-    // 待ち合わせ場所
-    fetch(`/${store}/reservation-settings/meeting_places`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                populateSelect('meeting_place', data.data, 'place_id', 'place_name');
-            }
-        })
-        .catch(error => console.error('Error loading meeting places:', error));
-
-    // ホテル
-    fetch(`/${store}/hotel-management/hotels`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                hotelsData = data.data;
-                populateSelect('hotel_id', data.data, 'hotel_id', 'hotel_name');
-                // ホテル選択時に交通費を自動設定
-                document.getElementById('hotel_id').addEventListener('change', updateTransportationFeeFromHotel);
-            }
-        })
-        .catch(error => console.error('Error loading hotels:', error));
-
-    // 交通費（エリア）
-    fetch(`/${store}/hotel-management/areas`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data) {
-                const select = document.getElementById('transportation_fee');
-                data.data.forEach(area => {
-                    const option = document.createElement('option');
-                    option.value = area.transportation_fee;
-                    option.textContent = `${area.area_name} - ¥${area.transportation_fee.toLocaleString()}`;
-                    select.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error loading areas:', error));
-
-    // スタッフ一覧
-    fetch(`/${store}/staff/api`)
-        .then(response => response.json())
-        .then(data => {
-            populateSelect('staff_id', data, 'id', 'name');
-
-            // ログイン中のスタッフを自動選択
-            if (window.currentStaffId) {
-                const staffSelect = document.getElementById('staff_id');
-                staffSelect.value = window.currentStaffId;
-            }
-        })
-        .catch(error => console.error('Error loading staff:', error));
-}
-
-// カード手数料率の読み込み
-function loadCardFeeRate() {
-    const store = getStoreFromUrl();
-    fetch(`/${store}/reservation-settings/card_fee_rate`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                cardFeeRate = Math.floor(data.rate) || 5;
-            }
-        })
-        .catch(error => console.error('Error loading card fee rate:', error));
-}
+// 旧loadMasterData()とloadCardFeeRate()は削除され、loadAllDataParallel()に統合されました
 
 // ログイン中のスタッフを取得してデフォルト選択
 // ※ この関数は使用されていません（window.currentStaffIdを使用）
@@ -268,8 +303,16 @@ function loadCurrentStaff() {
 }
 
 // SELECTに選択肢を追加
-function populateSelect(selectId, data, valueKey, textKey) {
+function populateSelect(selectId, data, valueKey, textKey, clearFirst = false) {
     const select = document.getElementById(selectId);
+
+    // clearFirstがtrueの場合、既存の選択肢をクリア（最初の選択肢は残す）
+    if (clearFirst) {
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+    }
+
     data.forEach(item => {
         const option = document.createElement('option');
         option.value = item[valueKey];
@@ -424,10 +467,18 @@ function updateCourseColors() {
     Array.from(courseSelect.options).forEach(option => {
         if (option.value) {
             const courseId = parseInt(option.value);
+
+            // NGコースの場合は濃い赤を維持（上書きしない）
+            if (ngCourseIds.includes(courseId)) {
+                option.style.backgroundColor = '#ff9999';
+                option.style.color = '#000';
+                return;
+            }
+
             const course = coursesData.find(c => c.course_id === courseId);
 
             if (course && course.category_id !== castCategoryId) {
-                // カテゴリが一致しない場合は赤背景
+                // カテゴリが一致しない場合は薄い赤背景
                 option.style.backgroundColor = '#ffcccc';
                 option.style.color = '#000';
             } else {
@@ -437,6 +488,245 @@ function updateCourseColors() {
             }
         }
     });
+}
+
+/**
+ * キャスト選択時にNG項目を赤背景でハイライト
+ */
+async function highlightNgItems() {
+    const castSelect = document.getElementById('cast_id');
+
+    console.log('highlightNgItems called, cast_id:', castSelect?.value);
+
+    if (!castSelect || !castSelect.value) {
+        // キャストが選択されていない場合は全てクリア
+        console.log('キャストが選択されていないため、NGハイライトをクリア');
+        clearNgHighlights();
+        return;
+    }
+
+    const selectedCastId = parseInt(castSelect.value);
+    const store = getStoreFromUrl();
+
+    console.log('NG項目取得開始 - cast_id:', selectedCastId);
+
+    try {
+        // キャストのNG項目を取得
+        const response = await fetch(`/${store}/casts/${selectedCastId}/ng-items`);
+        const ngData = await response.json();
+
+        console.log('NG項目データ取得:', ngData);
+
+        // グローバル変数に保存
+        ngCourseIds = ngData.ng_course_ids || [];
+        ngHotelIds = ngData.ng_hotel_ids || [];
+        ngOptionIds = ngData.ng_option_ids || [];
+        ngExtensionIds = ngData.ng_extension_ids || [];
+
+        // NG項目をハイライト
+        highlightNgCourses(ngCourseIds);
+        highlightNgHotels(ngHotelIds);
+        highlightNgOptions(ngOptionIds);
+        highlightNgExtensions(ngExtensionIds);
+
+        console.log('NG項目ハイライト完了');
+
+    } catch (error) {
+        console.error('NG項目取得エラー:', error);
+    }
+}
+
+/**
+ * NGコースをハイライト
+ */
+function highlightNgCourses(ngCourseIds) {
+    console.log('highlightNgCourses - NG course IDs:', ngCourseIds);
+    const courseSelect = document.getElementById('course_id');
+    if (!courseSelect) {
+        console.log('course_id selectが見つかりません');
+        return;
+    }
+
+    let highlightCount = 0;
+    Array.from(courseSelect.options).forEach(option => {
+        if (option.value && ngCourseIds.includes(parseInt(option.value))) {
+            // NG項目は濃い赤でハイライト
+            option.style.backgroundColor = '#ff9999';
+            option.style.color = '#000';
+            highlightCount++;
+            console.log('NGコースハイライト:', option.value, option.textContent);
+        }
+    });
+    console.log(`${highlightCount}個のコースをハイライトしました`);
+}
+
+/**
+ * NGホテルをハイライト
+ */
+function highlightNgHotels(ngHotelIds) {
+    console.log('highlightNgHotels - NG hotel IDs:', ngHotelIds);
+    const hotelSelect = document.getElementById('hotel_id');
+    if (!hotelSelect) {
+        console.log('hotel_id selectが見つかりません');
+        return;
+    }
+
+    let highlightCount = 0;
+    Array.from(hotelSelect.options).forEach(option => {
+        if (option.value && ngHotelIds.includes(parseInt(option.value))) {
+            // NG項目は濃い赤でハイライト
+            option.style.backgroundColor = '#ff9999';
+            option.style.color = '#000';
+            highlightCount++;
+            console.log('NGホテルハイライト:', option.value, option.textContent);
+        }
+    });
+    console.log(`${highlightCount}個のホテルをハイライトしました`);
+}
+
+/**
+ * NGオプションをハイライト
+ */
+function highlightNgOptions(ngOptionIds) {
+    console.log('highlightNgOptions - NG option IDs:', ngOptionIds);
+    const optionsContainer = document.getElementById('options_container');
+    if (!optionsContainer) {
+        console.log('options_containerが見つかりません');
+        return;
+    }
+
+    let highlightCount = 0;
+    const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+    console.log('オプションチェックボックス数:', checkboxes.length);
+
+    checkboxes.forEach(checkbox => {
+        const optionId = parseInt(checkbox.value);
+        const label = checkbox.closest('label');
+
+        if (ngOptionIds.includes(optionId)) {
+            // NG項目は濃い赤でハイライト
+            label.style.backgroundColor = '#ff9999';
+            label.style.padding = '4px 8px';
+            label.style.borderRadius = '4px';
+
+            // !important を使って強制的にスタイルを適用
+            label.style.setProperty('background-color', '#ff9999', 'important');
+
+            highlightCount++;
+            console.log('NGオプションハイライト:', optionId, label.textContent.trim());
+        } else {
+            label.style.backgroundColor = '';
+            label.style.padding = '';
+            label.style.borderRadius = '';
+        }
+    });
+    console.log(`${highlightCount}個のオプションをハイライトしました`);
+}
+
+/**
+ * NG延長をハイライト
+ */
+function highlightNgExtensions(ngExtensionIds) {
+    console.log('highlightNgExtensions - NG extension IDs:', ngExtensionIds);
+    const extensionSelect = document.getElementById('extension');
+    if (!extensionSelect) {
+        console.log('extension selectが見つかりません');
+        return;
+    }
+
+    let highlightCount = 0;
+    Array.from(extensionSelect.options).forEach(option => {
+        if (option.value && ngExtensionIds.includes(parseInt(option.value))) {
+            // NG項目は濃い赤でハイライト
+            option.style.backgroundColor = '#ff9999';
+            option.style.color = '#000';
+            highlightCount++;
+            console.log('NG延長ハイライト:', option.value, option.textContent);
+        }
+    });
+    console.log(`${highlightCount}個の延長をハイライトしました`);
+}
+
+/**
+ * 全てのNGハイライトをクリア
+ */
+function clearNgHighlights() {
+    // コースのクリア
+    const courseSelect = document.getElementById('course_id');
+    if (courseSelect) {
+        Array.from(courseSelect.options).forEach(option => {
+            if (option.value) {
+                option.style.backgroundColor = '';
+                option.style.color = '';
+            }
+        });
+    }
+
+    // ホテルのクリア
+    const hotelSelect = document.getElementById('hotel_id');
+    if (hotelSelect) {
+        Array.from(hotelSelect.options).forEach(option => {
+            if (option.value) {
+                option.style.backgroundColor = '';
+                option.style.color = '';
+            }
+        });
+    }
+
+    // オプションのクリア
+    const optionsContainer = document.getElementById('options_container');
+    if (optionsContainer) {
+        const labels = optionsContainer.querySelectorAll('label');
+        labels.forEach(label => {
+            label.style.backgroundColor = '';
+            label.style.padding = '';
+            label.style.borderRadius = '';
+        });
+    }
+
+    // 延長のクリア
+    const extensionSelect = document.getElementById('extension');
+    if (extensionSelect) {
+        Array.from(extensionSelect.options).forEach(option => {
+            if (option.value) {
+                option.style.backgroundColor = '';
+                option.style.color = '';
+            }
+        });
+    }
+}
+
+// 交通費（エリア）選択時にホテルをフィルタリング
+function filterHotelsByArea() {
+    const transportationFeeSelect = document.getElementById('transportation_fee');
+    const hotelSelect = document.getElementById('hotel_id');
+    const selectedAreaId = parseInt(transportationFeeSelect.value);
+
+    console.log('[DEBUG] 選択されたエリアID:', selectedAreaId);
+
+    // エリアが選択されていない場合（「なし」を選択）、全ホテルを表示
+    if (!selectedAreaId || selectedAreaId === 0) {
+        console.log('[DEBUG] エリア未選択 - 全ホテルを表示');
+        populateSelect('hotel_id', allHotelsData, 'hotel_id', 'hotel_name', true);
+        // NGホテルを再ハイライト
+        highlightNgHotels(ngHotelIds);
+        calculateTotal();
+        return;
+    }
+
+    // 選択されたエリアに属するホテルだけをフィルタリング
+    const filteredHotels = allHotelsData.filter(hotel => hotel.area_id === selectedAreaId);
+    console.log('[DEBUG] フィルタリング後のホテル数:', filteredHotels.length);
+    console.log('[DEBUG] フィルタリング後のホテル:', filteredHotels);
+
+    // ホテルセレクトボックスを更新（既存の選択肢をクリア）
+    populateSelect('hotel_id', filteredHotels, 'hotel_id', 'hotel_name', true);
+
+    // NGホテルを再ハイライト
+    highlightNgHotels(ngHotelIds);
+
+    // 料金を再計算
+    calculateTotal();
 }
 
 // ホテル選択時に交通費を自動設定
@@ -453,7 +743,7 @@ function updateTransportationFeeFromHotel() {
 
     // 選択されたホテルのデータを取得
     const selectedHotelId = parseInt(hotelSelect.value);
-    const selectedHotel = hotelsData.find(h => h.hotel_id === selectedHotelId);
+    const selectedHotel = allHotelsData.find(h => h.hotel_id === selectedHotelId);
 
     if (!selectedHotel) {
         transportationFeeSelect.value = '0';
@@ -461,9 +751,13 @@ function updateTransportationFeeFromHotel() {
         return;
     }
 
-    // ホテルの交通費を取得して設定
-    const transportationFee = selectedHotel.transportation_fee || 0;
-    transportationFeeSelect.value = transportationFee.toString();
+    // ホテルのエリアIDを取得して、対応するエリアを設定
+    const areaId = selectedHotel.area_id;
+    if (areaId) {
+        transportationFeeSelect.value = areaId.toString();
+    } else {
+        transportationFeeSelect.value = '0';
+    }
 
     // 料金を再計算
     calculateTotal();
@@ -514,7 +808,9 @@ function calculateTotal() {
     }
 
     // 交通費
-    const transportationFee = parseInt(document.getElementById('transportation_fee').value) || 0;
+    const transportationFeeSelect = document.getElementById('transportation_fee');
+    const selectedOption = transportationFeeSelect.options[transportationFeeSelect.selectedIndex];
+    const transportationFee = selectedOption ? parseInt(selectedOption.getAttribute('data-transportation-fee')) || 0 : 0;
     total += transportationFee;
 
     // 割引を適用（複数選択可能）
@@ -532,6 +828,10 @@ function calculateTotal() {
             }
         }
     });
+
+    // 調整金を加算
+    const adjustmentAmount = parseInt(document.getElementById('adjustment_amount').value) || 0;
+    total += adjustmentAmount;
 
     // カード手数料を適用（支払い方法がカードの場合）
     const paymentMethod = document.getElementById('payment_method').value;
@@ -617,6 +917,12 @@ document.getElementById('reservation_edit_form').addEventListener('submit', func
 
     const store = getStoreFromUrl();
     const formData = new FormData(this);
+
+    // 交通費をエリアIDから金額に変換
+    const transportationFeeSelect = document.getElementById('transportation_fee');
+    const selectedOption = transportationFeeSelect.options[transportationFeeSelect.selectedIndex];
+    const transportationFeeAmount = selectedOption ? parseInt(selectedOption.getAttribute('data-transportation-fee')) || 0 : 0;
+    formData.set('transportation_fee', transportationFeeAmount);
 
     fetch(`/${store}/reservation/update`, {
         method: 'POST',
@@ -879,9 +1185,16 @@ function loadExistingReservationData() {
         document.getElementById('meeting_place').value = reservation.meeting_place_id;
     }
 
-    // 交通費
+    // 交通費（エリアIDを探して設定）
     if (reservation.transportation_fee) {
-        document.getElementById('transportation_fee').value = reservation.transportation_fee;
+        const transportationFeeSelect = document.getElementById('transportation_fee');
+        // 交通費に対応するエリアを探す
+        const area = areasData.find(a => a.transportation_fee === reservation.transportation_fee);
+        if (area) {
+            transportationFeeSelect.value = area.area_id;
+            // ホテルをフィルタリング
+            filterHotelsByArea();
+        }
     }
 
     // ホテル
@@ -960,11 +1273,18 @@ function loadExistingReservationData() {
         document.getElementById('comment').value = reservation.customer_comment;
     }
 
+    // 調整金
+    if (reservation.adjustment_amount) {
+        document.getElementById('adjustment_amount').value = reservation.adjustment_amount;
+    }
+
     // 預かり金額
     if (reservation.amount_received && reservation.amount_received > 0) {
         const amountReceivedInput = document.getElementById('amount_received');
         if (amountReceivedInput) {
             amountReceivedInput.value = '¥' + reservation.amount_received.toLocaleString();
+            // 登録済みフラグを設定
+            isAmountReceivedRegistered = true;
         }
     }
 
@@ -990,6 +1310,12 @@ function loadExistingReservationData() {
 // ========================================
 
 function deleteReservation() {
+    // お預かり金額確定済みの場合は削除不可
+    if (window.reservationData && window.reservationData.amount_received && window.reservationData.amount_received > 0) {
+        alert('キャストによるお預かり金額確定済みなので削除できません。');
+        return;
+    }
+
     if (!confirm('この予約を削除しますか？この操作は取り消せません。')) {
         return;
     }
@@ -1030,16 +1356,24 @@ function deleteReservation() {
  */
 function handlePaymentMethodChange() {
     const paymentMethod = document.getElementById('payment_method').value;
-    const changeArea = document.getElementById('change_input_area');
+    const changeInputArea = document.getElementById('change_input_area');
+    const changeAmountArea = document.getElementById('change_amount_area');
+    const amountReceivedInput = document.getElementById('amount_received');
 
     // お釣り機能がONかつ現金払いの場合のみ表示
     if (window.useChangeFeature && paymentMethod === 'cash') {
-        changeArea.style.display = 'flex';
+        changeInputArea.style.display = 'flex';
+        changeAmountArea.style.display = 'flex';
     } else {
-        changeArea.style.display = 'none';
-        // 非表示の場合は値をクリア
-        document.getElementById('amount_received').value = '';
-        document.getElementById('change_amount').value = '0円';
+        changeInputArea.style.display = 'none';
+        changeAmountArea.style.display = 'none';
+
+        // 【重要】預かり金額が既に登録されている場合は値をクリアしない
+        if (!isAmountReceivedRegistered) {
+            // 登録されていない場合のみクリア
+            amountReceivedInput.value = '';
+            document.getElementById('change_amount').value = '0円';
+        }
     }
 
     // 料金総額も再計算
@@ -1072,6 +1406,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('reservation_edit_form');
     if (form) {
         form.addEventListener('submit', function(e) {
+            // お預かり金額確定済みの場合は送信不可
+            if (window.reservationData && window.reservationData.amount_received && window.reservationData.amount_received > 0) {
+                e.preventDefault();
+                alert('キャストによるお預かり金額確定済みなので編集できません。');
+                return false;
+            }
+
             if (!validateReservationForm()) {
                 e.preventDefault();
                 return false;
@@ -1079,3 +1420,163 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+/**
+ * フォーム編集を無効化（お預かり金額確定済みの場合）
+ */
+function disableFormEditing() {
+    const form = document.getElementById('reservation_edit_form');
+    if (!form) return;
+
+    // 全ての入力欄、セレクトボックス、テキストエリアを無効化
+    const inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
+    inputs.forEach(input => {
+        input.disabled = true;
+        input.style.backgroundColor = '#f5f5f5';
+        input.style.cursor = 'not-allowed';
+    });
+
+    // カスタムセレクトボックスも無効化
+    const customSelects = form.querySelectorAll('.select-display');
+    customSelects.forEach(select => {
+        select.style.pointerEvents = 'none';
+        select.style.backgroundColor = '#f5f5f5';
+        select.style.opacity = '0.6';
+    });
+
+    console.log('フォーム編集を無効化しました');
+}
+
+// ========================================
+// 顧客評価モーダル
+// ========================================
+
+/**
+ * 顧客評価件数を取得してボタンに表示
+ */
+async function loadCustomerRatingCount() {
+    if (!window.currentCustomerId) {
+        return;
+    }
+
+    try {
+        const store = getStoreFromUrl();
+        const response = await fetch(`/${store}/reservation/customer_rating/${window.currentCustomerId}`);
+        const data = await response.json();
+
+        if (data.success && data.rating_count !== undefined) {
+            const btn = document.getElementById('customerRatingBtn');
+            if (btn) {
+                btn.textContent = `顧客評価：${data.rating_count}件`;
+            }
+        }
+    } catch (error) {
+        console.error('評価件数取得エラー:', error);
+    }
+}
+
+/**
+ * 顧客評価モーダルを表示
+ */
+async function showCustomerRatingModal(customerId) {
+    const modal = document.getElementById('ratingModal');
+    const modalBody = document.getElementById('ratingModalBody');
+
+    if (!customerId) {
+        alert('顧客IDが指定されていません');
+        return;
+    }
+
+    // ローディング表示
+    modalBody.innerHTML = '<div class="rating-empty">読み込み中...</div>';
+    modal.style.display = 'flex';
+
+    try {
+        const store = getStoreFromUrl();
+        const response = await fetch(`/${store}/reservation/customer_rating/${customerId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            modalBody.innerHTML = '<div class="rating-empty">評価データの取得に失敗しました</div>';
+            return;
+        }
+
+        // モーダルの内容を生成
+        let html = '';
+
+        // 評価項目を表示
+        const ratingItems = data.rating_items.filter(item => item.item_type !== 'textarea');
+
+        if (ratingItems.length === 0 && data.everyone_comments.length === 0) {
+            html = '<div class="rating-empty">まだ評価がありません</div>';
+        } else {
+            // ラジオ/セレクト項目の評価を表示
+            ratingItems.forEach(item => {
+                const itemId = String(item.item_id);
+                const ratings = data.everyone_ratings[itemId] || [];
+
+                html += `<div class="rating-item">`;
+                html += `<span class="rating-item-name">${escapeHtml(item.item_name)}</span>`;
+
+                if (ratings.length > 0) {
+                    ratings.forEach(rating => {
+                        // ratingが正しい形式か確認
+                        if (rating && typeof rating === 'object' && rating.value !== undefined && rating.count !== undefined) {
+                            html += `<div class="rating-option">`;
+                            html += `<span class="rating-option-value">${escapeHtml(String(rating.value))}</span>`;
+                            html += `<span class="rating-option-count">${rating.count}票</span>`;
+                            html += `</div>`;
+                        }
+                    });
+                } else {
+                    html += '<div class="rating-empty" style="padding: 10px;">評価なし</div>';
+                }
+
+                html += `</div>`;
+            });
+
+            // コメント（備考欄）を表示
+            if (data.everyone_comments.length > 0) {
+                html += `<div class="rating-item">`;
+                html += `<span class="rating-item-name">備考欄</span>`;
+                html += `<div class="rating-comments">`;
+
+                data.everyone_comments.forEach(comment => {
+                    html += `<div class="rating-comment">`;
+                    html += `<div class="rating-comment-text">${escapeHtml(comment.rating_value)}</div>`;
+                    html += `<div class="rating-comment-meta">`;
+                    html += `<span class="rating-comment-cast">${escapeHtml(comment.cast_name)}</span>`;
+                    html += `<span class="rating-comment-date">${comment.created_at}</span>`;
+                    html += `</div>`;
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+                html += `</div>`;
+            }
+        }
+
+        modalBody.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error:', error);
+        modalBody.innerHTML = '<div class="rating-empty">エラーが発生しました</div>';
+    }
+}
+
+/**
+ * 顧客評価モーダルを閉じる
+ */
+function closeRatingModal() {
+    const modal = document.getElementById('ratingModal');
+    modal.style.display = 'none';
+}
+
+/**
+ * HTMLエスケープ
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}

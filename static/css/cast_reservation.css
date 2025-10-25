@@ -94,7 +94,7 @@
     transform: scale(0.98);
 }
 
-/* 詳細リンク（右上） */
+/* 削除：詳細リンク（アコーディオン化により新しいスタイルに変更）
 .cr-detail-link-top {
     position: absolute;
     top: 14px;
@@ -113,6 +113,7 @@
 .cr-detail-link-top:hover {
     background: #ff7799;
 }
+*/
 
 /* 時間表示 */
 .cr-time {
@@ -323,12 +324,13 @@
 }
 
 .cr-modal-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
 }
 
 .cr-modal-content {
@@ -345,6 +347,7 @@
     overflow-y: auto;
     box-shadow: 0 8px 30px rgba(255, 153, 187, 0.3);
     animation: slideUp 0.3s ease;
+    z-index: 2001;
 }
 
 @keyframes slideUp {
@@ -495,37 +498,28 @@
     color: #999;
 }
 
-/* ==== 予約詳細モーダル ==== */
+/* ==== 削除：予約詳細モーダル（アコーディオン化により不要） ==== */
 
-.cr-detail-modal-content {
-    position: relative;
-    background: white;
-    border-radius: 20px;
-    max-width: 500px;
-    width: 90%;
-    max-height: calc(100vh - 80px);
+/* 削除：予約詳細モーダルはflexboxレイアウトを使用
+#detailModal .cr-modal-content {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 30px rgba(255, 153, 187, 0.3);
-    animation: slideUp 0.3s ease;
+    overflow: hidden;
+    padding: 0;
+    max-width: 600px;
+    max-height: 85vh;
 }
+*/
 
-.cr-detail-header {
+/* 削除：ヘッダーを固定
+#detailModal .cr-modal-header {
     flex-shrink: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 20px 16px 20px;
-    margin-bottom: 0;
-    border-bottom: 2px solid #ffd6e0;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
 }
+*/
 
-.cr-detail-header h2 {
-    font-weight: 700;
-    color: #333;
-    margin: 0;
-}
-
+/* 削除：予約詳細モーダルの閉じるアイコン（不要）
 .cr-modal-close-icon {
     width: 32px;
     height: 32px;
@@ -545,35 +539,42 @@
 .cr-modal-close-icon:hover {
     background: #e0e0e0;
 }
+*/
 
+/* 削除：予約詳細モーダルのボディ（アコーディオン化により不要）
 .cr-detail-body {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding: 16px 20px;
+    padding: 20px;
     min-height: 0;
 }
+*/
 
-.cr-detail-modal-content .cr-modal-close {
+/* 削除：予約詳細モーダルの閉じるボタン（フッター）
+#detailModal .cr-modal-close {
     flex-shrink: 0;
-    width: calc(100% - 40px);
-    margin: 0 20px 20px 20px;
-    padding: 14px;
+    width: 100%;
+    padding: 16px 20px;
+    margin: 0;
+    background: white;
     border: none;
-    border-radius: 12px;
-    background: #f5f5f5;
-    color: #666;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 0 0 16px 16px;
+    cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    cursor: pointer;
+    color: #666;
     transition: all 0.3s;
 }
 
-.cr-detail-modal-content .cr-modal-close:hover {
-    background: #e0e0e0;
+#detailModal .cr-modal-close:hover {
+    background: #f5f5f5;
 }
+*/
 
+/* 削除：予約詳細モーダルのセクション関連スタイル（アコーディオン化により不要）
 .cr-detail-section {
     margin-bottom: 16px;
     padding-bottom: 16px;
@@ -657,27 +658,27 @@
     padding: 40px 20px;
     color: #999;
 }
+*/
 
-/* スマホ用に詳細モーダルを最適化 */
-@media (max-width: 500px) {
-    .cr-detail-modal-content {
-        width: 95%;
-        max-height: calc(100vh - 60px);
+/* 削除：スマホ用の詳細モーダル最適化（アコーディオン化により不要）
+@media (max-width: 768px) {
+    #detailModal .cr-modal-content {
+        max-height: 90vh;
     }
 
-    .cr-detail-header {
-        padding: 16px 16px 12px 16px;
+    #detailModal .cr-modal-header {
+        padding: 16px;
     }
 
     .cr-detail-body {
-        padding: 12px 16px;
+        padding: 16px;
     }
 
-    .cr-detail-modal-content .cr-modal-close {
-        width: calc(100% - 32px);
-        margin: 0 16px 16px 16px;
+    #detailModal .cr-modal-close {
+        padding: 14px 16px;
     }
 }
+*/
 
 /* ==== お釣り入力欄 ==== */
 
@@ -706,7 +707,7 @@
 }
 
 .cr-amount-received-input {
-    width: 120px;
+    width: 80px;
     padding: 6px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -758,6 +759,17 @@
     opacity: 0.6;
 }
 
+/* 編集モードのボタン（オレンジ色） */
+.cr-save-amount-btn.cr-edit-mode {
+    background: #ff9800;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.cr-save-amount-btn.cr-edit-mode:hover {
+    background: #f57c00;
+}
+
 .cr-amount-received-input:disabled {
     background: #f5f5f5;
     cursor: not-allowed;
@@ -766,11 +778,6 @@
 /* ==== レスポンシブ（スマホ） ==== */
 
 @media (max-width: 768px) {
-    /* 予約一覧の下部余白（スマホのみ） */
-    .cr-reservation-list {
-        padding-bottom: 150px;
-    }
-
     .cr-modal-content {
         width: 95% !important;
         max-width: 95%;
@@ -831,19 +838,165 @@
         font-size: 0.95rem;
         margin-top: 12px;
     }
+
 }
 
-/* ==== レスポンシブ（タブレット以上） ==== */
+/* ========================================
+   予約一覧専用コンテナ
+   ======================================== */
 
-@media (min-width: 768px) {
-    .cr-date-nav {
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
+   .cr-reservation-container {
+    padding-bottom: 0;
+}
+
+/* スマホのみ */
+@media (max-width: 768px) {
+    .cr-reservation-container {
+        padding-bottom: 200px;
+    }
+}
+
+/* ========================================
+   予約詳細アコーディオン（モーダルデザインを適用）
+   ======================================== */
+
+/* 詳細リンク（右上） */
+.cr-detail-link-top {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    color: #00BCD4;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: #e0f7fa;
+    border-radius: 20px;
+    transition: all 0.3s;
+    z-index: 1;
+}
+
+.cr-detail-link-top:hover {
+    background: #00BCD4;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* 詳細エリアコンテナ */
+.cr-accordion-detail {
+    margin-top: 16px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 詳細コンテンツ */
+.cr-accordion-content {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 0 0 30px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* セクション */
+.cr-accordion-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed #ffd6e0;
+}
+
+.cr-accordion-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* セクションタイトル */
+.cr-accordion-section h3 {
+    font-weight: 700;
+    color: #ff99bb;
+    margin: 0 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #ffe0ec;
+    font-size: 0.95rem;
+}
+
+/* アイテム（行） */
+.cr-accordion-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    gap: 8px;
+}
+
+/* オプション用の縦並びレイアウト */
+.cr-accordion-item-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+/* ラベルバッジ */
+.cr-accordion-label-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #00BCD4;
+    color: white;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* 値 */
+.cr-accordion-value {
+    color: #333;
+    word-break: break-word;
+    font-size: 0.9rem;
+}
+
+/* コメント */
+.cr-accordion-comment {
+    background: #fff5f8;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #333;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.cr-accordion-comment:last-child {
+    margin-bottom: 0;
+}
+
+/* スマホ */
+@media (max-width: 768px) {
+    .cr-accordion-content {
+        padding: 12px;
     }
 
-    .cr-reservation-list {
-        max-width: 600px;
-        margin: 0 auto;
+    .cr-accordion-section h3 {
+        font-size: 0.9rem;
+    }
+
+    .cr-accordion-label-badge {
+        font-size: 0.8rem;
+    }
+
+    .cr-accordion-value {
+        font-size: 0.95rem;
     }
 }

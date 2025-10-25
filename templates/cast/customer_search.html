@@ -71,41 +71,22 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <button class="ccs-filter-btn" id="filterBtn" onclick="openFilterModal()">
+        <button class="ccs-filter-btn" id="filterBtn" onclick="toggleFilter()">
             <i class="fas fa-sliders-h"></i>
         </button>
     </div>
 
-    <!-- 件数表示 -->
-    <div class="ccs-result-info">
-        接客履歴 <span id="totalCustomerCount">{{ total_count or 0 }}</span>件
-        <span class="ccs-result-note">※最終利用日時の新しい順</span>
-    </div>
+    <!-- フィルターアコーディオン -->
+    <div class="ccs-filter-area" id="filterArea" style="display: none;">
+        <div class="ccs-filter-content">
+            <h3 class="ccs-filter-area-title">
+                <i class="fas fa-filter"></i>
+                絞り込み
+            </h3>
 
-    <!-- 顧客カード一覧 -->
-    <div class="ccs-customer-list" id="customerList">
-        <!-- JavaScriptで動的に生成 -->
-    </div>
-
-    <!-- ページネーション -->
-    <div class="ccs-pagination" id="pagination">
-        <!-- JavaScriptで動的に生成 -->
-    </div>
-</div>
-
-<!-- フィルターモーダル -->
-<div class="ccs-modal" id="filterModal">
-    <div class="ccs-modal-overlay" onclick="closeFilterModal()"></div>
-    <div class="ccs-modal-content">
-        <div class="ccs-modal-header">
-            <h2>絞り込み</h2>
-            <button class="ccs-modal-close-icon" onclick="closeFilterModal()">×</button>
-        </div>
-
-        <div class="ccs-modal-body">
             <!-- 指名タイプ -->
             <div class="ccs-filter-section">
-                <h3 class="ccs-filter-title">指名タイプ</h3>
+                <h4 class="ccs-filter-title">指名タイプ</h4>
                 <div class="ccs-filter-options">
                     <label class="ccs-filter-option">
                         <input type="radio" name="nominationType" value="all" checked>
@@ -124,7 +105,7 @@
 
             <!-- 来店時期 -->
             <div class="ccs-filter-section">
-                <h3 class="ccs-filter-title">来店時期</h3>
+                <h4 class="ccs-filter-title">来店時期</h4>
                 <div class="ccs-filter-options">
                     <label class="ccs-filter-option">
                         <input type="radio" name="visitPeriod" value="all" checked>
@@ -144,16 +125,35 @@
                     </label>
                 </div>
             </div>
-        </div>
 
-        <div class="ccs-modal-footer">
-            <button class="ccs-modal-btn ccs-modal-btn-secondary" onclick="clearFilter()">
-                クリア
-            </button>
-            <button class="ccs-modal-btn ccs-modal-btn-primary" onclick="applyFilter()">
-                適用
-            </button>
+            <!-- ボタン -->
+            <div class="ccs-filter-buttons">
+                <button class="ccs-filter-clear-btn" onclick="clearFilter()">
+                    <i class="fas fa-undo"></i>
+                    クリア
+                </button>
+                <button class="ccs-filter-apply-btn" onclick="applyFilter()">
+                    <i class="fas fa-check"></i>
+                    適用
+                </button>
+            </div>
         </div>
+    </div>
+
+    <!-- 件数表示 -->
+    <div class="ccs-result-info">
+        接客履歴 <span id="totalCustomerCount">{{ total_count or 0 }}</span>件
+        <span class="ccs-result-note">※最終利用日時の新しい順</span>
+    </div>
+
+    <!-- 顧客カード一覧 -->
+    <div class="ccs-customer-list" id="customerList">
+        <!-- JavaScriptで動的に生成 -->
+    </div>
+
+    <!-- ページネーション -->
+    <div class="ccs-pagination" id="pagination">
+        <!-- JavaScriptで動的に生成 -->
     </div>
 </div>
 

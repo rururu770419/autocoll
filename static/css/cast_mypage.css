@@ -569,13 +569,6 @@
 
 /* ==== レスポンシブ調整 ==== */
 
-@media (max-width: 768px) {
-    /* ダッシュボード（お知らせ一覧）の下部余白（スマホのみ） */
-    .cm-container {
-        padding-bottom: 100px;
-    }
-}
-
 @media (max-width: 480px) {
     .cm-login-container {
         padding: 16px;

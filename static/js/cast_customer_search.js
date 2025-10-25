@@ -248,6 +248,11 @@ function renderCustomerList(customers, containerId) {
             ? formatDateTimeJP(customer.last_visit_datetime)
             : '利用履歴なし';
 
+        // 日付部分のみを取得（YYYY-MM-DD形式）
+        const lastVisitDateOnly = customer.last_visit_datetime
+            ? customer.last_visit_datetime.split('T')[0]
+            : null;
+
         // 指名タイプのアイコン
         let nominationIcon = '';
         let nominationText = '';
@@ -283,11 +288,11 @@ function renderCustomerList(customers, containerId) {
                         <i class="far fa-calendar-alt"></i>
                         <span>${lastVisitDate}</span>
                     </div>
-                    ${customer.last_reservation_id ? `
-                        <button class="ccs-reservation-btn"
-                                onclick="openDetailModal(${customer.last_reservation_id})">
+                    ${customer.last_reservation_id && lastVisitDateOnly ? `
+                        <a href="/${store}/cast/reservation_list?date=${lastVisitDateOnly}&reservation_id=${customer.last_reservation_id}"
+                           class="ccs-reservation-btn">
                             予約詳細
-                        </button>
+                        </a>
                     ` : ''}
                 </div>
 
@@ -363,38 +368,34 @@ function renderPagination() {
 }
 
 // ============================================
-// フィルターモーダル
+// フィルターアコーディオン
 // ============================================
 
 /**
- * フィルターモーダルを開く
+ * フィルターエリアの開閉（アコーディオン）
  */
-function openFilterModal() {
-    const modal = document.getElementById('filterModal');
-    modal.classList.add('ccs-modal-show');
-    document.body.style.overflow = 'hidden';
-}
+function toggleFilter() {
+    const filterArea = document.getElementById('filterArea');
+    const filterBtn = document.getElementById('filterBtn');
 
-/**
- * フィルターモーダルを閉じる
- */
-function closeFilterModal() {
-    const modal = document.getElementById('filterModal');
-    modal.classList.remove('ccs-modal-show');
-    document.body.style.overflow = '';
+    if (filterArea.style.display === 'none' || !filterArea.style.display) {
+        // 開く
+        filterArea.style.display = 'block';
+        filterBtn.style.background = 'linear-gradient(135deg, #ff7799 0%, #ff99bb 100%)';
+    } else {
+        // 閉じる
+        filterArea.style.display = 'none';
+        filterBtn.style.background = 'linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%)';
+    }
 }
 
 /**
  * フィルターをクリア
  */
 function clearFilter() {
-    // ラジオボタンをリセット
-    document.querySelectorAll('input[name="nominationType"]').forEach(radio => {
-        radio.checked = radio.value === 'all';
-    });
-    document.querySelectorAll('input[name="visitPeriod"]').forEach(radio => {
-        radio.checked = radio.value === 'all';
-    });
+    // すべてのラジオボタンをリセット
+    document.querySelector('input[name="nominationType"][value="all"]').checked = true;
+    document.querySelector('input[name="visitPeriod"][value="all"]').checked = true;
 
     // フィルターを適用
     applyFilter();
@@ -404,16 +405,20 @@ function clearFilter() {
  * フィルターを適用
  */
 function applyFilter() {
-    // 選択された値を取得
     const nominationType = document.querySelector('input[name="nominationType"]:checked').value;
     const visitPeriod = document.querySelector('input[name="visitPeriod"]:checked').value;
+
+    console.log('フィルター適用:', { nominationType, visitPeriod });
 
     // フィルターを保存
     currentFilters.nomination_type = nominationType;
     currentFilters.visit_period = visitPeriod;
 
-    // モーダルを閉じる
-    closeFilterModal();
+    // フィルターエリアを閉じる
+    const filterArea = document.getElementById('filterArea');
+    const filterBtn = document.getElementById('filterBtn');
+    filterArea.style.display = 'none';
+    filterBtn.style.background = 'linear-gradient(135deg, #ff99bb 0%, #ffb3cc 100%)';
 
     // 現在のタブに応じてデータを再読み込み
     if (currentTab === 'list') {
@@ -493,28 +498,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // モーダルのタッチイベント制御（スマホ対応）
-    const filterModal = document.getElementById('filterModal');
-    if (filterModal) {
-        const modalContent = filterModal.querySelector('.ccs-modal-content');
-        if (modalContent) {
-            modalContent.addEventListener('touchmove', function(e) {
-                e.stopPropagation();
-            }, { passive: true });
-        }
-
-        const overlay = filterModal.querySelector('.ccs-modal-overlay');
-        if (overlay) {
-            overlay.addEventListener('touchmove', function(e) {
-                e.preventDefault();
-            }, { passive: false });
-        }
-    }
-
-    // ESCキーでモーダルを閉じる
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeFilterModal();
-        }
-    });
+    // フィルターアコーディオンは特別なイベントリスナー不要
 });

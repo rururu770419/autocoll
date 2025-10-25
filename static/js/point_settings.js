@@ -67,45 +67,9 @@ function togglePointMethod() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
- * 基本設定を保存
+ * 基本設定を保存（削除済み）
+ * 新規顧客登録時のデフォルトポイント機能は削除されました
  */
-async function saveBasicSettings() {
-    const newCustomerPoints = document.getElementById('new_customer_default_points').value;
-
-    if (newCustomerPoints === '' || newCustomerPoints < 0) {
-        showMessage('正しいポイント数を入力してください', 'error');
-        return;
-    }
-
-    const data = {
-        save_type: 'basic',
-        new_customer_default_points: parseInt(newCustomerPoints),
-        point_method: document.querySelector('input[name="point_method"]:checked').value,
-        is_active: true
-    };
-
-    try {
-        const store = getStoreCode();
-        const response = await fetch(`/${store}/point_settings/save`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showMessage(result.message, 'success');
-        } else {
-            showMessage(result.message || '保存に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('エラーが発生しました', 'error');
-    }
-}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ポイント付与方式の保存
@@ -116,12 +80,11 @@ async function saveBasicSettings() {
  */
 async function savePointMethod() {
     const pointMethod = document.querySelector('input[name="point_method"]:checked').value;
-    const newCustomerPoints = document.getElementById('new_customer_default_points').value;
 
     const data = {
         save_type: 'basic',
         point_method: pointMethod,
-        new_customer_default_points: parseInt(newCustomerPoints) || 0,
+        new_customer_default_points: 0,  // デフォルト値として0を固定
         is_active: true
     };
 

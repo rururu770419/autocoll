@@ -351,7 +351,7 @@
 @media (max-width: 768px) {
     /* 顧客情報の下部余白（スマホのみ） */
     .cci-accordion-container {
-        padding-bottom: 100px;
+        padding-bottom: 200px;
     }
 
     .cci-container {

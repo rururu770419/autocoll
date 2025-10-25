@@ -368,6 +368,29 @@
                         </td>
                     </tr>
 
+                    <!-- 延長 -->
+                    <tr>
+                        <th>延長</th>
+                        <td>
+                            {% if all_extensions %}
+                            <div class="cast-edit-checkbox-grid">
+                                {% for extension in all_extensions %}
+                                <label class="cast-edit-checkbox-label">
+                                    <input type="checkbox" name="ng_extensions" class="cast-edit-checkbox"
+                                           value="{{ extension.extension_id }}"
+                                           {% if extension.extension_id in ng_extension_ids %}checked{% endif %}>
+                                    <span class="cast-edit-checkbox-text">{{ extension.extension_name }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="cast-edit-no-data">
+                                <p>延長が登録されていません</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+
                     <!-- エリア -->
                     <tr>
                         <th>エリア</th>

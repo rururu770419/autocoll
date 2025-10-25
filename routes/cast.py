@@ -15,10 +15,11 @@ from database.cast_db import (
     get_all_hotels, get_all_courses, get_all_options, get_all_areas,
     get_all_ng_areas, get_all_ng_age_patterns,
     get_cast_ng_hotels, get_cast_ng_courses, get_cast_ng_options, get_cast_ng_areas,
-    get_cast_ng_custom_areas, get_cast_ng_age_patterns,
+    get_cast_ng_custom_areas, get_cast_ng_age_patterns, get_cast_ng_extensions,
     update_cast_ng_items,
     update_cast_ng_custom_areas, update_cast_ng_age_patterns
 )
+from database.extension_db import get_all_extensions
 
 
 # ファイルアップロード設定
@@ -583,11 +584,16 @@ def edit_cast(store, cast_id):
             # 年齢NGの保存
             ng_age_patterns = request.form.getlist('ng_age_patterns')
             ng_age_patterns = [int(p) for p in ng_age_patterns if p]
-            
+
+            # NG延長の保存
+            ng_extensions = request.form.getlist('ng_extensions')
+            ng_extensions = [int(e) for e in ng_extensions if e]
+
             # データベース更新
             update_cast_ng_items(db, cast_id, 'hotels', ng_hotels, store_id)
             update_cast_ng_items(db, cast_id, 'courses', ng_courses, store_id)
             update_cast_ng_items(db, cast_id, 'options', ng_options, store_id)
+            update_cast_ng_items(db, cast_id, 'extensions', ng_extensions, store_id)
             update_cast_ng_custom_areas(db, cast_id, ng_custom_areas, store_id)
             update_cast_ng_age_patterns(db, cast_id, ng_age_patterns, store_id)
             
@@ -647,23 +653,26 @@ def edit_cast(store, cast_id):
         all_hotels = get_all_hotels(db, store_id)
         all_courses = get_all_courses(db, store_id)
         all_options = get_all_options(db, store_id)
+        all_extensions = get_all_extensions(db, store_id)
         all_ng_areas = get_all_ng_areas(db)
         all_ng_age_patterns = get_all_ng_age_patterns(db)
-        
+
         # キャストのNG設定を取得
         ng_hotels = get_cast_ng_hotels(db, cast_id, store_id)
         ng_courses = get_cast_ng_courses(db, cast_id, store_id)
         ng_options = get_cast_ng_options(db, cast_id, store_id)
+        ng_extensions = get_cast_ng_extensions(db, cast_id, store_id)
         ng_custom_areas = get_cast_ng_custom_areas(db, cast_id, store_id)
         ng_age_patterns = get_cast_ng_age_patterns(db, cast_id, store_id)
-        
+
         # NGのIDリストを作成
         ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
         ng_course_ids = [c['course_id'] for c in ng_courses]
         ng_option_ids = [o['option_id'] for o in ng_options]
+        ng_extension_ids = [e['extension_id'] for e in ng_extensions]
         ng_custom_area_ids = [a['ng_area_id'] for a in ng_custom_areas]
         ng_age_pattern_ids = [p['ng_age_id'] for p in ng_age_patterns]
-        
+
         # ✅ flash()とredirect()を使わず、successまたはerrorメッセージを渡して再レンダリング
         return render_template(
             "cast_edit.html",
@@ -675,11 +684,13 @@ def edit_cast(store, cast_id):
             all_hotels=all_hotels,
             all_courses=all_courses,
             all_options=all_options,
+            all_extensions=all_extensions,
             all_ng_areas=all_ng_areas,
             all_ng_age_patterns=all_ng_age_patterns,
             ng_hotel_ids=ng_hotel_ids,
             ng_course_ids=ng_course_ids,
             ng_option_ids=ng_option_ids,
+            ng_extension_ids=ng_extension_ids,
             ng_custom_area_ids=ng_custom_area_ids,
             ng_age_pattern_ids=ng_age_pattern_ids,
             success="更新できました。" if success else None,
@@ -703,20 +714,23 @@ def edit_cast(store, cast_id):
     all_hotels = get_all_hotels(db, store_id)
     all_courses = get_all_courses(db, store_id)
     all_options = get_all_options(db, store_id)
+    all_extensions = get_all_extensions(db, store_id)
     all_ng_areas = get_all_ng_areas(db)
     all_ng_age_patterns = get_all_ng_age_patterns(db)
-    
+
     # キャストのNG設定を取得
     ng_hotels = get_cast_ng_hotels(db, cast_id, store_id)
     ng_courses = get_cast_ng_courses(db, cast_id, store_id)
     ng_options = get_cast_ng_options(db, cast_id, store_id)
+    ng_extensions = get_cast_ng_extensions(db, cast_id, store_id)
     ng_custom_areas = get_cast_ng_custom_areas(db, cast_id, store_id)
     ng_age_patterns = get_cast_ng_age_patterns(db, cast_id, store_id)
-    
+
     # NGのIDリストを作成
     ng_hotel_ids = [h['hotel_id'] for h in ng_hotels]
     ng_course_ids = [c['course_id'] for c in ng_courses]
     ng_option_ids = [o['option_id'] for o in ng_options]
+    ng_extension_ids = [e['extension_id'] for e in ng_extensions]
     ng_custom_area_ids = [a['ng_area_id'] for a in ng_custom_areas]
     ng_age_pattern_ids = [p['ng_age_id'] for p in ng_age_patterns]
 
@@ -730,11 +744,13 @@ def edit_cast(store, cast_id):
         all_hotels=all_hotels,
         all_courses=all_courses,
         all_options=all_options,
+        all_extensions=all_extensions,
         all_ng_areas=all_ng_areas,
         all_ng_age_patterns=all_ng_age_patterns,
         ng_hotel_ids=ng_hotel_ids,
         ng_course_ids=ng_course_ids,
         ng_option_ids=ng_option_ids,
+        ng_extension_ids=ng_extension_ids,
         ng_custom_area_ids=ng_custom_area_ids,
         ng_age_pattern_ids=ng_age_pattern_ids
     )
@@ -774,11 +790,16 @@ def save_cast_ng_settings(store, cast_id):
             # 年齢NGの保存
             ng_age_patterns = request.form.getlist('ng_age_patterns')
             ng_age_patterns = [int(p) for p in ng_age_patterns if p]
-            
+
+            # NG延長の保存
+            ng_extensions = request.form.getlist('ng_extensions')
+            ng_extensions = [int(e) for e in ng_extensions if e]
+
             # データベース更新
             update_cast_ng_items(db, cast_id, 'hotels', ng_hotels, store_id)
             update_cast_ng_items(db, cast_id, 'courses', ng_courses, store_id)
             update_cast_ng_items(db, cast_id, 'options', ng_options, store_id)
+            update_cast_ng_items(db, cast_id, 'extensions', ng_extensions, store_id)
             update_cast_ng_custom_areas(db, cast_id, ng_custom_areas, store_id)
             update_cast_ng_age_patterns(db, cast_id, ng_age_patterns, store_id)
             
@@ -807,3 +828,29 @@ def delete_cast(store, cast_id):
     
     # ✅ 削除後は一覧画面にリダイレクト（これはOK - 別ページへの遷移）
     return redirect(url_for('main_routes.cast_management', store=store))
+
+def get_cast_ng_items_api(store, cast_id):
+    """キャストのNG項目一覧をJSON形式で返す（予約登録画面用）"""
+    try:
+        store_id = get_store_id(store)
+        db = get_db()
+
+        # キャストのNG設定を取得
+        ng_courses = get_cast_ng_courses(db, cast_id, store_id)
+        ng_hotels = get_cast_ng_hotels(db, cast_id, store_id)
+        ng_options = get_cast_ng_options(db, cast_id, store_id)
+        ng_extensions = get_cast_ng_extensions(db, cast_id, store_id)
+
+        db.close()
+
+        return jsonify({
+            'ng_course_ids': [c['course_id'] for c in ng_courses],
+            'ng_hotel_ids': [h['hotel_id'] for h in ng_hotels],
+            'ng_option_ids': [o['option_id'] for o in ng_options],
+            'ng_extension_ids': [e['extension_id'] for e in ng_extensions]
+        })
+    except Exception as e:
+        print(f"キャストNG情報取得エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500

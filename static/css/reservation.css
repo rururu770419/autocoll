@@ -2,13 +2,64 @@
    予約登録ページCSS
 ======================================== */
 
+/* レスポンシブ無効化：最小幅を設定して横スクロールを許可 */
+body {
+    min-width: 1440px;
+    overflow-x: auto;
+}
+
+/* ========================================
+   ローディングオーバーレイ
+======================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* スピナー */
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #00BCD4;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 20px;
+    font-size: 16px;
+    color: #333;
+}
+
 /* ========================================
    全体レイアウト
 ======================================== */
 .reservation-container {
     display: grid;
-    grid-template-columns: 20% 1fr;
+    grid-template-columns: 200px 1fr;
     gap: 20px;
+    min-width: 1000px;
     max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
@@ -39,6 +90,16 @@
 /* 編集ページの顧客情報カード - 灰色背景 */
 .customer-info-card.edit-mode {
     background: #5a5a5a;
+}
+
+/* 編集モードのPT表示を白色に */
+.customer-info-card.edit-mode .stat-value {
+    color: white !important;
+}
+
+/* 編集モードの現在のPT表示を確実に白色に */
+.customer-info-card.edit-mode #current_pt_display {
+    color: white !important;
 }
 
 /* ページ名（カード内の一番上） */
@@ -99,7 +160,12 @@
 .stat-value {
     font-size: 0.95em;
     font-weight: bold;
-    color: white;
+    color: white !important;
+}
+
+/* 現在のPT表示を確実に白色に */
+#current_pt_display {
+    color: white !important;
 }
 
 /* 縦並び表示用のスタイル */
@@ -117,7 +183,7 @@
 .customer-stat-vertical .stat-value {
     font-size: 0.95em;
     font-weight: bold;
-    color: white;
+    color: white !important;
 }
 
 /* 詳細ボタン */
@@ -230,7 +296,6 @@
 ======================================== */
 .form-group {
     display: flex;
-    flex-direction: column;
     width: 100%;
     margin-bottom: 10px;
 }
@@ -246,6 +311,101 @@
     font-size: 0.9em;
     font-weight: bold;
     margin-bottom: 5px;
+}
+
+.customer-form-field {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.customer-form-field label {
+    display: inline-block;
+    width: 80px;
+    flex-shrink: 0;
+    background-color: #00BCD4;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding: 2px;
+    text-align: center;
+}
+
+/* 右側フォームエリアの入力フィールド専用クラス - input */
+.customer-field-input {
+    display: block;
+    width: 100%;
+    padding: 2px 2px 1px 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+}
+
+.customer-field-input:focus {
+    outline: none;
+    border-color: #00BCD4;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+/* 読み取り専用フィールド */
+.customer-field-input[readonly] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* 右側フォームエリアの入力フィールド専用クラス - select */
+.customer-field-select {
+    display: block;
+    width: 100%;
+    padding: 3px 2px 3px 2px;
+    border: 1px solid #ddd !important;
+    border-radius: 4px;
+    font-size: 1em;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+}
+
+.customer-field-select:focus {
+    outline: none;
+    border: 1px solid #00BCD4 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+/* 右側フォームエリアの入力フィールド専用クラス - textarea */
+.customer-field-textarea {
+    display: block;
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    line-height: 1.2;
+    color: #495057;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 26px;
+}
+
+.customer-field-textarea:focus {
+    outline: none;
+    border-color: #00BCD4;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
 }
 
 .form-select,
@@ -295,8 +455,13 @@
 }
 
 .room-number-input {
-    width: 70px;
+    width: 60px;
     flex-shrink: 0;
+}
+
+/* 延長回数セレクトボックス */
+#extension_quantity {
+    width: 60px !important;
 }
 
 /* 予約日の年月日セレクトボックス */
@@ -308,7 +473,7 @@
 
 .date-select {
     width: auto;
-    min-width: 70px;
+    min-width: 55px;
 }
 
 .date-separator {
@@ -326,7 +491,7 @@
 
 .time-select {
     width: auto;
-    min-width: 65px;
+    min-width: 45px;
 }
 
 .time-separator {
@@ -359,12 +524,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px;
+    padding: 1px 2px 1px 4px;
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: white;
     cursor: pointer;
-    min-height: 38px;
     box-sizing: border-box;
     transition: border-color 0.15s ease-in-out;
     font-size: 1em;
@@ -550,7 +714,6 @@
 }
 
 .pt-result {
-    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -584,6 +747,29 @@
     justify-content: center;
     gap: 10px;
     margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* 編集ロックメッセージ */
+.edit-locked-message {
+    width: 100%;
+    padding: 15px 20px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    color: #856404;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.edit-locked-message i {
+    font-size: 1.2em;
 }
 
 .btn-reset,
@@ -635,58 +821,17 @@
     background: #0097A7;
 }
 
-/* ========================================
-   レスポンシブ対応
-======================================== */
-@media (max-width: 1200px) {
-    .reservation-container {
-        grid-template-columns: 25% 1fr;
-    }
+.btn-submit:disabled,
+.btn-delete:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
-@media (max-width: 992px) {
-    .reservation-container {
-        grid-template-columns: 1fr;
-    }
-
-    .customer-info-area {
-        grid-column: 1;
-        position: static;
-        max-height: none;
-        overflow-y: visible;
-    }
-
-    .reservation-form-area {
-        grid-column: 1;
-    }
-}
-
-@media (max-width: 768px) {
-    #reservation_form,
-    #reservation_edit_form {
-        grid-template-columns: 1fr;
-    }
-
-    .form-column {
-        grid-column: 1;
-    }
-
-    .form-full-width {
-        grid-column: 1;
-    }
-
-    .pt-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .pt-result {
-        margin-left: 0;
-    }
-
-    .pt-input {
-        width: 100%;
-    }
+.btn-submit:disabled:hover,
+.btn-delete:disabled:hover {
+    background: #ccc;
 }
 
 /* ========================================
@@ -726,4 +871,198 @@
     font-size: 0.95em;
     color: #fff;
     margin-left: 8px;
+}
+
+/* 登録済み預かり金額のスタイル */
+.amount-registered {
+    background-color: #e0f7fa !important;
+    border: 2px solid #00BCD4 !important;
+    font-weight: bold;
+    color: #006064 !important;
+}
+
+/* ========================================
+   顧客評価モーダル
+======================================== */
+.rating-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rating-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.rating-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10001;
+}
+
+.rating-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #00BCD4;
+    background: #f9f9f9;
+    border-radius: 8px 8px 0 0;
+}
+
+.rating-modal-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #00BCD4;
+}
+
+.rating-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.rating-modal-close:hover {
+    background: #e0e0e0;
+}
+
+.rating-modal-body {
+    padding: 20px;
+}
+
+/* 評価項目 */
+.rating-item {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.rating-item:last-child {
+    border-bottom: none;
+}
+
+.rating-item-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* 評価オプション */
+.rating-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.rating-option-value {
+    font-size: 1em;
+    color: #333;
+}
+
+.rating-option-count {
+    font-size: 1em;
+    font-weight: bold;
+    color: #00BCD4;
+}
+
+/* コメントセクション */
+.rating-comments {
+    margin-top: 10px;
+}
+
+.rating-comment {
+    background: #f9f9f9;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #00BCD4;
+}
+
+.rating-comment-text {
+    font-size: 1em;
+    color: #333;
+    margin-bottom: 5px;
+    white-space: pre-wrap;
+}
+
+.rating-comment-meta {
+    font-size: 0.85em;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rating-comment-cast {
+    font-weight: bold;
+}
+
+.rating-comment-date {
+    font-style: italic;
+}
+
+/* 評価なしメッセージ */
+.rating-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 1.1em;
+}
+
+/* モーダルフッター */
+.rating-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: center;
+    background: #f9f9f9;
+    border-radius: 0 0 8px 8px;
+}
+
+.rating-modal-close-btn {
+    padding: 10px 30px;
+    background: #00BCD4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.rating-modal-close-btn:hover {
+    background: #0097A7;
 }

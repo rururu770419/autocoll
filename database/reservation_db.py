@@ -251,7 +251,8 @@ def create_reservation(
     customer_comment: Optional[str] = None,
     staff_memo: Optional[str] = None,
     cancellation_reason_id: Optional[int] = None,
-    reservation_method_id: Optional[int] = None
+    reservation_method_id: Optional[int] = None,
+    adjustment_amount: int = 0
 ) -> Optional[int]:
     """新規予約を作成（既存のreservationsテーブル構造に対応）"""
     conn = get_connection()
@@ -465,12 +466,13 @@ def create_reservation(
                 payment_method, card_fee_rate, card_fee,
                 options_total, subtotal, total_amount,
                 staff_id, staff_name,
-                points_to_grant, customer_comment, staff_memo
+                points_to_grant, customer_comment, staff_memo,
+                adjustment_amount
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s
             )
             RETURNING reservation_id
         """, (
@@ -489,7 +491,8 @@ def create_reservation(
             payment_method, card_fee_rate, card_fee,
             options_total, subtotal, total_amount,
             staff_id, staff_name,
-            points_to_grant, customer_comment, staff_memo
+            points_to_grant, customer_comment, staff_memo,
+            adjustment_amount
         ))
 
         reservation_id = cursor.fetchone()[0]
@@ -917,6 +920,10 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
 
         total_amount = subtotal - discount_amount
 
+        # 調整金を加算
+        adjustment_amount = data.get('adjustment_amount', type=int) or 0
+        total_amount += adjustment_amount
+
         # カード手数料を適用
         if card_fee_rate > 0:
             card_fee = int(total_amount * (card_fee_rate / 100))
@@ -971,7 +978,7 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
                 hotel_id = %s, hotel_name = %s, room_number = %s,
                 transportation_fee = %s,
                 payment_method = %s, card_fee_rate = %s, card_fee = %s,
-                options_total = %s, subtotal = %s, total_amount = %s,
+                options_total = %s, subtotal = %s, total_amount = %s, adjustment_amount = %s,
                 staff_id = %s, staff_name = %s,
                 points_to_grant = %s, customer_comment = %s, staff_memo = %s,
                 updated_at = CURRENT_TIMESTAMP
@@ -990,7 +997,7 @@ def update_reservation(reservation_id: int, data: Dict) -> bool:
             hotel_id, hotel_name, room_number,
             transportation_fee,
             payment_method, card_fee_rate, card_fee,
-            options_total, subtotal, total_amount,
+            options_total, subtotal, total_amount, adjustment_amount,
             staff_id, staff_name,
             points_to_grant, customer_comment, staff_memo,
             reservation_id

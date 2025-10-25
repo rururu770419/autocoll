@@ -40,77 +40,55 @@ function renderCalendar() {
  * 日付を選択
  */
 function selectDate(date) {
-    currentDate = new Date(date);
-    renderCalendar();
-    updateDatePickerTrigger();
     // ページを遷移
     const dateStr = formatDate(date);
     window.location.href = `/${window.storeName}/gantt?date=${dateStr}`;
 }
 
 /**
- * 日付ピッカートリガーのテキストを更新
+ * 日付ピッカートリガーのテキストを更新（常に今日の日付を表示）
  */
 function updateDatePickerTrigger() {
     const trigger = document.getElementById('date-picker-trigger');
     if (trigger) {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth() + 1;
-        const day = currentDate.getDate();
-        const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-        const weekDay = weekDays[currentDate.getDay()];
-        trigger.textContent = `${year}年${month}月${day}日（${weekDay}）`;
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+        trigger.textContent = `${year}年${month}月${day}日`;
     }
 }
 
 /**
- * flatpickrを初期化
+ * 今日に戻るボタンの初期化
  */
 function initializeDatePicker() {
-    flatpickr.localize(flatpickr.l10ns.ja);
-    datePickerInstance = flatpickr("#date-picker-trigger", {
-        locale: "ja",
-        dateFormat: "Y年n月j日",
-        defaultDate: currentDate,
-        onChange: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length > 0) {
-                // 選択された日付を反映
-                currentDate = new Date(selectedDates[0]);
-                renderCalendar();
-                updateDatePickerTrigger();
-                // ページを遷移
-                const dateStr = formatDate(currentDate);
-                window.location.href = `/${window.storeName}/gantt?date=${dateStr}`;
-            }
-        }
-    });
+    const trigger = document.getElementById('date-picker-trigger');
+    if (trigger) {
+        // クリックで今日に戻る
+        trigger.addEventListener('click', function() {
+            const today = new Date();
+            const dateStr = formatDate(today);
+            window.location.href = `/${window.storeName}/gantt?date=${dateStr}`;
+        });
+    }
 }
 
 /**
- * 前の週を表示（選択日を7日前に移動）
+ * 前の日を表示（選択日を1日前に移動）
  */
 function showPrevWeek() {
-    currentDate.setDate(currentDate.getDate() - 7);
-    renderCalendar();
-    updateDatePickerTrigger();
-    if (datePickerInstance) {
-        datePickerInstance.setDate(currentDate, false);
-    }
+    currentDate.setDate(currentDate.getDate() - 1);
     // ページを遷移
     const dateStr = formatDate(currentDate);
     window.location.href = `/${window.storeName}/gantt?date=${dateStr}`;
 }
 
 /**
- * 次の週を表示（選択日を7日後に移動）
+ * 次の日を表示（選択日を1日後に移動）
  */
 function showNextWeek() {
-    currentDate.setDate(currentDate.getDate() + 7);
-    renderCalendar();
-    updateDatePickerTrigger();
-    if (datePickerInstance) {
-        datePickerInstance.setDate(currentDate, false);
-    }
+    currentDate.setDate(currentDate.getDate() + 1);
     // ページを遷移
     const dateStr = formatDate(currentDate);
     window.location.href = `/${window.storeName}/gantt?date=${dateStr}`;
